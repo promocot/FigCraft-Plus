@@ -24,14 +24,14 @@ use crate::widgets::{self, BindEvent};
 /// The model dropdown's width (wide enough for "OKLCH").
 pub(crate) const MODEL_DROPDOWN_W: f32 = 64.0;
 /// A channel field's width (room for a bound variable's name).
-const FIELD_W: f32 = 52.0;
+const FIELD_W: f32 = 60.0;
 /// The OKLCH L and C fields' width (fits "0.2197" and the variable button).
-const OKLCH_FIELD_W: f32 = 60.0;
+const OKLCH_FIELD_W: f32 = 64.0;
 /// The picker's narrowest width (FigCraft's own).
 const BASE_W: f32 = 240.0;
 const MAX_W: f32 = 640.0;
 const GAP: f32 = 4.0;
-const ALPHA_W: f32 = 52.0;
+const ALPHA_W: f32 = 60.0;
 /// In the picker's own rows: what draws RGB, HSL, HSB and OKLCH (FigCraft's own rows for them are skipped).
 pub(crate) const OWN_ROWS: bool = true;
 
