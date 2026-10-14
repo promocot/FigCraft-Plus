@@ -20,8 +20,8 @@
   {
     "note": "engine: recompute linked colours after every edit",
     "file": "crates/engine/src/lib.rs",
-    "after": "^pub fn normalize\\(doc: &mut Document, before: &Document\\) \\{$",
-    "insert": "    // Colour variables computed from number variables (oklch formulas) follow them.\n    oklch_links::resolve(doc, before);"
+    "find": "    let mut touched: BTreeSet<NodeId> = doc.take_dirty();\n",
+    "replace": "    let mut touched: BTreeSet<NodeId> = doc.take_dirty();\n    // FigCraft Plus: colours driven by number variables follow them (and their own edits).\n    oklch_links::resolve(doc, before, &touched);\n    touched.extend(doc.take_dirty());\n"
   },
   {
     "note": "ui: picker additions module",
@@ -54,10 +54,10 @@
     "replace": "    let mut out: Option<Color> = None;\n    crate::oklch_fields::captions(ui, MODELS.get(model).copied().unwrap_or(\"Hex\"));\n    ui.horizontal(|ui| {\n        ui.add_space(16.0);\n        ui.spacing_mut().item_spacing.x = 4.0;\n        let resp = widgets::dropdown(ui, MODELS.get(model).copied().unwrap_or(\"Hex\"), crate::oklch_fields::MODEL_DROPDOWN_W, None);"
   },
   {
-    "note": "picker: OKLCH fields",
+    "note": "picker: RGB, HSL, HSB and OKLCH rows with variable buttons",
     "file": "crates/ui-egui/src/colorpicker.rs",
     "find": "            \"CSS\" => {\n                if let Some(text) = widgets::text_field(ui, Id::new(\"cp_css\")",
-    "replace": "            \"OKLCH\" => out = crate::oklch_fields::fields(ui, c, profile),\n            \"CSS\" => {\n                if let Some(text) = widgets::text_field(ui, Id::new(\"cp_css\")"
+    "replace": "            m @ (\"RGB\" | \"HSL\" | \"HSB\" | \"OKLCH\") => out = crate::oklch_fields::model_row(ui, c, profile, m),\n            \"CSS\" => {\n                if let Some(text) = widgets::text_field(ui, Id::new(\"cp_css\")"
   },
   {
     "note": "picker: width",
@@ -129,13 +129,13 @@
     "note": "picker: pass the profile",
     "file": "crates/ui-egui/src/colorpicker.rs",
     "find": "                // Colour model fields (Hex, RGB, HSL, HSB or CSS) + alpha.\n                if let Some(c) = model_fields(ui, nc) {",
-    "replace": "                // Colour model fields (Hex, RGB, HSL, HSB, OKLCH or CSS) + alpha.\n                let profile = app.session.doc().map(|d| d.color_profile).unwrap_or_default();\n                if let Some(c) = model_fields(ui, nc, profile) {"
+    "replace": "                // Colour model fields (Hex, RGB, HSL, HSB, OKLCH or CSS) + alpha.\n                let profile = app.session.doc().map(|d| d.color_profile).unwrap_or_default();\n                crate::oklch_fields::prepare(app, ui.ctx(), &target);\n                if let Some(c) = model_fields(ui, nc, profile) {"
   },
   {
-    "note": "picker: links to number variables",
+    "note": "picker: variable list and links notes",
     "file": "crates/ui-egui/src/colorpicker.rs",
     "find": "                    gamut_warning(ui, &t);\n                }\n",
-    "replace": "                    gamut_warning(ui, &t);\n                }\n                crate::oklch_fields::variable_links(app, ui, &target, nc, &MODELS, w);\n"
+    "replace": "                    gamut_warning(ui, &t);\n                }\n                crate::oklch_fields::bindings_ui(app, ui, nc, &MODELS);\n"
   },
   {
     "note": "picker: drag handle",
@@ -154,5 +154,23 @@
     "file": "crates/ui-egui/src/colorpicker.rs",
     "find": "                let (c2, d2) = hue_slider(ui, hr, &mut hsb);",
     "replace": "                let (c2, d2) = if crate::oklch_fields::active(ui.ctx(), &MODELS) {\n                    crate::oklch_fields::hue_strip(ui, hr, &mut hsb, color, oklch_profile)\n                } else {\n                    hue_slider(ui, hr, &mut hsb)\n                };"
+  },
+  {
+    "note": "picker: FigCraft's own RGB row gives way to ours",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "            \"RGB\" => {\n",
+    "replace": "            \"RGB\" if !crate::oklch_fields::OWN_ROWS => {\n"
+  },
+  {
+    "note": "picker: FigCraft's own HSL/HSB row gives way to ours",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "            \"HSL\" | \"HSB\" => {\n",
+    "replace": "            \"HSL\" | \"HSB\" if !crate::oklch_fields::OWN_ROWS => {\n"
+  },
+  {
+    "note": "picker: our rows draw their own (bindable) alpha",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "        if MODELS.get(model) != Some(&\"CSS\")\n            && let Some(widgets::FieldEdit::Set(v)) =",
+    "replace": "        if !matches!(MODELS.get(model).copied(), Some(\"CSS\" | \"RGB\" | \"HSL\" | \"HSB\" | \"OKLCH\"))\n            && let Some(widgets::FieldEdit::Set(v)) ="
   }
 ]

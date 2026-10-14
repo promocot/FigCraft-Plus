@@ -30,7 +30,7 @@ fn field(u: &mut Ui, name: &str) -> (Pos2, String) {
     let n = nodes
         .iter()
         .map(|(_, n)| n)
-        .find(|n| matches!(n.role(), Role::SpinButton | Role::TextInput) && n.label() == Some(name))
+        .find(|n| matches!(n.role(), Role::SpinButton | Role::TextInput | Role::ComboBox) && n.label() == Some(name))
         .unwrap_or_else(|| panic!("no field {name:?}"));
     let b = n.bounds().expect("bounds");
     (pos2(((b.x0 + b.x1) / 2.0) as f32, ((b.y0 + b.y1) / 2.0) as f32), n.value().unwrap_or_default().to_string())
@@ -58,30 +58,30 @@ fn fill(u: &Ui, a: NodeId) -> figcraft_color::Color {
 fn the_oklch_model_shows_and_sets_a_fill() {
     // The values oklch.com shows for #EF3D88: oklch(0.6456 0.2197 0.14).
     let (mut u, a) = setup("#EF3D88");
-    assert_eq!(field(&mut u, "OKLCH lightness").1, "0.6456");
-    assert_eq!(field(&mut u, "OKLCH chroma").1, "0.2197");
-    assert_eq!(field(&mut u, "OKLCH hue").1, "0.14");
+    assert_eq!(field(&mut u, "OKLCH L").1, "0.6456");
+    assert_eq!(field(&mut u, "OKLCH C").1, "0.2197");
+    assert_eq!(field(&mut u, "OKLCH H").1, "0.14");
     // sRGB red is oklch(0.628 0.2577 29.23).
     let (mut u, a2) = setup("#FF0000");
-    assert_eq!(field(&mut u, "OKLCH lightness").1, "0.628");
-    assert_eq!(field(&mut u, "OKLCH chroma").1, "0.2577");
-    assert_eq!(field(&mut u, "OKLCH hue").1, "29.23");
+    assert_eq!(field(&mut u, "OKLCH L").1, "0.628");
+    assert_eq!(field(&mut u, "OKLCH C").1, "0.2577");
+    assert_eq!(field(&mut u, "OKLCH H").1, "29.23");
     // A new hue: the fields then show the colour as it is (chroma mapped into sRGB), not 0.2577.
-    type_into(&mut u, "OKLCH hue", "260");
+    type_into(&mut u, "OKLCH H", "260");
     let got = Oklch::from_color(fill(&u, a2), ColorProfile::Srgb);
     assert!((got.h - 260.0).abs() < 4.0 && (got.l - 0.628).abs() < 0.03, "{got:?}");
-    assert_eq!(field(&mut u, "OKLCH chroma").1, format!("{}", (got.c * 10000.0).round() / 10000.0));
+    assert_eq!(field(&mut u, "OKLCH C").1, format!("{}", (got.c * 10000.0).round() / 10000.0));
     // L and C take CSS forms too.
-    type_into(&mut u, "OKLCH lightness", "50%");
+    type_into(&mut u, "OKLCH L", "50%");
     let now = Oklch::from_color(fill(&u, a2), ColorProfile::Srgb);
     // (out of sRGB at this chroma: CSS gamut mapping may move L by up to its 0.02 JND)
-    assert!((now.l - 0.5).abs() < 0.01, "{now:?} shown {:?}", field(&mut u, "OKLCH lightness").1);
-    type_into(&mut u, "OKLCH chroma", "0,1");
+    assert!((now.l - 0.5).abs() < 0.01, "{now:?} shown {:?}", field(&mut u, "OKLCH L").1);
+    type_into(&mut u, "OKLCH C", "0,1");
     assert!((Oklch::from_color(fill(&u, a2), ColorProfile::Srgb).c - 0.1).abs() < 0.002);
     // A grey keeps its hue while the chroma is 0.
-    let h = field(&mut u, "OKLCH hue").1;
-    type_into(&mut u, "OKLCH chroma", "0");
-    assert_eq!(field(&mut u, "OKLCH hue").1, h);
+    let h = field(&mut u, "OKLCH H").1;
+    type_into(&mut u, "OKLCH C", "0");
+    assert_eq!(field(&mut u, "OKLCH H").1, h);
     let grey = fill(&u, a2);
     assert!((grey.r - grey.g).abs() < 0.01 && (grey.g - grey.b).abs() < 0.01, "{grey:?}");
     let _ = a;
@@ -93,9 +93,9 @@ fn a_display_p3_file_reads_and_writes_p3_values() {
     u.app.session.execute("file.colorProfile", &json!({"profile": "displayP3", "convert": false})).unwrap();
     u.frame(vec![]);
     // P3 red is wider: oklch(0.6486 0.2995 28.96).
-    assert_eq!(field(&mut u, "OKLCH lightness").1, "0.6486");
-    assert_eq!(field(&mut u, "OKLCH chroma").1, "0.2995");
-    type_into(&mut u, "OKLCH lightness", "0.5");
+    assert_eq!(field(&mut u, "OKLCH L").1, "0.6486");
+    assert_eq!(field(&mut u, "OKLCH C").1, "0.2995");
+    type_into(&mut u, "OKLCH L", "0.5");
     let got = Oklch::from_color(fill(&u, a), ColorProfile::DisplayP3);
     assert!((got.l - 0.5).abs() < 0.02 && (got.h - 28.96).abs() < 4.0, "{got:?}");
 }
@@ -112,27 +112,105 @@ fn the_picker_widens_for_oklch_and_remembers_a_dragged_width() {
     assert_eq!(crate::oklch_fields::picker_width(&u.ctx, &models), 400.0);
 }
 
+/// The fields' accessible names and what they show (a bound field shows the variable's name).
+fn names(u: &mut Ui) -> Vec<String> {
+    u.frame(vec![]);
+    let nodes = u.frame_output(vec![]).platform_output.accesskit_update.unwrap().nodes;
+    nodes.iter().filter_map(|(_, n)| Some(format!("{}={}", n.label()?, n.value().unwrap_or_default()))).collect()
+}
+
+/// Open the variable list for field `name` and pick `var` in it.
+fn bind(u: &mut Ui, name: &str, var: &str) {
+    let (p, _) = field(u, name);
+    // Hover the field: its variable button shows at the right end.
+    u.frame(vec![Event::PointerMoved(p)]);
+    let nodes = u.frame_output(vec![Event::PointerMoved(p)]).platform_output.accesskit_update.unwrap().nodes;
+    let field = nodes.iter().map(|(_, n)| n).find(|n| n.label() == Some(name)).unwrap();
+    let b = field.bounds().unwrap();
+    let button = pos2(b.x1 as f32 - 11.0, ((b.y0 + b.y1) / 2.0) as f32);
+    u.frame(vec![Event::PointerMoved(button)]);
+    u.button(button, true);
+    u.button(button, false);
+    u.frame(vec![]);
+    let nodes = u.frame_output(vec![]).platform_output.accesskit_update.unwrap().nodes;
+    let item = nodes.iter().map(|(_, n)| n).find(|n| n.label() == Some(var)).unwrap_or_else(|| panic!("no {var:?} in the list: {:?}", nodes.iter().filter_map(|(_, n)| n.label()).collect::<Vec<_>>()));
+    let ib = item.bounds().unwrap();
+    let at = pos2(((ib.x0 + ib.x1) / 2.0) as f32, ((ib.y0 + ib.y1) / 2.0) as f32);
+    u.button(at, true);
+    u.button(at, false);
+    u.frame(vec![]);
+}
+
+fn plus_data(u: &Ui, a: NodeId) -> String {
+    u.app.session.doc().unwrap().node(a).unwrap().plugin_data.get(figcraft_engine::oklch_links::NODE_KEY).cloned().unwrap_or_default()
+}
+
 #[test]
-fn a_colour_variable_shows_its_links_and_follows_a_linked_hue() {
+fn a_layer_fill_channel_binds_to_a_number_variable_in_each_model() {
+    let mut s = Session::new();
+    let c = s.execute("variable.createCollection", &json!({"name": "Theme"})).unwrap()["id"].as_str().unwrap().to_string();
+    s.execute("variable.create", &json!({"collection": c, "name": "Hue", "type": "number", "value": 280})).unwrap();
+    s.execute("variable.create", &json!({"collection": c, "name": "Fade", "type": "number", "value": 40})).unwrap();
+    let a = NodeId(s.execute("shape.rectangle", &json!({"x": 10, "y": 20, "width": 40, "height": 30, "props": {"fill": "#3366FF"}})).unwrap()["id"].as_u64().unwrap());
+    s.execute("select.set", &json!({"ids": [a]})).unwrap();
+    let mut u = Ui::new(s);
+    u.ctx.enable_accesskit();
+    u.app.ui.picker = Some(PickerTarget::Paint { fills: true, index: 0, ids: vec![a] });
+    // OKLCH: H to Hue, alpha to Opacity.
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::new("cp_model"), 4usize));
+    u.frame(vec![]);
+    bind(&mut u, "OKLCH H", "Hue");
+    assert!(plus_data(&u, a).starts_with("fills/0 oklch("), "{}", plus_data(&u, a));
+    assert!(plus_data(&u, a).contains("{Hue}"));
+    assert!(names(&mut u).iter().any(|n| n == "OKLCH H=Hue"), "the field shows the variable: {:?}", names(&mut u));
+    bind(&mut u, "OKLCH alpha", "Fade");
+    let got = fill(&u, a);
+    assert!((Oklch::from_color(got, ColorProfile::Srgb).h - 280.0).abs() < 1.5, "{got:?}");
+    let opacity = u.app.session.doc().unwrap().node(a).unwrap().fills[0].opacity;
+    assert!((opacity - 0.4).abs() < 0.01, "{opacity} {}", plus_data(&u, a));
+    // Changing the variable restyles the fill.
+    u.app.run("variable.set", json!({"variable": "Hue", "value": 130}));
+    let h = Oklch::from_color(fill(&u, a), ColorProfile::Srgb);
+    // (out of sRGB at this chroma: CSS gamut mapping may move the hue a little)
+    assert!((h.h - 130.0).abs() < 4.0, "{h:?} {}", plus_data(&u, a));
+    // In HSL the OKLCH links are noted, and a link there replaces them.
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::new("cp_model"), 2usize));
+    bind(&mut u, "HSL H", "Hue");
+    let text = plus_data(&u, a);
+    assert!(text.starts_with("fills/0 hsl({Hue} ") && !text.contains("oklch"), "{text}");
+    assert!((figcraft_color::Hsl::from_color(fill(&u, a)).h - 130.0).abs() < 1.0);
+    // Detach: the channel keeps its value and, with nothing linked, the formula goes.
+    let (p, _) = field(&mut u, "HSL H");
+    u.frame(vec![Event::PointerMoved(p)]);
+    let nodes = u.frame_output(vec![Event::PointerMoved(p)]).platform_output.accesskit_update.unwrap().nodes;
+    let b = nodes.iter().map(|(_, n)| n).find(|n| n.label() == Some("HSL H")).unwrap().bounds().unwrap();
+    let detach = pos2(b.x1 as f32 - 11.0, ((b.y0 + b.y1) / 2.0) as f32);
+    u.frame(vec![Event::PointerMoved(detach)]);
+    u.button(detach, true);
+    u.button(detach, false);
+    u.frame(vec![]);
+    assert_eq!(plus_data(&u, a), "");
+    assert!((figcraft_color::Hsl::from_color(fill(&u, a)).h - 130.0).abs() < 1.0);
+}
+
+#[test]
+fn a_colour_variable_binds_in_its_description() {
     let mut s = Session::new();
     let c = s.execute("variable.createCollection", &json!({"name": "Theme"})).unwrap()["id"].as_str().unwrap().to_string();
     s.execute("variable.create", &json!({"collection": c, "name": "Hue", "type": "number", "value": 280})).unwrap();
     let p = s.execute("variable.create", &json!({"collection": c, "name": "Primary", "type": "color", "value": "#3366FF"})).unwrap()["id"].as_str().unwrap().to_string();
-    s.execute("variable.update", &json!({"variable": p, "description": "oklch(62% 0.15 {Hue})"})).unwrap();
+    s.execute("variable.update", &json!({"variable": p, "description": "Main colour"})).unwrap();
     let mode = s.doc().unwrap().variables.collection(&c).unwrap().modes[0].id.clone();
     let mut u = Ui::new(s);
     u.ctx.enable_accesskit();
     u.app.ui.picker = Some(PickerTarget::Variable { id: p.clone(), mode });
-    u.ctx.data_mut(|d| d.insert_temp(egui::Id::new("cp_model"), 4usize));
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::new("cp_model"), 3usize));
     u.frame(vec![]);
-    let nodes = u.frame_output(vec![]).platform_output.accesskit_update.unwrap().nodes;
-    let texts: Vec<String> = nodes.iter().filter_map(|(_, n)| n.label().or(n.value()).map(str::to_string)).collect();
-    assert!(texts.iter().any(|t| t.contains("H: Hue")), "{texts:?}");
-    assert!(texts.iter().any(|t| t.contains("L: —")), "{texts:?}");
-    // The hue field shows the linked value.
-    assert!((field(&mut u, "OKLCH hue").1.parse::<f64>().unwrap() - 280.0).abs() < 0.5);
+    bind(&mut u, "HSB H", "Hue");
+    let desc = u.app.session.doc().unwrap().variables.get(&p).unwrap().description.clone();
+    assert!(desc.starts_with("Main colour\nhsb({Hue} "), "{desc}");
     u.app.run("variable.set", json!({"variable": "Hue", "value": 130}));
-    assert!((field(&mut u, "OKLCH hue").1.parse::<f64>().unwrap() - 130.0).abs() < 0.5);
+    assert!((field(&mut u, "HSB H").1 == "Hue"));
 }
 
 /// Two frames of `draw`: the second with a click at `at`; what the colour became.

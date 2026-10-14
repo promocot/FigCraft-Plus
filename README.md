@@ -53,19 +53,31 @@ The picker's model menu gains **OKLCH** (Hex / RGB / HSL / HSB / **OKLCH** / CSS
 
 ### Colours driven by number variables
 
-A colour variable's L, C and H can come from number variables — e.g. bind H to `Hue = 280`,
-change `Hue` to 130 and every linked colour, and every layer using it, follows in one undo step.
+Every channel of a colour can be bound to a number variable, right in the picker — just like
+FigCraft's own number fields. Hover a field in the **RGB**, **HSL**, **HSB** or **OKLCH** row
+(R G B, H S L, H S B, L C H, and alpha **A**): the variable button appears at its right end. Pick
+a number variable and the field shows its name; the detach button turns it back into a number.
 
-Open the colour variable in the Variables editor, click its swatch, choose **OKLCH** and pick
-variables under **Linked to number variables**.
+Bind H to `brand/hue = 280`, change the variable to 130, and every colour linked to it follows —
+layers, styles and variables — in one undo step.
 
-- L from a variable is 0–1 (or 0–100 when above 1), C is 0–0.4, H is degrees.
-- A number variable in the colour's own collection is read in the same mode, so Light and Dark
-  (or Desktop and Mobile) can differ.
-- The link is stored as a line in the variable's description, e.g. `oklch(0.62 0.19 {Hue})`; it
-  can be edited by hand. Rename a number variable → update the name in the formula too.
-- Editing the colour itself (hex, eyedropper) updates the formula's fixed channels and keeps the
-  links. The official FigCraft simply keeps the last computed colours.
+- Works wherever the picker edits a colour: layer fills and strokes, **gradient stops**, effect
+  colours (shadows, noise), the **page background**, **colour styles** and **colour variables**.
+  (Not yet: a range of characters inside a text layer, plugin colour fields.)
+- Each model binds in its own terms: H in OKLCH is OKLCH hue, H in HSL is HSL hue. A colour is
+  linked in one model at a time; the picker notes links made in another model, and binding in the
+  current one replaces them.
+- Units are the fields': OKLCH L 0–1 (a variable above 1 is read as a percentage), C 0–0.4,
+  H degrees; HSL / HSB H degrees, S L B 0–100; RGB 0–255; alpha 0–100.
+- Variables are read in the modes that apply where the colour is: a layer's frames (switch a
+  frame to Dark and its layers re-read Dark values), a colour variable's own collection mode;
+  styles use the default modes.
+- Editing the colour itself (hex, square, eyedropper) updates the unbound channels; bound ones
+  stay bound.
+- The links are stored as text — a layer's data `figcraftplus.colors`, or a line in a style's or
+  colour variable's description, e.g. `fills/0 oklch(0.62 0.19 {brand/hue} / {fade})`. Variables
+  are referred to by name: rename one → update the name in the line too. The official FigCraft
+  opens such files fine and keeps the last computed colours.
 
 ## How it works
 
