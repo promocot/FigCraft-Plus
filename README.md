@@ -1,8 +1,9 @@
 # FigCraft Plus (OKLCH)
 
 **[FigCraft](https://github.com/storytold/figcraft) with extra tools — OKLCH in the colour
-picker, a resizable picker with labelled fields, colours driven by number variables, and
-drag & drop ordering and sorting of variables.**
+picker, a resizable picker with labelled fields, colours driven by number variables, variables
+for font family, weight and paragraph spacing, and drag & drop ordering and sorting of
+variables.**
 
 This repository holds only the additions. A GitHub Actions workflow takes every new FigCraft
 release, applies them, runs the tests and publishes a ready-to-run Windows build under
@@ -115,6 +116,42 @@ model replaces those links.
   colour variable's description, e.g. `fills/0 oklch(0.62 0.19 {brand/hue} / {fade})`. Variables
   are referred to by name: rename one → update the name in the line too. The official FigCraft
   opens such files fine and keeps the last computed colours.
+
+### Variables in text: font family, weight and paragraph spacing
+
+<p>
+<img src="docs/images/12-text-variables.png" width="560" alt="A text layer with font family, weight and paragraph spacing bound to variables">
+<img src="docs/images/13-weight-or-style-list.png" width="300" alt="The font style dropdown's list: number and string variables">
+</p>
+
+As in Figma, the Typography section binds more of a text layer to variables. Hover a field: the
+variable button appears at its right end.
+
+| Field | Variable | Example |
+|---|---|---|
+| **Font family** | string | `family/body` = `Inter` |
+| **Font style / weight** | number (the weight) or string (the style) | `weight/bold` = 700, `style/heading` = `SemiBold Italic` |
+| **Paragraph spacing** | number | `space/para` = 16 |
+
+(Font size, line height and letter spacing could already be bound.)
+
+- The style dropdown lists **both** kinds: a number sets the weight (the nearest style the font has
+  is used), a string sets the style by name. Binding one replaces the other in one undo step;
+  click the bound chip to switch, or its detach button to unbind.
+- Variables follow their modes like everywhere else (e.g. a Mobile mode with a smaller paragraph
+  spacing).
+- Lists respect each variable's **scopes** (below): a variable limited to Font size isn't offered
+  for the weight.
+- While editing a range of characters these fields take plain values (bindings are per layer).
+
+### Variable details & scope, one click away
+
+<img src="docs/images/14-edit-variable.png" width="640" alt="The Edit variable button on a row and the variable's details and scopes">
+
+Hover a row in the Variables editor: the **Edit variable** button (two sliders) appears at the end
+of the name. It opens the variable's name, description, code syntax and **scoping** — which
+properties pickers offer it for (corner radius, gap, font weight, font size, paragraph spacing,
+fills, strokes…). Click it again to close. (Right-click ▸ Edit variable still works.)
 
 ### Reorder variables: drag & drop and sorting
 

@@ -1,0 +1,50 @@
+[
+  {
+    "note": "ui: text variables module",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod variables_panel;$",
+    "insert": "mod text_vars_ui;"
+  },
+  {
+    "note": "text: font family takes a string variable",
+    "file": "crates/ui-egui/src/typography.rs",
+    "find": "        let resp = widgets::dropdown(ui, family.as_deref().unwrap_or(tr(MIXED)), w, None);\n        menu_popup(&resp).width(w.max(240.0)).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {\n            if let Some(f) = font_picker(ui, family.as_deref(), resp.clicked()) {\n                remember_family(ui.ctx(), &f);\n                apply_style(app, \"fontFamily\", json!(f));\n                ui.close();\n            }\n        });\n",
+    "replace": "        crate::text_vars_ui::family(app, ui, ids, editing, w, |app, ui| {\n        let resp = widgets::dropdown(ui, family.as_deref().unwrap_or(tr(MIXED)), w, None);\n        menu_popup(&resp).width(w.max(240.0)).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {\n            if let Some(f) = font_picker(ui, family.as_deref(), resp.clicked()) {\n                remember_family(ui.ctx(), &f);\n                apply_style(app, \"fontFamily\", json!(f));\n                ui.close();\n            }\n        });\n        });\n"
+  },
+  {
+    "note": "text: font style takes a weight or style variable (start)",
+    "file": "crates/ui-egui/src/typography.rs",
+    "find": "        let resp = widgets::dropdown(ui, fstyle.as_deref().unwrap_or(tr(MIXED)), half, None);\n",
+    "replace": "        crate::text_vars_ui::weight_or_style(app, ui, ids, editing, half, |app, ui| {\n        let resp = widgets::dropdown(ui, fstyle.as_deref().unwrap_or(tr(MIXED)), half, None);\n"
+  },
+  {
+    "note": "text: font style takes a weight or style variable (end)",
+    "file": "crates/ui-egui/src/typography.rs",
+    "find": "            None => widgets::label(ui, tr(\"Pick one font family first\"), t.text_tertiary),\n        });\n",
+    "replace": "            None => widgets::label(ui, tr(\"Pick one font family first\"), t.text_tertiary),\n        });\n        });\n"
+  },
+  {
+    "note": "text: paragraph spacing takes a number variable",
+    "file": "crates/ui-egui/src/typography.rs",
+    "find": "lead_field(ui, Id::new(\"ty_ps\"), LeadGlyph::ParagraphSpacing, &ps_label, half, tr(\"Paragraph spacing\"))",
+    "replace": "spacing_field(app, ui, ids, &SpacingField { field: \"paragraphSpacing\", id: Id::new(\"ty_ps\"), glyph: LeadGlyph::ParagraphSpacing, tip: tr(\"Paragraph spacing\") }, &ps_label, half, false)"
+  },
+  {
+    "note": "variable picker: the font style dropdown lists weights and styles",
+    "file": "crates/ui-egui/src/variable_ui.rs",
+    "find": "        p.kind.is_none_or(|k| v.kind == k)\n            && !(local_only && lib.is_some())\n",
+    "replace": "        (if matches!(&p.target, Target::Bind { field, .. } if field == crate::text_vars_ui::WEIGHT_OR_STYLE) {\n            crate::text_vars_ui::weight_fits(v)\n        } else {\n            p.kind.is_none_or(|k| v.kind == k)\n        })\n            && !(local_only && lib.is_some())\n"
+  },
+  {
+    "note": "variable picker: bind a weight or a style",
+    "file": "crates/ui-egui/src/variable_ui.rs",
+    "after": "^pub fn bind\\(app: &mut FigApp, ids: &\\[NodeId\\], field: &str, pick: &Pick\\) \\{$",
+    "insert": "    if crate::text_vars_ui::bind_weight_or_style(app, ids, field, pick) {\n        return;\n    }"
+  },
+  {
+    "note": "variables: Edit variable button on every row",
+    "file": "crates/ui-egui/src/variables_panel.rs",
+    "after": "^    kind_glyph\\(ui, view\\.vars, v, coll, Rect::from_center_size",
+    "insert": "    if editable && crate::text_vars_ui::details_button(ui, r, NAME_W, st.details.as_deref() == Some(v.id.as_str())) {\n        st.details = if st.details.as_deref() == Some(v.id.as_str()) { None } else { Some(v.id.clone()) };\n    }"
+  }
+]

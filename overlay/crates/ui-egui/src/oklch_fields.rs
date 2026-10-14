@@ -66,7 +66,7 @@ fn width_id() -> Id {
 pub(crate) fn picker_width(ctx: &egui::Context, models: &[&str]) -> f32 {
     let model = models.get(model_index(ctx)).copied().unwrap_or("Hex");
     let chosen = ctx.data_mut(|d| d.get_persisted::<f32>(width_id())).unwrap_or(BASE_W);
-    chosen.max(needed(model)).max(BASE_W).min(MAX_W)
+    chosen.max(needed(model)).clamp(BASE_W, MAX_W)
 }
 
 /// A handle along the picker's left edge: dragging it left widens the picker (it stays anchored on
