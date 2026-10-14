@@ -1,0 +1,20 @@
+[
+  {
+    "note": "ui: Local styles + module",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod variables_panel;$",
+    "insert": "mod styles_plus_ui;"
+  },
+  {
+    "note": "design panel: Local styles header with +",
+    "file": "crates/ui-egui/src/right.rs",
+    "find": "    widgets::section_header(ui, tr(\"Local styles\"), &[], figcraft_engine::library::local_styles(doc).next().is_none());\n",
+    "replace": "    crate::styles_plus_ui::header(app, ui, doc);\n"
+  },
+  {
+    "note": "style picker: create a style from a value and edit it",
+    "file": "crates/ui-egui/src/style_picker.rs",
+    "find": "fn next_name(doc: &Document, base: &str) -> String {\n    (1..).map(|n| format!(\"{base} {n}\")).find(|n| doc.styles.iter().all(|s| &s.name != n)).unwrap_or_else(|| base.to_string())\n}\n",
+    "replace": "fn next_name(doc: &Document, base: &str) -> String {\n    (1..).map(|n| format!(\"{base} {n}\")).find(|n| doc.styles.iter().all(|s| &s.name != n)).unwrap_or_else(|| base.to_string())\n}\n\n/// FigCraft Plus: create a `slot` style from `value` (the Local styles \"+\" menu) and open its\n/// editor at screen y `y` with the new name selected for typing.\npub(crate) fn create_local(app: &mut FigApp, slot: StyleSlot, value: Value, y: f32) {\n    let Some(name) = app.session.doc().ok().map(|d| next_name(d, slot.default_name())) else { return };\n    let made = app.run(\"style.create\", json!({\"type\": slot.create_type(), \"name\": name, \"value\": value}));\n    if let Some(id) = made.as_ref().and_then(|v| v[\"id\"].as_str()) {\n        let edit = Some(Editing { id: id.to_string(), name, description: String::new(), focus: true });\n        app.ui.style_picker = Some(Picker { slot, ids: Vec::new(), y, query: String::new(), edit });\n    }\n}\n"
+  }
+]

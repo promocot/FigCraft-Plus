@@ -2,7 +2,7 @@
 
 **[FigCraft](https://github.com/storytold/figcraft) with extra tools — OKLCH in the colour
 picker, a resizable picker with labelled fields, colours driven by number variables, variables
-for font family, weight and paragraph spacing, and drag & drop ordering and sorting of
+for font family, weight and paragraph spacing, "+" to create local styles, and drag & drop ordering and sorting of
 variables.**
 
 This repository holds only the additions. A GitHub Actions workflow takes every new FigCraft
@@ -143,6 +143,28 @@ variable button appears at its right end.
 - Lists respect each variable's **scopes** (below): a variable limited to Font size isn't offered
   for the weight.
 - While editing a range of characters these fields take plain values (bindings are per layer).
+
+### Create local styles with "+"
+
+<p>
+<img src="docs/images/15-create-style-menu.png" width="300" alt="The + menu on Local styles: Text, Color, Effect, Layout grid">
+<img src="docs/images/16-new-style-editor.png" width="420" alt="A new text style's editor with its name selected">
+<img src="docs/images/17-local-styles.png" width="200" alt="Local styles of every type, in folders">
+</p>
+
+As in Figma, the **Local styles** header (Design panel, nothing selected) has a **+**. Choose the
+type and the style is created right away — no layer needed — and its editor opens with the name
+selected: type a name (`Brand/Primary` puts it in the Brand folder) and set it up.
+
+| Type | Starts as |
+|---|---|
+| **Text** | Inter Regular 12, line height Auto |
+| **Color** | `#D9D9D9` |
+| **Effect** | drop shadow 0 4 blur 4, 25 % black |
+| **Layout grid** | 10 px grid |
+
+The styles are saved in the file and offered wherever that kind of style applies. (Creating a
+style from a selected layer works as before, from the style picker.)
 
 ### Variable details & scope, one click away
 
