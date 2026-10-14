@@ -102,6 +102,8 @@ jobs:
           cargo test --locked -p figcraft-color oklch
           cargo test --locked -p figcraft-engine --lib oklch_links
           cargo test --locked -p figcraft-ui-egui --lib oklch
+          cargo test --locked -p figcraft-engine --lib var_order
+          cargo test --locked -p figcraft-ui-egui --lib var_order
 
   windows:
     needs: plan

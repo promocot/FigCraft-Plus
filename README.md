@@ -1,7 +1,8 @@
 # FigCraft Plus (OKLCH)
 
-**[FigCraft](https://github.com/storytold/figcraft) with extra colour tools — OKLCH in the colour
-picker, a resizable picker with labelled fields, and colours driven by number variables.**
+**[FigCraft](https://github.com/storytold/figcraft) with extra tools — OKLCH in the colour
+picker, a resizable picker with labelled fields, colours driven by number variables, and
+drag & drop ordering and sorting of variables.**
 
 This repository holds only the additions. A GitHub Actions workflow takes every new FigCraft
 release, applies them, runs the tests and publishes a ready-to-run Windows build under
@@ -115,6 +116,37 @@ model replaces those links.
   are referred to by name: rename one → update the name in the line too. The official FigCraft
   opens such files fine and keeps the last computed colours.
 
+### Reorder variables: drag & drop and sorting
+
+Variables, groups and collections keep the order you give them: in the editor, in the file and
+in exports. That fixes imports that arrive in the wrong order (`n-xs, n-6xl, n-s, n-m …` or
+`1, 10, 2, 3`).
+
+<img src="docs/images/11-drag-several.png" width="560" alt="Two selected variables dragged in the table, with the drop line">
+
+- **Drag a variable** up or down in the table; a blue line shows where it lands. Drop it on
+  another group's rows or header to move it into that group (it is renamed `group/name`, e.g.
+  `space/gap` → `number/gap`). Variables stay in their collection.
+- **Select several**: click, then **Shift**-click for a range or **Ctrl**-click to add or remove
+  one; drag any selected row to move them all. **Esc** clears the selection (or cancels a drag).
+- **Alt + ↑ / ↓** moves the selected variables one row within their group.
+- **Drag a group** by its header in the table or its row in the sidebar (to the top level: drop on
+  **All variables**). Subgroups move with it.
+- **Drag a collection** in the sidebar.
+- **Sort**: right-click a group or a collection in the sidebar.
+
+  <img src="docs/images/09-sort-menu.png" width="560" alt="The group menu with Sort by name and Sort by value">
+  <img src="docs/images/10-sorted.png" width="560" alt="The group after Sort by name: n-xs, n-s, n-m, n-l, n-xl, n-2xl … n-6xl">
+
+  - **Sort by name** is natural and knows sizes: `xxs, xs, s, m, l, xl, 2xl … 6xl` and
+    `1, 2, 10`.
+  - **Sort by value** goes low → high: numbers by value, colours light → dark, then text and
+    booleans.
+  - Groups keep their places; variables are sorted inside each group.
+- Each drag, Alt+arrow or sort is one undo step. Read-only libraries can't be reordered.
+- The same operations are commands for scripts, the CLI and MCP: `variable.move`,
+  `variable.moveGroup`, `variable.moveCollection`, `variable.sort`.
+
 ## How it works
 
 ```
@@ -150,7 +182,7 @@ cd figcraft && cargo run --release -p figcraft
 ### Add a feature
 
 1. Put its code in new files under `overlay/` (same paths as in FigCraft).
-2. Connect them with a new `hooks/0002-….json` (see `0001` for the format).
+2. Connect them with a new `hooks/<next number>-….json` (see `0001` for the format).
 3. Bump `CUSTOM_VERSION`. Pushing starts a build.
 
 ## License
