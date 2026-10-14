@@ -1,0 +1,76 @@
+diff --git a/crates/color/src/lib.rs b/crates/color/src/lib.rs
+index 7d0bae9..e73e922 100644
+--- a/crates/color/src/lib.rs
++++ b/crates/color/src/lib.rs
+@@ -11,9 +11,11 @@ use serde::{Deserialize, Serialize};
+ mod blend;
+ mod hsx;
+ mod icc;
++mod oklch;
+ mod profile;
+ pub use blend::BlendMode;
+ pub use hsx::*;
++pub use oklch::{OKLCH_FULL_CHROMA, Oklch};
+ pub use profile::{ColorProfile, ProfileConversion};
+ 
+ /// A non-premultiplied sRGB colour with alpha, components in `0..=1`. Deserializes from
+diff --git a/crates/ui-egui/src/colorpicker.rs b/crates/ui-egui/src/colorpicker.rs
+index 9a11236..c00d3fb 100644
+--- a/crates/ui-egui/src/colorpicker.rs
++++ b/crates/ui-egui/src/colorpicker.rs
+@@ -210,10 +210,11 @@ fn page_colors(app: &FigApp, ui: &Ui) -> Vec<Color> {
+ }
+ 
+ /// Colour models the value row can show.
+-const MODELS: [&str; 5] = ["Hex", "RGB", "HSL", "HSB", "CSS"];
++const MODELS: [&str; 6] = ["Hex", "RGB", "HSL", "HSB", "OKLCH", "CSS"];
+ 
+-/// The model dropdown with its fields and the alpha field. Returns a committed colour.
+-fn model_fields(ui: &mut Ui, c: Color) -> Option<Color> {
++/// The model dropdown with its fields and the alpha field. Returns a committed colour. `profile`
++/// is the document's colour profile (OKLCH reads and writes values in it).
++fn model_fields(ui: &mut Ui, c: Color, profile: figcraft_color::ColorProfile) -> Option<Color> {
+     let model_id = Id::new("cp_model");
+     let model: usize = ui.data(|d| d.get_temp(model_id)).unwrap_or(0).min(MODELS.len() - 1);
+     let mut out: Option<Color> = None;
+@@ -277,6 +278,7 @@ fn model_fields(ui: &mut Ui, c: Color) -> Option<Color> {
+                     }
+                 }
+             }
++            "OKLCH" => out = crate::oklch_fields::fields(ui, c, profile),
+             "CSS" => {
+                 if let Some(text) = widgets::text_field(ui, Id::new("cp_css"), &c.to_css(), 152.0, "") {
+                     out = Color::parse_css(&text);
+@@ -743,8 +745,9 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
+                     changed = true;
+                     done |= d;
+                 }
+-                // Colour model fields (Hex, RGB, HSL, HSB or CSS) + alpha.
+-                if let Some(c) = model_fields(ui, nc) {
++                // Colour model fields (Hex, RGB, HSL, HSB, OKLCH or CSS) + alpha.
++                let profile = app.session.doc().map(|d| d.color_profile).unwrap_or_default();
++                if let Some(c) = model_fields(ui, nc, profile) {
+                     nc = c;
+                     hsb = Hsb::from_color(nc);
+                     changed = true;
+diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
+index 613f18f..1ce802c 100644
+--- a/crates/ui-egui/src/lib.rs
++++ b/crates/ui-egui/src/lib.rs
+@@ -12,6 +12,7 @@ pub mod branch_ui;
+ pub mod canvas;
+ pub mod cjk;
+ pub mod colorpicker;
++mod oklch_fields;
+ pub mod comments;
+ pub mod component_panel;
+ pub mod control;
+@@ -124,6 +125,8 @@ mod panel_width_tests;
+ #[cfg(test)]
+ mod perf_tests;
+ #[cfg(test)]
++mod oklch_picker_tests;
++#[cfg(test)]
+ mod plugin_panel_tests;
+ #[cfg(test)]
+ mod plugins_browse_tests;

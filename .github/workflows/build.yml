@@ -1,0 +1,191 @@
+# Builds FigCraft for Windows with the custom features from this repository.
+#
+# Every day it looks at the latest FigCraft release. When there is one this repository hasn't built
+# yet (or the custom features changed: bump CUSTOM_VERSION), it checks that release out, connects
+# overlay/ and patches/ to it (scripts/apply.sh), runs the tests and publishes a portable Windows
+# build under Releases. A run that fails leaves the previous release in place, and GitHub e-mails
+# the repository owner.
+name: Build FigCraft + custom
+
+on:
+  schedule:
+    - cron: "17 4 * * *" # every day, 07:17 in Chisinau
+  workflow_dispatch:
+    inputs:
+      figcraft_ref:
+        description: "FigCraft tag or branch (empty: the latest release)"
+        required: false
+        default: ""
+      force:
+        description: "Build even if this version is already released"
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - "overlay/**"
+      - "patches/**"
+      - "scripts/**"
+      - "CUSTOM_VERSION"
+      - ".github/workflows/build.yml"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build
+  cancel-in-progress: false
+
+env:
+  UPSTREAM: storytold/figcraft
+  CARGO_TERM_COLOR: always
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.p.outputs.ref }}
+      release: ${{ steps.p.outputs.release }}
+      build: ${{ steps.p.outputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: p
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_REF: ${{ inputs.figcraft_ref }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          ref="$INPUT_REF"
+          if [ -z "$ref" ]; then
+            ref="$(gh release view --repo "$UPSTREAM" --json tagName -q .tagName)"
+          fi
+          custom="$(tr -d '[:space:]' < CUSTOM_VERSION)"
+          release="${ref}-custom.${custom}"
+          build=true
+          if [ "${{ github.event_name }}" = "schedule" ] && gh release view "$release" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            build=false
+          fi
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "$FORCE" != "true" ] && gh release view "$release" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            build=false
+          fi
+          echo "FigCraft $ref, custom $custom -> $release (build: $build)"
+          { echo "ref=$ref"; echo "release=$release"; echo "build=$build"; } >> "$GITHUB_OUTPUT"
+
+  test:
+    needs: plan
+    if: needs.plan.outputs.build == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: custom
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.UPSTREAM }}
+          ref: ${{ needs.plan.outputs.ref }}
+          path: figcraft
+      - name: Connect custom features
+        run: bash custom/scripts/apply.sh figcraft
+      - name: System libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libxkbcommon-dev libwayland-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libgtk-3-dev
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: figcraft
+          key: test
+      - name: Tests (custom features)
+        working-directory: figcraft
+        run: |
+          cargo test --locked -p figcraft-color oklch
+          cargo test --locked -p figcraft-ui-egui --lib oklch
+
+  windows:
+    needs: plan
+    if: needs.plan.outputs.build == 'true'
+    runs-on: windows-latest
+    env:
+      TARGET: x86_64-pc-windows-msvc
+      CARGO_TARGET_X86_64_PC_WINDOWS_MSVC_RUSTFLAGS: "-C target-feature=+crt-static"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: custom
+      - uses: actions/checkout@v4
+        with:
+          repository: ${{ env.UPSTREAM }}
+          ref: ${{ needs.plan.outputs.ref }}
+          path: figcraft
+      - uses: actions/checkout@v4
+        with:
+          repository: storytold/craft-fonts
+          path: craft-fonts
+      - name: Connect custom features
+        shell: bash
+        run: bash custom/scripts/apply.sh figcraft
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ env.TARGET }}
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: figcraft
+          key: windows
+      - name: Build
+        working-directory: figcraft
+        shell: pwsh
+        env:
+          CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
+        run: |
+          $bins = @('-p', 'figcraft')
+          if (Test-Path 'apps/figcraft-cli/Cargo.toml') { $bins += @('-p', 'figcraft-cli') }
+          cargo build --release --locked @bins --target $env:TARGET
+          if ($LASTEXITCODE -ne 0) { throw "cargo build failed" }
+      - name: Package portable zip
+        shell: pwsh
+        run: |
+          $name = "figcraft-${{ needs.plan.outputs.release }}-windows-x64-portable"
+          $out = Join-Path $env:RUNNER_TEMP $name
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
+          Copy-Item "figcraft/target/$env:TARGET/release/*.exe" $out
+          foreach ($f in 'LICENSE-MIT', 'LICENSE-APACHE', 'NOTICE') {
+            if (Test-Path "figcraft/$f") { Copy-Item "figcraft/$f" $out }
+          }
+          Get-ChildItem craft-fonts/fonts -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+            $lic = Join-Path $_.FullName 'OFL.txt'
+            if (Test-Path $lic) { Copy-Item $lic (Join-Path $out "OFL-$($_.Name).txt") }
+          }
+          Copy-Item custom/README.md (Join-Path $out 'README-custom.md')
+          if (Test-Path "$out/figcraft-cli.exe") { & "$out/figcraft-cli.exe" --version }
+          Compress-Archive -Path $out -DestinationPath "$name.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: "*.zip"
+          if-no-files-found: error
+
+  release:
+    needs: [plan, test, windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: dist
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ needs.plan.outputs.ref }}
+          RELEASE: ${{ needs.plan.outputs.release }}
+        run: |
+          notes="FigCraft ${REF} + custom features (CUSTOM_VERSION $(cat CUSTOM_VERSION)).
+
+          Download the .zip, unpack it anywhere (a USB drive is fine) and run figcraft.exe.
+          Custom features: OKLCH in the colour picker's model menu."
+          if gh release view "$RELEASE" >/dev/null 2>&1; then
+            gh release upload "$RELEASE" dist/*.zip --clobber
+          else
+            gh release create "$RELEASE" dist/*.zip --title "FigCraft ${REF} + custom" --notes "$notes" --latest
+          fi
