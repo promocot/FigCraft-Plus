@@ -27,7 +27,11 @@ fn setup(hex: &str) -> (Ui, NodeId) {
 fn field(u: &mut Ui, name: &str) -> (Pos2, String) {
     u.frame(vec![]);
     let nodes = u.frame_output(vec![]).platform_output.accesskit_update.expect("an AccessKit update").nodes;
-    let n = nodes.iter().map(|(_, n)| n).find(|n| n.role() == Role::SpinButton && n.label() == Some(name)).unwrap_or_else(|| panic!("no field {name:?}"));
+    let n = nodes
+        .iter()
+        .map(|(_, n)| n)
+        .find(|n| matches!(n.role(), Role::SpinButton | Role::TextInput) && n.label() == Some(name))
+        .unwrap_or_else(|| panic!("no field {name:?}"));
     let b = n.bounds().expect("bounds");
     (pos2(((b.x0 + b.x1) / 2.0) as f32, ((b.y0 + b.y1) / 2.0) as f32), n.value().unwrap_or_default().to_string())
 }
@@ -36,9 +40,10 @@ fn type_into(u: &mut Ui, name: &str, text: &str) {
     let (p, _) = field(u, name);
     u.button(p, true);
     u.button(p, false);
+    let key = |k, m, pressed| Event::Key { key: k, physical_key: None, pressed, repeat: false, modifiers: m };
+    u.frame(vec![key(Key::A, Modifiers::COMMAND, true), key(Key::A, Modifiers::COMMAND, false)]);
     u.frame(vec![Event::Text(text.into())]);
-    let key = |pressed| Event::Key { key: Key::Enter, physical_key: None, pressed, repeat: false, modifiers: Modifiers::NONE };
-    u.frame(vec![key(true), key(false)]);
+    u.frame(vec![key(Key::Enter, Modifiers::NONE, true), key(Key::Enter, Modifiers::NONE, false)]);
     u.frame(vec![]);
 }
 
@@ -51,24 +56,35 @@ fn fill(u: &Ui, a: NodeId) -> figcraft_color::Color {
 
 #[test]
 fn the_oklch_model_shows_and_sets_a_fill() {
-    let (mut u, a) = setup("#FF0000");
-    // sRGB red is oklch(62.8% 0.2577 29.23): C shows as % of 0.4.
-    assert_eq!(field(&mut u, "OKLCH lightness").1, "62.8");
-    assert_eq!(field(&mut u, "OKLCH chroma").1, "64.42");
+    // The values oklch.com shows for #EF3D88: oklch(0.6456 0.2197 0.14).
+    let (mut u, a) = setup("#EF3D88");
+    assert_eq!(field(&mut u, "OKLCH lightness").1, "0.6456");
+    assert_eq!(field(&mut u, "OKLCH chroma").1, "0.2197");
+    assert_eq!(field(&mut u, "OKLCH hue").1, "0.14");
+    // sRGB red is oklch(0.628 0.2577 29.23).
+    let (mut u, a2) = setup("#FF0000");
+    assert_eq!(field(&mut u, "OKLCH lightness").1, "0.628");
+    assert_eq!(field(&mut u, "OKLCH chroma").1, "0.2577");
     assert_eq!(field(&mut u, "OKLCH hue").1, "29.23");
-    // A new hue keeps L and C where they fit.
+    // A new hue: the fields then show the colour as it is (chroma mapped into sRGB), not 0.2577.
     type_into(&mut u, "OKLCH hue", "260");
-    let got = Oklch::from_color(fill(&u, a), ColorProfile::Srgb);
-    assert!((got.h - 260.0).abs() < 4.0, "{got:?}");
-    assert!((got.l - 0.628).abs() < 0.03, "{got:?}");
-    // The fields keep what was typed, not the RGB round trip (C was gamut-mapped down).
-    assert_eq!(field(&mut u, "OKLCH hue").1, "260");
-    assert_eq!(field(&mut u, "OKLCH chroma").1, "64.42");
+    let got = Oklch::from_color(fill(&u, a2), ColorProfile::Srgb);
+    assert!((got.h - 260.0).abs() < 4.0 && (got.l - 0.628).abs() < 0.03, "{got:?}");
+    assert_eq!(field(&mut u, "OKLCH chroma").1, format!("{}", (got.c * 10000.0).round() / 10000.0));
+    // L and C take CSS forms too.
+    type_into(&mut u, "OKLCH lightness", "50%");
+    let now = Oklch::from_color(fill(&u, a2), ColorProfile::Srgb);
+    // (out of sRGB at this chroma: CSS gamut mapping may move L by up to its 0.02 JND)
+    assert!((now.l - 0.5).abs() < 0.01, "{now:?} shown {:?}", field(&mut u, "OKLCH lightness").1);
+    type_into(&mut u, "OKLCH chroma", "0,1");
+    assert!((Oklch::from_color(fill(&u, a2), ColorProfile::Srgb).c - 0.1).abs() < 0.002);
     // A grey keeps its hue while the chroma is 0.
+    let h = field(&mut u, "OKLCH hue").1;
     type_into(&mut u, "OKLCH chroma", "0");
-    assert_eq!(field(&mut u, "OKLCH hue").1, "260");
-    let grey = fill(&u, a);
+    assert_eq!(field(&mut u, "OKLCH hue").1, h);
+    let grey = fill(&u, a2);
     assert!((grey.r - grey.g).abs() < 0.01 && (grey.g - grey.b).abs() < 0.01, "{grey:?}");
+    let _ = a;
 }
 
 #[test]
@@ -76,9 +92,10 @@ fn a_display_p3_file_reads_and_writes_p3_values() {
     let (mut u, a) = setup("#FF0000");
     u.app.session.execute("file.colorProfile", &json!({"profile": "displayP3", "convert": false})).unwrap();
     u.frame(vec![]);
-    // P3 red is wider: oklch(64.86% 0.2995 28.96).
-    assert_eq!(field(&mut u, "OKLCH lightness").1, "64.86");
-    type_into(&mut u, "OKLCH lightness", "50");
+    // P3 red is wider: oklch(0.6486 0.2995 28.96).
+    assert_eq!(field(&mut u, "OKLCH lightness").1, "0.6486");
+    assert_eq!(field(&mut u, "OKLCH chroma").1, "0.2995");
+    type_into(&mut u, "OKLCH lightness", "0.5");
     let got = Oklch::from_color(fill(&u, a), ColorProfile::DisplayP3);
     assert!((got.l - 0.5).abs() < 0.02 && (got.h - 28.96).abs() < 4.0, "{got:?}");
 }
@@ -113,9 +130,9 @@ fn a_colour_variable_shows_its_links_and_follows_a_linked_hue() {
     assert!(texts.iter().any(|t| t.contains("H: Hue")), "{texts:?}");
     assert!(texts.iter().any(|t| t.contains("L: —")), "{texts:?}");
     // The hue field shows the linked value.
-    assert_eq!(field(&mut u, "OKLCH hue").1, "280");
+    assert!((field(&mut u, "OKLCH hue").1.parse::<f64>().unwrap() - 280.0).abs() < 0.5);
     u.app.run("variable.set", json!({"variable": "Hue", "value": 130}));
-    assert_eq!(field(&mut u, "OKLCH hue").1, "130");
+    assert!((field(&mut u, "OKLCH hue").1.parse::<f64>().unwrap() - 130.0).abs() < 0.5);
 }
 
 /// Two frames of `draw`: the second with a click at `at`; what the colour became.

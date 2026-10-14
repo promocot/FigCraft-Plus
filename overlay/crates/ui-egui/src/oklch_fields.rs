@@ -22,8 +22,10 @@ use crate::widgets;
 
 /// The model dropdown's width (wide enough for "OKLCH").
 pub(crate) const MODEL_DROPDOWN_W: f32 = 64.0;
-/// One OKLCH field's width (fits "64.42").
-const OKLCH_FIELD_W: f32 = 40.0;
+/// The OKLCH L and C fields width (fits "0.2197").
+const OKLCH_FIELD_W: f32 = 50.0;
+/// The OKLCH hue field width (fits "359.99").
+const HUE_FIELD_W: f32 = 44.0;
 /// The picker's narrowest width (FigCraft's own).
 const BASE_W: f32 = 240.0;
 const MAX_W: f32 = 640.0;
@@ -41,7 +43,7 @@ fn columns(model: &str) -> Vec<(&'static str, f32)> {
         "RGB" => three("R", "G", "B", 31.0),
         "HSL" => three("H °", "S %", "L %", 31.0),
         "HSB" => three("H °", "S %", "B %", 31.0),
-        "OKLCH" => three("L %", "C %", "H °", OKLCH_FIELD_W),
+        "OKLCH" => vec![("L", OKLCH_FIELD_W), ("C", OKLCH_FIELD_W), ("H °", HUE_FIELD_W), ("A %", ALPHA_W)],
         "CSS" => vec![("CSS", 152.0)],
         _ => vec![("Hex", 101.0), ("A %", ALPHA_W)],
     }
@@ -94,30 +96,50 @@ pub(crate) fn captions(ui: &mut Ui, model: &str) {
     }
 }
 
-/// The three OKLCH fields for colour `c`: the committed colour when one was edited.
+/// `v` with up to `places` decimals, trailing zeros dropped ("0.2197", "0.14", "0").
+fn num_text(v: f64, places: usize) -> String {
+    let s = format!("{v:.places$}");
+    let s = if s.contains('.') { s.trim_end_matches('0').trim_end_matches('.').to_string() } else { s };
+    if s == "-0" { "0".into() } else { s }
+}
+
+/// A typed number; `pct_of` is what 100% means (`64.56%` gives 0.6456 for L, `55%` 0.22 for C).
+fn parse_num(text: &str, pct_of: f64) -> Option<f64> {
+    let t = text.trim().replace(',', ".");
+    let (num, pct) = match t.strip_suffix('%') {
+        Some(n) => (n.trim().to_string(), true),
+        None => (t.clone(), false),
+    };
+    let v = num.parse::<f64>().ok().filter(|v| v.is_finite())?;
+    Some(if pct { v / 100.0 * pct_of } else { v })
+}
+
+/// The three OKLCH fields for colour `c`, in the units oklch.com and CSS `oklch(L C H)` use:
+/// L 0-1, C 0-0.4 (both to 4 decimals), H in degrees. They show the colour as it is (after any
+/// gamut mapping). L also takes `64.56%` (or 64.56), C `55%` (of 0.4). Returns the edited colour.
 pub(crate) fn fields(ui: &mut Ui, c: Color, profile: ColorProfile) -> Option<Color> {
-    // The last OKLCH typed for this colour: keeps the exact values (and the hue of a grey) that
-    // the RGB round trip would blur.
-    let cache = cache_id();
     let lch = current(ui.ctx(), c, profile);
-    let vals = [lch.l * 100.0, lch.c / OKLCH_FULL_CHROMA * 100.0, lch.h];
-    let mut out = None;
-    for (k, v) in vals.iter().enumerate() {
-        let (id, name, step) = [("ok_l", "OKLCH lightness", 0.5), ("ok_c", "OKLCH chroma", 0.5), ("ok_h", "OKLCH hue", 1.0)][k.min(2)];
-        let shown = Some((*v * 100.0).round() / 100.0);
-        let edit = widgets::number_field(ui, Id::new(("cp_f", id)), widgets::Lead::Named(name), shown, "", OKLCH_FIELD_W, step);
-        if let Some(widgets::FieldEdit::Set(x) | widgets::FieldEdit::Scrub(x, _)) = edit {
-            let mut v3 = vals;
-            if let Some(slot) = v3.get_mut(k) {
-                *slot = if k == 2 { x.rem_euclid(360.0) } else { x.clamp(0.0, 100.0) };
-            }
-            let want = Oklch::new(v3[0] / 100.0, v3[1] / 100.0 * OKLCH_FULL_CHROMA, v3[2]);
-            let col = want.to_color(profile, c.a);
-            ui.data_mut(|d| d.insert_temp(cache, (col.to_rgba8(), want.l, want.c, want.h)));
-            out = Some(col);
-        }
+    let mut want: Option<Oklch> = None;
+    let l = widgets::text_field_named(ui, Id::new(("cp_f", "ok_l")), &num_text(lch.l, 4), OKLCH_FIELD_W, "OKLCH lightness");
+    if let Some(v) = l.as_deref().and_then(|t| parse_num(t, 1.0)) {
+        // "64.56" without % means percent too: lightness can't exceed 1.
+        let v = if v > 1.0 { v / 100.0 } else { v };
+        want = Some(Oklch::new(v, lch.c, lch.h));
     }
-    out
+    let ch = widgets::text_field_named(ui, Id::new(("cp_f", "ok_c")), &num_text(lch.c, 4), OKLCH_FIELD_W, "OKLCH chroma");
+    if let Some(v) = ch.as_deref().and_then(|t| parse_num(t, OKLCH_FULL_CHROMA)) {
+        want = Some(Oklch::new(lch.l, v, lch.h));
+    }
+    let shown_h = Some((lch.h * 100.0).round() / 100.0);
+    if let Some(widgets::FieldEdit::Set(x) | widgets::FieldEdit::Scrub(x, _)) =
+        widgets::number_field(ui, Id::new(("cp_f", "ok_h")), widgets::Lead::Named("OKLCH hue"), shown_h, "", HUE_FIELD_W, 1.0)
+    {
+        want = Some(Oklch::new(lch.l, lch.c, x.rem_euclid(360.0)));
+    }
+    let want = want?;
+    let col = snap(want.to_color(profile, c.a));
+    remember_hue(ui.ctx(), col, want.h);
+    Some(col)
 }
 
 /// For a colour variable shown in the OKLCH model: a row linking its L, C and H to number
@@ -194,14 +216,26 @@ fn cache_id() -> Id {
     Id::new("cp_oklch")
 }
 
-/// The OKLCH the picker shows for `c`: the last one set for this exact colour (keeps the values
-/// typed or dragged, and the hue of a grey), else `c`'s own.
+/// The OKLCH of `c` as it is. A grey has no hue of its own: it keeps the hue last set for it (so
+/// dragging chroma to 0 and back doesn't lose the hue).
 fn current(ctx: &egui::Context, c: Color, profile: ColorProfile) -> Oklch {
-    let rgba = c.to_rgba8();
-    ctx.data(|d| d.get_temp::<([u8; 4], f64, f64, f64)>(cache_id()))
-        .filter(|(k, ..)| *k == rgba)
-        .map(|(_, l, ch, h)| Oklch::new(l, ch, h))
-        .unwrap_or_else(|| Oklch::from_color(c, profile))
+    let o = Oklch::from_color(c, profile);
+    if o.c >= 0.0005 {
+        return o;
+    }
+    let hue = ctx.data(|d| d.get_temp::<([u8; 4], f64)>(cache_id())).filter(|(k, _)| *k == c.to_rgba8()).map(|(_, h)| h);
+    hue.map_or(o, |h| Oklch { h, ..o })
+}
+
+/// `c` rounded to what its hex shows (8 bits a channel), so the OKLCH shown for it is exactly the
+/// OKLCH of its hex (what oklch.com and CSS tools compute from a copied hex).
+fn snap(c: Color) -> Color {
+    let [r, g, b, a] = c.to_rgba8();
+    Color::new(f32::from(r) / 255.0, f32::from(g) / 255.0, f32::from(b) / 255.0, f32::from(a) / 255.0)
+}
+
+fn remember_hue(ctx: &egui::Context, c: Color, h: f64) {
+    ctx.data_mut(|d| d.insert_temp(cache_id(), (c.to_rgba8(), h)));
 }
 
 /// Whether the picker shows the OKLCH model.
@@ -212,9 +246,8 @@ pub(crate) fn active(ctx: &egui::Context, models: &[&str]) -> bool {
 /// The colour for `want` (gamut-mapped into `profile`, alpha `a`) as the picker will hold it (it
 /// goes through HSB), remembered so the fields and the plane show `want` itself.
 fn set(ctx: &egui::Context, want: Oklch, profile: ColorProfile, a: f32, hsb: &mut Hsb) {
-    *hsb = Hsb::from_color(want.to_color(profile, a));
-    let held = hsb.to_color().with_alpha(a);
-    ctx.data_mut(|d| d.insert_temp(cache_id(), (held.to_rgba8(), want.l, want.c, want.h)));
+    *hsb = Hsb::from_color(snap(want.to_color(profile, a)));
+    remember_hue(ctx, hsb.to_color().with_alpha(a), want.h);
 }
 
 /// The largest chroma at lightness `l` and hue `h` inside `profile`'s gamut.

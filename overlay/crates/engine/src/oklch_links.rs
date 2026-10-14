@@ -3,7 +3,8 @@
 //! them in every mode of its collection. Change `Hue` from 280 to 130 and every linked colour (and
 //! every layer bound to one) follows.
 //!
-//! Channels: L is a percentage (`62%`, or a number variable holding 0–100), C is chroma (`0.19`, or
+//! Channels: L is lightness (`0.62` or `62%`; a number variable holds 0-1, or 0-100 when above 1),
+//! C is chroma (`0.19`, or
 //! `48%` of 0.4 as in CSS, or a number variable holding 0–0.4), H is degrees. A number variable in
 //! the colour's own collection is read in the same mode (Light/Dark lightness), any other in its
 //! default mode. Editing the colour itself (hex, picker) rewrites the formula's fixed channels
@@ -149,11 +150,13 @@ fn number(doc: &Document, name: &str, modes: &BTreeMap<String, String>) -> Optio
 
 /// The OKLCH a formula gives in `modes` (None when a linked variable is missing).
 pub fn evaluate(doc: &Document, f: &Formula, modes: &BTreeMap<String, String>) -> Option<Oklch> {
-    let get = |ch: &Channel, scale: f64| match ch {
+    let get = |ch: &Channel, scale: fn(f64) -> f64| match ch {
         Channel::Fixed(v) => Some(*v),
-        Channel::Var(n) => number(doc, n, modes).map(|x| x * scale),
+        Channel::Var(n) => number(doc, n, modes).map(scale),
     };
-    Some(Oklch::new(get(&f.l, 0.01)?, get(&f.c, 1.0)?, get(&f.h, 1.0)?))
+    // Lightness from a variable: 0-1 as in oklch(0.62 ...), or a percentage when above 1 (62).
+    let l = get(&f.l, |x| if x > 1.0 { x / 100.0 } else { x })?;
+    Some(Oklch::new(l, get(&f.c, |x| x)?, get(&f.h, |x| x)?))
 }
 
 /// After an edit that changed variables: recompute every linked colour variable (see the module
