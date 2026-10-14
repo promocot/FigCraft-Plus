@@ -24,7 +24,7 @@ on:
     branches: [main]
     paths:
       - "overlay/**"
-      - "patches/**"
+      - "hooks/**"
       - "scripts/**"
       - "CUSTOM_VERSION"
       - ".github/workflows/build.yml"
@@ -85,7 +85,7 @@ jobs:
           ref: ${{ needs.plan.outputs.ref }}
           path: figcraft
       - name: Connect custom features
-        run: bash custom/scripts/apply.sh figcraft
+        run: python3 custom/scripts/apply.py figcraft
       - name: System libraries
         run: |
           sudo apt-get update
@@ -125,7 +125,7 @@ jobs:
           path: craft-fonts
       - name: Connect custom features
         shell: bash
-        run: bash custom/scripts/apply.sh figcraft
+        run: python3 custom/scripts/apply.py figcraft
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ env.TARGET }}

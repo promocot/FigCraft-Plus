@@ -1,0 +1,146 @@
+[
+  {
+    "note": "colour: OKLCH maths module",
+    "file": "crates/color/src/lib.rs",
+    "after": "^mod \\w+;$",
+    "insert": "mod oklch;"
+  },
+  {
+    "note": "colour: export Oklch",
+    "file": "crates/color/src/lib.rs",
+    "after": "^pub use \\w+",
+    "insert": "pub use oklch::{OKLCH_FULL_CHROMA, Oklch};"
+  },
+  {
+    "note": "engine: OKLCH links module",
+    "file": "crates/engine/src/lib.rs",
+    "after": "^pub mod \\w+;$",
+    "insert": "pub mod oklch_links;"
+  },
+  {
+    "note": "engine: recompute linked colours after every edit",
+    "file": "crates/engine/src/lib.rs",
+    "after": "^pub fn normalize\\(doc: &mut Document, before: &Document\\) \\{$",
+    "insert": "    // Colour variables computed from number variables (oklch formulas) follow them.\n    oklch_links::resolve(doc, before);"
+  },
+  {
+    "note": "ui: picker additions module",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod colorpicker;$",
+    "insert": "mod oklch_fields;"
+  },
+  {
+    "note": "ui: tests",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^mod \\w+_tests;$",
+    "insert": "#[cfg(test)]\nmod oklch_picker_tests;"
+  },
+  {
+    "note": "picker: OKLCH in the model list",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "const MODELS: [&str; 5] = [\"Hex\", \"RGB\", \"HSL\", \"HSB\", \"CSS\"];",
+    "replace": "const MODELS: [&str; 6] = [\"Hex\", \"RGB\", \"HSL\", \"HSB\", \"OKLCH\", \"CSS\"];"
+  },
+  {
+    "note": "picker: model fields know the profile",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "fn model_fields(ui: &mut Ui, c: Color) -> Option<Color> {",
+    "replace": "fn model_fields(ui: &mut Ui, c: Color, profile: figcraft_color::ColorProfile) -> Option<Color> {"
+  },
+  {
+    "note": "picker: captions and a wider model menu",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "    let mut out: Option<Color> = None;\n    ui.horizontal(|ui| {\n        ui.add_space(16.0);\n        ui.spacing_mut().item_spacing.x = 4.0;\n        let resp = widgets::dropdown(ui, MODELS.get(model).copied().unwrap_or(\"Hex\"), 52.0, None);",
+    "replace": "    let mut out: Option<Color> = None;\n    crate::oklch_fields::captions(ui, MODELS.get(model).copied().unwrap_or(\"Hex\"));\n    ui.horizontal(|ui| {\n        ui.add_space(16.0);\n        ui.spacing_mut().item_spacing.x = 4.0;\n        let resp = widgets::dropdown(ui, MODELS.get(model).copied().unwrap_or(\"Hex\"), crate::oklch_fields::MODEL_DROPDOWN_W, None);"
+  },
+  {
+    "note": "picker: OKLCH fields",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "            \"CSS\" => {\n                if let Some(text) = widgets::text_field(ui, Id::new(\"cp_css\")",
+    "replace": "            \"OKLCH\" => out = crate::oklch_fields::fields(ui, c, profile),\n            \"CSS\" => {\n                if let Some(text) = widgets::text_field(ui, Id::new(\"cp_css\")"
+  },
+  {
+    "note": "picker: width",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "    let screen = ctx.content_rect();\n",
+    "replace": "    let screen = ctx.content_rect();\n    let w = crate::oklch_fields::picker_width(ctx, &MODELS);\n"
+  },
+  {
+    "note": "picker: position beside plugin panels",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "map(|r| pos2(r.min.x - 248.0, r.min.y))",
+    "replace": "map(|r| pos2(r.min.x - w - 8.0, r.min.y))"
+  },
+  {
+    "note": "picker: position",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "pos2(screen.max.x - app.ui.right_width - 260.0, 140.0)",
+    "replace": "pos2(screen.max.x - app.ui.right_width - w - 20.0, 140.0)"
+  },
+  {
+    "note": "picker: window width",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": ".fixed_size(vec2(240.0, 0.0))",
+    "replace": ".fixed_size(vec2(w, 0.0))"
+  },
+  {
+    "note": "picker: header width",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "let (hr, _) = ui.allocate_exact_size(vec2(240.0, 40.0), Sense::hover());",
+    "replace": "let (hr, _) = ui.allocate_exact_size(vec2(w, 40.0), Sense::hover());"
+  },
+  {
+    "note": "picker: gradient bar width",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "let (bar, _) = ui.allocate_exact_size(vec2(240.0, 28.0), Sense::hover());",
+    "replace": "let (bar, _) = ui.allocate_exact_size(vec2(w, 28.0), Sense::hover());"
+  },
+  {
+    "note": "picker: square width",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "let (sq, _) = ui.allocate_exact_size(vec2(240.0, 240.0), Sense::hover());",
+    "replace": "let (sq, _) = ui.allocate_exact_size(vec2(w, 240.0), Sense::hover());"
+  },
+  {
+    "note": "picker: hue slider width",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "let (hr, _) = ui.allocate_exact_size(vec2(240.0, 28.0), Sense::hover());",
+    "replace": "let (hr, _) = ui.allocate_exact_size(vec2(w, 28.0), Sense::hover());"
+  },
+  {
+    "note": "picker: alpha slider width",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "let (ar, _) = ui.allocate_exact_size(vec2(240.0, 20.0), Sense::hover());",
+    "replace": "let (ar, _) = ui.allocate_exact_size(vec2(w, 20.0), Sense::hover());"
+  },
+  {
+    "note": "picker: blend menu width",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "widgets::dropdown(ui, tr(paint.blend.label()), 208.0, Some(Icon::Blend))",
+    "replace": "widgets::dropdown(ui, tr(paint.blend.label()), w - 32.0, Some(Icon::Blend))"
+  },
+  {
+    "note": "picker: style row width",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "VariableType::Color, 208.0, |_, ui| {\n                            let (r, _) = ui.allocate_exact_size(vec2(208.0, widgets::FIELD_H), Sense::hover());",
+    "replace": "VariableType::Color, w - 32.0, |_, ui| {\n                            let (r, _) = ui.allocate_exact_size(vec2(w - 32.0, widgets::FIELD_H), Sense::hover());"
+  },
+  {
+    "note": "picker: pass the profile",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "                // Colour model fields (Hex, RGB, HSL, HSB or CSS) + alpha.\n                if let Some(c) = model_fields(ui, nc) {",
+    "replace": "                // Colour model fields (Hex, RGB, HSL, HSB, OKLCH or CSS) + alpha.\n                let profile = app.session.doc().map(|d| d.color_profile).unwrap_or_default();\n                if let Some(c) = model_fields(ui, nc, profile) {"
+  },
+  {
+    "note": "picker: links to number variables",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "                    gamut_warning(ui, &t);\n                }\n",
+    "replace": "                    gamut_warning(ui, &t);\n                }\n                crate::oklch_fields::variable_links(app, ui, &target, nc, &MODELS, w);\n"
+  },
+  {
+    "note": "picker: drag handle",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "            ui.add_space(12.0);\n        });\n    if !open || close_now",
+    "replace": "            ui.add_space(12.0);\n            crate::oklch_fields::resize_handle(ui, w);\n        });\n    if !open || close_now"
+  }
+]
