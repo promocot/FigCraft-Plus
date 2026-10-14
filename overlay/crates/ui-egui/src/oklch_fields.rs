@@ -3,19 +3,21 @@
 //! - the OKLCH model's fields: lightness (%), chroma (% of 0.4, as CSS writes it) and hue
 //!   (degrees), read and written in the document's colour profile, gamut-mapped into it;
 //! - captions over every model's fields (R G B, H S L, H S B, L C H, A);
+//! - in the OKLCH model, an OKLCH plane (chroma across, lightness down, at the current hue, with
+//!   the file's gamut edge) and an OKLCH hue strip in place of the HSB square and rainbow;
 //! - a picker that widens to fit the chosen model and can be dragged wider by its left edge;
 //! - for a colour variable, links from its L, C and H to number variables (an `oklch(…)` formula in
 //!   its description, kept up to date by `figcraft_engine::oklch_links`).
 
-use egui::{Align2, Id, Rect, Sense, Ui, pos2, vec2};
-use figcraft_color::{Color, ColorProfile, OKLCH_FULL_CHROMA, Oklch};
+use egui::{Align2, Color32, Id, Mesh, Rect, Sense, Stroke, Ui, pos2, vec2};
+use figcraft_color::{Color, ColorProfile, Hsb, OKLCH_FULL_CHROMA, Oklch};
 use figcraft_doc::VariableType;
 use figcraft_engine::oklch_links::{self, Channel, Formula};
 use serde_json::json;
 
 use crate::FigApp;
 use crate::colorpicker::PickerTarget;
-use crate::theme::{Tokens, regular};
+use crate::theme::{Tokens, doc_c32, regular};
 use crate::widgets;
 
 /// The model dropdown's width (wide enough for "OKLCH").
@@ -96,13 +98,8 @@ pub(crate) fn captions(ui: &mut Ui, model: &str) {
 pub(crate) fn fields(ui: &mut Ui, c: Color, profile: ColorProfile) -> Option<Color> {
     // The last OKLCH typed for this colour: keeps the exact values (and the hue of a grey) that
     // the RGB round trip would blur.
-    let cache = Id::new("cp_oklch");
-    let rgba = c.to_rgba8();
-    let lch = ui
-        .data(|d| d.get_temp::<([u8; 4], f64, f64, f64)>(cache))
-        .filter(|(k, ..)| *k == rgba)
-        .map(|(_, l, ch, h)| Oklch::new(l, ch, h))
-        .unwrap_or_else(|| Oklch::from_color(c, profile));
+    let cache = cache_id();
+    let lch = current(ui.ctx(), c, profile);
     let vals = [lch.l * 100.0, lch.c / OKLCH_FULL_CHROMA * 100.0, lch.h];
     let mut out = None;
     for (k, v) in vals.iter().enumerate() {
@@ -191,4 +188,143 @@ pub(crate) fn variable_links(app: &mut FigApp, ui: &mut Ui, target: &PickerTarge
     let keep = [&f.l, &f.c, &f.h].iter().any(|c| matches!(c, Channel::Var(_)));
     let new = oklch_links::with_formula(&description, keep.then_some(&f));
     app.run("variable.update", json!({"variable": var_id, "description": new}));
+}
+
+fn cache_id() -> Id {
+    Id::new("cp_oklch")
+}
+
+/// The OKLCH the picker shows for `c`: the last one set for this exact colour (keeps the values
+/// typed or dragged, and the hue of a grey), else `c`'s own.
+fn current(ctx: &egui::Context, c: Color, profile: ColorProfile) -> Oklch {
+    let rgba = c.to_rgba8();
+    ctx.data(|d| d.get_temp::<([u8; 4], f64, f64, f64)>(cache_id()))
+        .filter(|(k, ..)| *k == rgba)
+        .map(|(_, l, ch, h)| Oklch::new(l, ch, h))
+        .unwrap_or_else(|| Oklch::from_color(c, profile))
+}
+
+/// Whether the picker shows the OKLCH model.
+pub(crate) fn active(ctx: &egui::Context, models: &[&str]) -> bool {
+    models.get(model_index(ctx)).copied() == Some("OKLCH")
+}
+
+/// The colour for `want` (gamut-mapped into `profile`, alpha `a`) as the picker will hold it (it
+/// goes through HSB), remembered so the fields and the plane show `want` itself.
+fn set(ctx: &egui::Context, want: Oklch, profile: ColorProfile, a: f32, hsb: &mut Hsb) {
+    *hsb = Hsb::from_color(want.to_color(profile, a));
+    let held = hsb.to_color().with_alpha(a);
+    ctx.data_mut(|d| d.insert_temp(cache_id(), (held.to_rgba8(), want.l, want.c, want.h)));
+}
+
+/// The largest chroma at lightness `l` and hue `h` inside `profile`'s gamut.
+fn max_chroma(l: f64, h: f64, profile: ColorProfile) -> f64 {
+    let (mut lo, mut hi) = (0.0, OKLCH_FULL_CHROMA);
+    for _ in 0..18 {
+        let mid = (lo + hi) / 2.0;
+        if Oklch::new(l, mid, h).in_gamut(profile) {
+            lo = mid;
+        } else {
+            hi = mid;
+        }
+    }
+    lo
+}
+
+fn knob(ui: &Ui, at: egui::Pos2, r: f32) {
+    ui.painter().circle_stroke(at, r, Stroke::new(2.0, Color32::WHITE));
+    ui.painter().circle_stroke(at, r + 1.0, Stroke::new(1.0, Color32::from_black_alpha(80)));
+}
+
+/// The OKLCH plane in place of the HSB square: chroma 0–0.4 across, lightness 100%–0 down, at the
+/// current hue. Colours outside the file's gamut are left out and its edge is drawn (in a Display
+/// P3 file, the sRGB edge too, dashed). Returns (changed, done) like the square it replaces.
+pub(crate) fn plane(ui: &mut Ui, rect: Rect, hsb: &mut Hsb, color: Color, profile: ColorProfile) -> (bool, bool) {
+    let ctx = ui.ctx().clone();
+    let lch = current(&ctx, color, profile);
+    const NX: usize = 32;
+    const NY: usize = 60;
+    // Each row runs from grey to the gamut's edge at its lightness, so the edge is exact and smooth.
+    let mut m = Mesh::default();
+    for j in 0..=NY {
+        let y = rect.min.y + j as f32 / NY as f32 * rect.height();
+        let l = 1.0 - j as f64 / NY as f64;
+        let cmax = max_chroma(l, lch.h, profile);
+        for i in 0..=NX {
+            let c = i as f64 / NX as f64 * cmax;
+            let col = doc_c32(&ctx, Oklch::new(l, c, lch.h).to_color(profile, 1.0));
+            m.colored_vertex(pos2(rect.min.x + (c / OKLCH_FULL_CHROMA) as f32 * rect.width(), y), col);
+        }
+    }
+    let row = (NX + 1) as u32;
+    for j in 0..NY as u32 {
+        for i in 0..NX as u32 {
+            let k = j * row + i;
+            m.add_triangle(k, k + 1, k + row);
+            m.add_triangle(k + 1, k + row + 1, k + row);
+        }
+    }
+    ui.painter().add(m);
+    // The gamut edge (and sRGB's inside a P3 file).
+    let edge = |p: ColorProfile| -> Vec<egui::Pos2> {
+        (0..=NY * 2)
+            .map(|j| {
+                let t = j as f32 / (NY * 2) as f32;
+                let c = max_chroma(1.0 - f64::from(t), lch.h, p);
+                pos2(rect.min.x + (c / OKLCH_FULL_CHROMA) as f32 * rect.width(), rect.min.y + t * rect.height())
+            })
+            .collect()
+    };
+    let t = Tokens::get(&ctx);
+    ui.painter().add(egui::Shape::line(edge(profile), Stroke::new(1.0, t.text_secondary)));
+    if profile == ColorProfile::DisplayP3 {
+        ui.painter().extend(egui::Shape::dashed_line(&edge(ColorProfile::Srgb), Stroke::new(1.0, t.text_secondary), 3.0, 3.0));
+    }
+    let resp = ui.interact(rect, Id::new("cp_sv"), Sense::click_and_drag());
+    let mut changed = false;
+    if (resp.dragged() || resp.clicked() || resp.drag_started())
+        && let Some(p) = resp.interact_pointer_pos()
+    {
+        let c = f64::from(((p.x - rect.min.x) / rect.width()).clamp(0.0, 1.0)) * OKLCH_FULL_CHROMA;
+        let l = 1.0 - f64::from(((p.y - rect.min.y) / rect.height()).clamp(0.0, 1.0));
+        set(&ctx, Oklch::new(l, c, lch.h), profile, color.a, hsb);
+        changed = true;
+    }
+    let shown = if changed { current(&ctx, hsb.to_color().with_alpha(color.a), profile) } else { lch };
+    knob(ui, pos2(rect.min.x + (shown.c / OKLCH_FULL_CHROMA).min(1.0) as f32 * rect.width(), rect.min.y + (1.0 - shown.l) as f32 * rect.height()), 6.0);
+    (changed, resp.drag_stopped() || resp.clicked())
+}
+
+/// The OKLCH hue strip in place of the rainbow: every hue at the current lightness and chroma
+/// (gamut-mapped where it doesn't fit). Returns (changed, done) like the slider it replaces.
+pub(crate) fn hue_strip(ui: &mut Ui, rect: Rect, hsb: &mut Hsb, color: Color, profile: ColorProfile) -> (bool, bool) {
+    let ctx = ui.ctx().clone();
+    let lch = current(&ctx, color, profile);
+    const N: usize = 72;
+    let mut m = Mesh::default();
+    for i in 0..=N {
+        let t = i as f32 / N as f32;
+        let c = doc_c32(&ctx, Oklch::new(lch.l, lch.c, f64::from(t) * 360.0).to_color(profile, 1.0));
+        let x = rect.min.x + t * rect.width();
+        m.colored_vertex(pos2(x, rect.min.y), c);
+        m.colored_vertex(pos2(x, rect.max.y), c);
+        if i > 0 {
+            let k = (i * 2) as u32;
+            m.add_triangle(k - 2, k - 1, k);
+            m.add_triangle(k - 1, k, k + 1);
+        }
+    }
+    ui.painter().add(m);
+    let resp = ui.interact(rect.expand(4.0), Id::new("cp_hue"), Sense::click_and_drag());
+    let mut changed = false;
+    if (resp.dragged() || resp.clicked() || resp.drag_started())
+        && let Some(p) = resp.interact_pointer_pos()
+    {
+        let h = f64::from(((p.x - rect.min.x) / rect.width()).clamp(0.0, 1.0)) * 360.0;
+        set(&ctx, Oklch::new(lch.l, lch.c, h.min(359.99)), profile, color.a, hsb);
+        changed = true;
+    }
+    let shown = if changed { current(&ctx, hsb.to_color().with_alpha(color.a), profile) } else { lch };
+    knob(ui, pos2(rect.min.x + (shown.h / 360.0) as f32 * rect.width(), rect.center().y), rect.height() / 2.0 + 1.0);
+    (changed, resp.drag_stopped() || resp.clicked())
 }

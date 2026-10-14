@@ -117,3 +117,39 @@ fn a_colour_variable_shows_its_links_and_follows_a_linked_hue() {
     u.app.run("variable.set", json!({"variable": "Hue", "value": 130}));
     assert_eq!(field(&mut u, "OKLCH hue").1, "130");
 }
+
+/// Two frames of `draw`: the second with a click at `at`; what the colour became.
+fn click_in(draw: impl Fn(&mut egui::Ui, &mut figcraft_color::Hsb) -> (bool, bool), start: figcraft_color::Color, at: Pos2) -> figcraft_color::Color {
+    let ctx = egui::Context::default();
+    let mut hsb = figcraft_color::Hsb::from_color(start);
+    let mut t = 0.0;
+    for events in [
+        vec![],
+        vec![Event::PointerMoved(at), Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE }],
+        vec![Event::PointerButton { pos: at, button: egui::PointerButton::Primary, pressed: false, modifiers: Modifiers::NONE }],
+    ] {
+        t += 0.1;
+        let input = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(Pos2::ZERO, egui::vec2(800.0, 600.0))), time: Some(t), events, ..Default::default() };
+        let mut out = ctx.run_ui(input, |ui| {
+            draw(ui, &mut hsb);
+        });
+        out.textures_delta.clear();
+    }
+    hsb.to_color()
+}
+
+#[test]
+fn the_oklch_plane_sets_lightness_and_chroma_and_the_hue_strip_keeps_lightness() {
+    let start = figcraft_color::Color::from_hex("#3366FF").unwrap();
+    let before = Oklch::from_color(start, ColorProfile::Srgb);
+    // Plane: 400 wide = chroma 0–0.4, 200 high = lightness 100%–0. A quarter across, halfway down.
+    let plane = egui::Rect::from_min_size(pos2(0.0, 0.0), egui::vec2(400.0, 200.0));
+    let got = click_in(|ui, hsb| crate::oklch_fields::plane(ui, plane, hsb, start, ColorProfile::Srgb), start, pos2(100.0, 100.0));
+    let o = Oklch::from_color(got, ColorProfile::Srgb);
+    assert!((o.l - 0.5).abs() < 0.01 && (o.c - 0.1).abs() < 0.005 && (o.h - before.h).abs() < 1.0, "{o:?} from {before:?}");
+    // Hue strip: 360 wide. Hue 130 at the same lightness (chroma mapped into sRGB if needed).
+    let strip = egui::Rect::from_min_size(pos2(0.0, 300.0), egui::vec2(360.0, 20.0));
+    let got = click_in(|ui, hsb| crate::oklch_fields::hue_strip(ui, strip, hsb, start, ColorProfile::Srgb), start, pos2(130.0, 310.0));
+    let o = Oklch::from_color(got, ColorProfile::Srgb);
+    assert!((o.l - before.l).abs() < 0.02 && (o.h - 130.0).abs() < 4.0, "{o:?} from {before:?}");
+}

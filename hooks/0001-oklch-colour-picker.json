@@ -142,5 +142,17 @@
     "file": "crates/ui-egui/src/colorpicker.rs",
     "find": "            ui.add_space(12.0);\n        });\n    if !open || close_now",
     "replace": "            ui.add_space(12.0);\n            crate::oklch_fields::resize_handle(ui, w);\n        });\n    if !open || close_now"
+  },
+  {
+    "note": "picker: OKLCH plane in place of the HSB square",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "                let (c1, d1) = sv_square(ui, sq, &mut hsb);",
+    "replace": "                let oklch_profile = app.session.doc().map(|d| d.color_profile).unwrap_or_default();\n                let (c1, d1) = if crate::oklch_fields::active(ui.ctx(), &MODELS) {\n                    crate::oklch_fields::plane(ui, sq, &mut hsb, color, oklch_profile)\n                } else {\n                    sv_square(ui, sq, &mut hsb)\n                };"
+  },
+  {
+    "note": "picker: OKLCH hue strip in place of the rainbow",
+    "file": "crates/ui-egui/src/colorpicker.rs",
+    "find": "                let (c2, d2) = hue_slider(ui, hr, &mut hsb);",
+    "replace": "                let (c2, d2) = if crate::oklch_fields::active(ui.ctx(), &MODELS) {\n                    crate::oklch_fields::hue_strip(ui, hr, &mut hsb, color, oklch_profile)\n                } else {\n                    hue_slider(ui, hr, &mut hsb)\n                };"
   }
 ]
