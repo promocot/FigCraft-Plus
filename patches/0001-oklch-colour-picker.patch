@@ -14,11 +14,32 @@ index 7d0bae9..e73e922 100644
  pub use profile::{ColorProfile, ProfileConversion};
  
  /// A non-premultiplied sRGB colour with alpha, components in `0..=1`. Deserializes from
+diff --git a/crates/engine/src/lib.rs b/crates/engine/src/lib.rs
+index 3bc49a9..64b5d89 100644
+--- a/crates/engine/src/lib.rs
++++ b/crates/engine/src/lib.rs
+@@ -37,6 +37,7 @@ pub mod live;
+ pub mod measure;
+ pub mod online;
+ pub mod params;
++pub mod oklch_links;
+ pub mod playground;
+ pub mod plugin_directory;
+ pub mod plugins;
+@@ -1171,6 +1172,8 @@ pub fn normalize(doc: &mut Document, before: &Document) {
+     if touched.is_empty() && doc.variables == before.variables {
+         return;
+     }
++    // Colour variables computed from number variables (oklch formulas) follow them.
++    oklch_links::resolve(doc, before);
+     let m = measure::TextMeasure;
+     // 0. Variable bindings and style links feed node values.
+     let scope = binding_scope(doc, before, &touched);
 diff --git a/crates/ui-egui/src/colorpicker.rs b/crates/ui-egui/src/colorpicker.rs
-index 9a11236..c00d3fb 100644
+index 9a11236..fb68351 100644
 --- a/crates/ui-egui/src/colorpicker.rs
 +++ b/crates/ui-egui/src/colorpicker.rs
-@@ -210,10 +210,11 @@ fn page_colors(app: &FigApp, ui: &Ui) -> Vec<Color> {
+@@ -210,17 +210,19 @@ fn page_colors(app: &FigApp, ui: &Ui) -> Vec<Color> {
  }
  
  /// Colour models the value row can show.
@@ -33,7 +54,16 @@ index 9a11236..c00d3fb 100644
      let model_id = Id::new("cp_model");
      let model: usize = ui.data(|d| d.get_temp(model_id)).unwrap_or(0).min(MODELS.len() - 1);
      let mut out: Option<Color> = None;
-@@ -277,6 +278,7 @@ fn model_fields(ui: &mut Ui, c: Color) -> Option<Color> {
++    crate::oklch_fields::captions(ui, MODELS.get(model).copied().unwrap_or("Hex"));
+     ui.horizontal(|ui| {
+         ui.add_space(16.0);
+         ui.spacing_mut().item_spacing.x = 4.0;
+-        let resp = widgets::dropdown(ui, MODELS.get(model).copied().unwrap_or("Hex"), 52.0, None);
++        let resp = widgets::dropdown(ui, MODELS.get(model).copied().unwrap_or("Hex"), crate::oklch_fields::MODEL_DROPDOWN_W, None);
+         crate::right::menu_popup(&resp).show(|ui| {
+             for (i, m) in MODELS.iter().enumerate() {
+                 if crate::right::menu_item(ui, m, "") {
+@@ -277,6 +279,7 @@ fn model_fields(ui: &mut Ui, c: Color) -> Option<Color> {
                      }
                  }
              }
@@ -41,7 +71,87 @@ index 9a11236..c00d3fb 100644
              "CSS" => {
                  if let Some(text) = widgets::text_field(ui, Id::new("cp_css"), &c.to_css(), 152.0, "") {
                      out = Color::parse_css(&text);
-@@ -743,8 +745,9 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
+@@ -406,24 +409,25 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
+     };
+     let t = Tokens::get(ctx);
+     let screen = ctx.content_rect();
++    let w = crate::oklch_fields::picker_width(ctx, &MODELS);
+     // A plugin's colour field: beside its window, which sits where the picker otherwise would.
+     let beside = match &target {
+-        PickerTarget::PluginField { plugin, .. } => crate::plugins_ui::field_window(app, ctx, plugin).map(|r| pos2(r.min.x - 248.0, r.min.y)),
++        PickerTarget::PluginField { plugin, .. } => crate::plugins_ui::field_window(app, ctx, plugin).map(|r| pos2(r.min.x - w - 8.0, r.min.y)),
+         _ => None,
+     };
+-    let pos = beside.unwrap_or(pos2(screen.max.x - app.ui.right_width - 260.0, 140.0));
++    let pos = beside.unwrap_or(pos2(screen.max.x - app.ui.right_width - w - 20.0, 140.0));
+     let mut open = true;
+     let mut close_now = false;
+     egui::Window::new("color_picker")
+         .title_bar(false)
+         .fixed_pos(pos)
+-        .fixed_size(vec2(240.0, 0.0))
++        .fixed_size(vec2(w, 0.0))
+         .frame(egui::Frame::window(&ctx.global_style()).fill(t.panel).inner_margin(egui::Margin::same(0)))
+         .open(&mut open)
+         .show(ctx, |ui| {
+             ui.spacing_mut().item_spacing = vec2(8.0, 8.0);
+             // Header.
+-            let (hr, _) = ui.allocate_exact_size(vec2(240.0, 40.0), Sense::hover());
++            let (hr, _) = ui.allocate_exact_size(vec2(w, 40.0), Sense::hover());
+             ui.painter().text(pos2(hr.min.x + 16.0, hr.center().y), Align2::LEFT_CENTER, tr("Custom"), semibold(11.0), t.text);
+             let cr = Rect::from_center_size(pos2(hr.max.x - 20.0, hr.center().y), vec2(24.0, 24.0));
+             let cresp = ui.interact(cr, Id::new("cp_close"), Sense::click());
+@@ -506,7 +510,7 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
+             ) {
+                 ui.horizontal(|ui| {
+                     ui.add_space(16.0);
+-                    let resp = widgets::dropdown(ui, tr(paint.blend.label()), 208.0, Some(Icon::Blend)).on_hover_text(tr("Blend mode"));
++                    let resp = widgets::dropdown(ui, tr(paint.blend.label()), w - 32.0, Some(Icon::Blend)).on_hover_text(tr("Blend mode"));
+                     crate::right::menu_popup(&resp).width(200.0).show(|ui| {
+                         if let Some(b) = crate::right::blend_menu(ui, false) {
+                             paint.blend = b;
+@@ -524,7 +528,7 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
+             if let PaintKind::Gradient(g) = &paint.kind {
+                 let mut g = g.clone();
+                 let mut sel: usize = ui.data(|d| d.get_temp(sel_stop_id)).unwrap_or(0).min(g.stops.len().saturating_sub(1));
+-                let (bar, _) = ui.allocate_exact_size(vec2(240.0, 28.0), Sense::hover());
++                let (bar, _) = ui.allocate_exact_size(vec2(w, 28.0), Sense::hover());
+                 let bar = bar.shrink2(vec2(16.0, 6.0));
+                 widgets::checker(&ui.painter().with_clip_rect(bar), bar, 4.0);
+                 let n = 24;
+@@ -612,8 +616,8 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
+                     let stop = g.stops.get(sel).map(|s| s.color);
+                     ui.horizontal(|ui| {
+                         ui.add_space(16.0);
+-                        crate::variable_ui::bindable(app, ui, ids, &field, figcraft_doc::VariableType::Color, 208.0, |_, ui| {
+-                            let (r, _) = ui.allocate_exact_size(vec2(208.0, widgets::FIELD_H), Sense::hover());
++                        crate::variable_ui::bindable(app, ui, ids, &field, figcraft_doc::VariableType::Color, w - 32.0, |_, ui| {
++                            let (r, _) = ui.allocate_exact_size(vec2(w - 32.0, widgets::FIELD_H), Sense::hover());
+                             ui.painter().rect_filled(r, CornerRadius::same(5), t.field);
+                             let sw = Rect::from_center_size(pos2(r.min.x + 13.0, r.center().y), vec2(14.0, 14.0));
+                             if let Some(c) = stop {
+@@ -709,9 +713,9 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
+                     .filter(|(_, _, _, rgba)| *rgba == color.to_rgba8())
+                     .map(|(h, s, b, _)| Hsb { h, s, b })
+                     .unwrap_or_else(|| Hsb::from_color(color));
+-                let (sq, _) = ui.allocate_exact_size(vec2(240.0, 240.0), Sense::hover());
++                let (sq, _) = ui.allocate_exact_size(vec2(w, 240.0), Sense::hover());
+                 let (c1, d1) = sv_square(ui, sq, &mut hsb);
+-                let (hr, _) = ui.allocate_exact_size(vec2(240.0, 28.0), Sense::hover());
++                let (hr, _) = ui.allocate_exact_size(vec2(w, 28.0), Sense::hover());
+                 let hr = Rect::from_min_max(pos2(hr.min.x + 48.0, hr.min.y + 8.0), pos2(hr.max.x - 16.0, hr.max.y - 8.0));
+                 if icons::button(
+                     &mut ui.new_child(
+@@ -729,7 +733,7 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
+                     return;
+                 }
+                 let (c2, d2) = hue_slider(ui, hr, &mut hsb);
+-                let (ar, _) = ui.allocate_exact_size(vec2(240.0, 20.0), Sense::hover());
++                let (ar, _) = ui.allocate_exact_size(vec2(w, 20.0), Sense::hover());
+                 let ar = Rect::from_min_max(pos2(ar.min.x + 48.0, ar.min.y + 2.0), pos2(ar.max.x - 16.0, ar.max.y - 6.0));
+                 let mut new_alpha = None;
+                 if let Some((a, d)) = alpha_slider(ui, ar, color) {
+@@ -743,8 +747,9 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
                      changed = true;
                      done |= d;
                  }
@@ -53,6 +163,22 @@ index 9a11236..c00d3fb 100644
                      nc = c;
                      hsb = Hsb::from_color(nc);
                      changed = true;
+@@ -755,6 +760,7 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
+                 if app.session.doc().is_ok_and(|d| d.color_profile.conversion_to(figcraft_color::ColorProfile::Srgb).clips(nc)) {
+                     gamut_warning(ui, &t);
+                 }
++                crate::oklch_fields::variable_links(app, ui, &target, nc, &MODELS, w);
+                 if changed {
+                     match &mut paint.kind {
+                         PaintKind::Solid { color } => {
+@@ -807,6 +813,7 @@ pub fn show(app: &mut FigApp, ctx: &egui::Context) {
+                 });
+             }
+             ui.add_space(12.0);
++            crate::oklch_fields::resize_handle(ui, w);
+         });
+     if !open || close_now || ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
+         finish(app);
 diff --git a/crates/ui-egui/src/lib.rs b/crates/ui-egui/src/lib.rs
 index 613f18f..1ce802c 100644
 --- a/crates/ui-egui/src/lib.rs

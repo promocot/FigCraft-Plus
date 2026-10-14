@@ -82,3 +82,38 @@ fn a_display_p3_file_reads_and_writes_p3_values() {
     let got = Oklch::from_color(fill(&u, a), ColorProfile::DisplayP3);
     assert!((got.l - 0.5).abs() < 0.02 && (got.h - 28.96).abs() < 4.0, "{got:?}");
 }
+
+#[test]
+fn the_picker_widens_for_oklch_and_remembers_a_dragged_width() {
+    let (u, _) = setup("#FF0000");
+    let models = ["Hex", "RGB", "HSL", "HSB", "OKLCH", "CSS"];
+    let w = crate::oklch_fields::picker_width(&u.ctx, &models);
+    assert!(w >= 276.0, "OKLCH needs room for its fields: {w}");
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::new("cp_model"), 0usize));
+    assert!(crate::oklch_fields::picker_width(&u.ctx, &models) < w, "Hex needs less");
+    u.ctx.data_mut(|d| d.insert_persisted(egui::Id::new("cp_width"), 400.0f32));
+    assert_eq!(crate::oklch_fields::picker_width(&u.ctx, &models), 400.0);
+}
+
+#[test]
+fn a_colour_variable_shows_its_links_and_follows_a_linked_hue() {
+    let mut s = Session::new();
+    let c = s.execute("variable.createCollection", &json!({"name": "Theme"})).unwrap()["id"].as_str().unwrap().to_string();
+    s.execute("variable.create", &json!({"collection": c, "name": "Hue", "type": "number", "value": 280})).unwrap();
+    let p = s.execute("variable.create", &json!({"collection": c, "name": "Primary", "type": "color", "value": "#3366FF"})).unwrap()["id"].as_str().unwrap().to_string();
+    s.execute("variable.update", &json!({"variable": p, "description": "oklch(62% 0.15 {Hue})"})).unwrap();
+    let mode = s.doc().unwrap().variables.collection(&c).unwrap().modes[0].id.clone();
+    let mut u = Ui::new(s);
+    u.ctx.enable_accesskit();
+    u.app.ui.picker = Some(PickerTarget::Variable { id: p.clone(), mode });
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::new("cp_model"), 4usize));
+    u.frame(vec![]);
+    let nodes = u.frame_output(vec![]).platform_output.accesskit_update.unwrap().nodes;
+    let texts: Vec<String> = nodes.iter().filter_map(|(_, n)| n.label().or(n.value()).map(str::to_string)).collect();
+    assert!(texts.iter().any(|t| t.contains("H: Hue")), "{texts:?}");
+    assert!(texts.iter().any(|t| t.contains("L: —")), "{texts:?}");
+    // The hue field shows the linked value.
+    assert_eq!(field(&mut u, "OKLCH hue").1, "280");
+    u.app.run("variable.set", json!({"variable": "Hue", "value": 130}));
+    assert_eq!(field(&mut u, "OKLCH hue").1, "130");
+}
