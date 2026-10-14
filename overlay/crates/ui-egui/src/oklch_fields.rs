@@ -424,13 +424,14 @@ pub(crate) fn bindings_ui(app: &mut FigApp, ui: &mut Ui, color: Color, models: &
     let area = egui::Area::new(popup_id()).order(egui::Order::Foreground).fixed_pos(at + vec2(0.0, 4.0)).show(&ctx, |ui| {
         egui::Frame::popup(&ctx.global_style()).show(ui, |ui| {
             ui.set_min_width(180.0);
+            ui.set_max_width(240.0);
             ui.set_max_height(320.0);
             let t = Tokens::get(&ctx);
             widgets::label(ui, &format!("{} — number variable", m.letters()[k.min(3)]), t.text_secondary);
             if b.numbers.is_empty() {
                 widgets::label(ui, "No number variables yet", t.text_secondary);
             }
-            egui::ScrollArea::vertical().max_height(280.0).show(ui, |ui| {
+            egui::ScrollArea::vertical().max_height(280.0).auto_shrink([true, true]).show(ui, |ui| {
                 let mut last = String::new();
                 for (name, coll) in &b.numbers {
                     if *coll != last {

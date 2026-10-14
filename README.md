@@ -26,6 +26,12 @@ stay fully compatible with the official app in both directions.
 
 The picker's model menu gains **OKLCH** (Hex / RGB / HSL / HSB / **OKLCH** / CSS):
 
+<p>
+<img src="docs/images/01-model-menu.png" width="230" alt="The colour picker's model menu with OKLCH">
+<img src="docs/images/02-oklch-picker.png" width="330" alt="The picker in OKLCH: the OKLCH plane, the OKLCH hue strip and the L, C, H, A fields">
+</p>
+
+
 | Field | Meaning | Range |
 |---|---|---|
 | **L** | lightness | 0–1 |
@@ -53,6 +59,13 @@ The picker's model menu gains **OKLCH** (Hex / RGB / HSL / HSB / **OKLCH** / CSS
 
 ### Colours driven by number variables
 
+<p>
+<img src="docs/images/05-bound-hue-280.png" width="440" alt="H bound to brand/hue = 280: a purple card">
+<img src="docs/images/06-bound-hue-130.png" width="440" alt="The same card after brand/hue is set to 130: green">
+</p>
+
+*Left: H is bound to `brand/hue` = 280. Right: the variable set to 130 — the card follows.*
+
 Every channel of a colour can be bound to a number variable, right in the picker — just like
 FigCraft's own number fields. Hover a field in the **RGB**, **HSL**, **HSB** or **OKLCH** row
 (R G B, H S L, H S B, L C H, and alpha **A**): the variable button appears at its right end. Pick
@@ -60,6 +73,29 @@ a number variable and the field shows its name; the detach button turns it back 
 
 Bind H to `brand/hue = 280`, change the variable to 130, and every colour linked to it follows —
 layers, styles and variables — in one undo step.
+
+**How to bind a channel**
+
+1. Open the picker and choose RGB, HSL, HSB or OKLCH. Hover a field: the variable button appears.
+
+   <img src="docs/images/03-variable-button.png" width="360" alt="The variable button on the H field">
+
+2. Click it and pick a number variable (grouped by collection).
+
+   <img src="docs/images/04-variable-list.png" width="400" alt="The number variable list">
+
+3. The field now shows the variable's name. Alpha binds the same way — here H follows
+   `brand/hue` and A follows `brand/fade` = 60%.
+
+   <img src="docs/images/07-hue-and-alpha-bound.png" width="560" alt="H and alpha both bound">
+
+4. To unbind, hover the name and click the detach button at its right; the field gets its
+   current value back.
+
+Switching to another model shows which channels are linked elsewhere; binding in the current
+model replaces those links.
+
+<img src="docs/images/08-linked-in-other-model.png" width="360" alt="The HSL row noting links made in OKLCH">
 
 - Works wherever the picker edits a colour: layer fills and strokes, **gradient stops**, effect
   colours (shadows, noise), the **page background**, **colour styles** and **colour variables**.
