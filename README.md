@@ -250,7 +250,8 @@ Mobile size). Figma's Shader effect has no FigCraft equivalent yet, so it isn't 
 Hover a row in the Variables editor: the **Edit variable** button (two sliders) appears at the end
 of the name. It opens the variable's name, description, code syntax and **scoping** — which
 properties pickers offer it for (corner radius, gap, font weight, font size, paragraph spacing,
-fills, strokes…). Click it again to close. (Right-click ▸ Edit variable still works.)
+fills, strokes…). The window opens beside the Variables editor at the variable's row, always above
+it, and follows the editor when it moves. Click the button again to close. (Right-click ▸ Edit variable still works.)
 
 ### Reorder variables: drag & drop and sorting
 

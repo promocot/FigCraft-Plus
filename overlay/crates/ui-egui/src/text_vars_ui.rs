@@ -129,6 +129,11 @@ pub(crate) fn weight_or_style(app: &mut FigApp, ui: &mut Ui, ids: &[NodeId], edi
 /// The "Edit variable" button at the end of a Variables editor row's name cell (`name_w` wide):
 /// shown while the pointer is on the row or its details are open (`open`). True when clicked.
 pub(crate) fn details_button(ui: &mut Ui, row: Rect, name_w: f32, open: bool) -> bool {
+    if open {
+        // The open row anchors the Edit variable window (it follows scrolling and the editor).
+        let editor = ui.ctx().memory(|m| m.area_rect(ui.layer_id().id));
+        ui.ctx().data_mut(|d| d.insert_temp(details_anchor_id(), (row, editor)));
+    }
     if !open && !ui.rect_contains_pointer(row) {
         return false;
     }
@@ -138,6 +143,30 @@ pub(crate) fn details_button(ui: &mut Ui, row: Rect, name_w: f32, open: bool) ->
     ui.painter().rect_filled(b, CornerRadius::same(4), if resp.hovered() || open { t.field } else { t.hover });
     icons::paint(ui.painter(), b.shrink(4.0), Icon::Adjust, if open { t.accent } else { t.icon_secondary });
     resp.clicked()
+}
+
+fn details_anchor_id() -> egui::Id {
+    egui::Id::new("figcraftplus_details_anchor")
+}
+
+/// Where the Edit variable window goes, as in Figma: beside the Variables editor (right of it, else
+/// left, else over its right end) at the height of the variable's row, inside the window. It is
+/// drawn above the editor.
+pub(crate) fn details_pos(ctx: &egui::Context) -> egui::Pos2 {
+    let screen = ctx.content_rect();
+    let size = ctx.memory(|m| m.area_rect(egui::Id::new("variable_details"))).map_or(vec2(312.0, 600.0), |r| r.size());
+    let anchor: Option<(Rect, Option<Rect>)> = ctx.data(|d| d.get_temp(details_anchor_id()));
+    let Some((row, editor)) = anchor else { return pos2(screen.center().x - size.x / 2.0, screen.min.y + 80.0) };
+    let editor = editor.unwrap_or(row);
+    let x = if editor.max.x + 8.0 + size.x <= screen.max.x - 8.0 {
+        editor.max.x + 8.0
+    } else if editor.min.x - 8.0 - size.x >= screen.min.x + 8.0 {
+        editor.min.x - 8.0 - size.x
+    } else {
+        editor.max.x - size.x - 8.0
+    };
+    let y = (row.min.y - 40.0).min(screen.max.y - size.y - 8.0).max(screen.min.y + 8.0);
+    pos2(x.max(screen.min.x + 8.0), y)
 }
 
 #[cfg(test)]
@@ -175,3 +204,4 @@ mod tests {
         assert_eq!(weight_fields(VariableType::String), ("fontStyle", "fontWeight"));
     }
 }
+

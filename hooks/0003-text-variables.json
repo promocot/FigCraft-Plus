@@ -52,5 +52,11 @@
     "file": "crates/ui-egui/src/typography.rs",
     "find": "                let field = widgets::number_field(ui, Id::new(\"ty_indent\"), Lead::None, indent, \"\", w - 118.0, 1.0);\n",
     "replace": "                let field = crate::variable_ui::number_field(app, ui, ids, \"paragraphIndent\", Id::new(\"ty_indent\"), Lead::None, indent, \"\", w - 118.0);\n"
+  },
+  {
+    "note": "variables: Edit variable opens beside the editor, above it",
+    "file": "crates/ui-egui/src/variables_panel.rs",
+    "find": "    egui::Window::new(tr(\"Edit variable\"))\n        .id(Id::new(\"variable_details\"))\n",
+    "replace": "    egui::Window::new(tr(\"Edit variable\"))\n        .id(Id::new(\"variable_details\"))\n        .order(egui::Order::Foreground)\n        .fixed_pos(crate::text_vars_ui::details_pos(ctx))\n"
   }
 ]
