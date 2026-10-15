@@ -226,22 +226,46 @@ fn folder_name(family: &str) -> String {
     family.chars().filter(|c| c.is_alphanumeric() || *c == ' ' || *c == '-').collect::<String>().trim().to_string()
 }
 
-/// Add the downloaded family `name` in `folder` to the font database: each `<variant>.ttf` as
-/// that style of `name`. True when a face was added.
+/// Add the downloaded family `name` in `folder` to the font database. A static `<variant>.ttf`
+/// becomes that style of `name`. Google serves variable families as one file for many styles (the
+/// same bytes under each variant), often without the font's named styles: such a file is added
+/// once, under its own style, with a named instance for each style it stands for (Thin… Black
+/// Italic at their weights), so every style draws at its weight. True when a face was added.
 fn install_folder(folder: &std::path::Path, name: &str) -> bool {
     let Ok(entries) = std::fs::read_dir(folder) else { return false };
-    let mut faces = Vec::new();
-    for e in entries.flatten() {
-        let p = e.path();
-        if p.extension().and_then(|x| x.to_str()) != Some("ttf") {
-            continue;
-        }
+    // Files by content: (bytes, the variants saved with them).
+    let mut files: Vec<(std::sync::Arc<Vec<u8>>, Vec<String>)> = Vec::new();
+    let mut paths: Vec<PathBuf> = entries.flatten().map(|e| e.path()).filter(|p| p.extension().and_then(|x| x.to_str()) == Some("ttf")).collect();
+    paths.sort();
+    for p in paths {
         let Some(variant) = p.file_stem().and_then(|s| s.to_str()).map(str::to_string) else { continue };
         let Ok(bytes) = std::fs::read(&p) else { continue };
-        let bytes = figcraft_text::fontdb::FontBytes::Shared(std::sync::Arc::new(bytes));
-        if let Some(f) = figcraft_text::Face::from_bytes(bytes, 0, Some(name), Some(&style_name(&variant))) {
-            faces.push(f);
+        match files.iter_mut().find(|(b, _)| **b == bytes) {
+            Some((_, vs)) => vs.push(variant),
+            None => files.push((std::sync::Arc::new(bytes), vec![variant])),
         }
+    }
+    let shared = |b: &std::sync::Arc<Vec<u8>>| figcraft_text::fontdb::FontBytes::Shared(b.clone());
+    let mut faces = Vec::new();
+    for (bytes, variants) in &files {
+        let Some(mut probe) = figcraft_text::Face::from_bytes(shared(bytes), 0, Some(name), None) else { continue };
+        if probe.axes.is_empty() {
+            // Static: each variant is its own style.
+            for v in variants {
+                if let Some(f) = figcraft_text::Face::from_bytes(shared(bytes), 0, Some(name), Some(&style_name(v))) {
+                    faces.push(f);
+                }
+            }
+            continue;
+        }
+        for v in variants {
+            let style = style_name(v);
+            if probe.instance(&style).is_none() {
+                let coords = instance_coords(&probe.axes, v);
+                probe.instances.push(figcraft_text::NamedInstance { name: style, coords });
+            }
+        }
+        faces.push(probe);
     }
     if faces.is_empty() {
         return false;
@@ -253,6 +277,24 @@ fn install_folder(folder: &std::path::Path, name: &str) -> bool {
     drop(db);
     figcraft_text::clear_layout_cache();
     true
+}
+
+/// The axis values of the style `variant` ("700i") on a variable font with `axes`: its weight,
+/// italic or slanted when it is italic, the other axes at their defaults.
+fn instance_coords(axes: &[figcraft_text::Axis], variant: &str) -> Vec<f64> {
+    let italic = variant.ends_with('i');
+    let weight = f64::from(variant.trim_end_matches('i').parse::<u16>().unwrap_or(400));
+    axes.iter()
+        .map(|a| {
+            let v = match a.tag.as_str() {
+                "wght" => weight,
+                "ital" if italic => 1.0,
+                "slnt" if italic => a.min,
+                _ => a.default,
+            };
+            a.clamp(v)
+        })
+        .collect()
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -689,6 +731,19 @@ mod tests {
             ]
         );
         assert!(parse_catalog(b"<html>").is_err());
+    }
+
+    #[test]
+    fn variable_files_get_a_named_style_per_variant() {
+        let axis =
+            |tag: &str, min: f64, default: f64, max: f64| figcraft_text::Axis { tag: tag.into(), name: tag.into(), min, default, max, hidden: false };
+        let axes = [axis("opsz", 14.0, 14.0, 32.0), axis("wght", 100.0, 400.0, 900.0)];
+        assert_eq!(instance_coords(&axes, "900"), [14.0, 900.0]);
+        assert_eq!(instance_coords(&axes, "100i"), [14.0, 100.0]);
+        assert_eq!(instance_coords(&[axis("wght", 300.0, 400.0, 700.0)], "900"), [700.0]);
+        let slanted = [axis("wght", 100.0, 400.0, 900.0), axis("slnt", -10.0, 0.0, 0.0), axis("ital", 0.0, 0.0, 1.0)];
+        assert_eq!(instance_coords(&slanted, "700i"), [700.0, -10.0, 1.0]);
+        assert_eq!(instance_coords(&slanted, "700"), [700.0, 0.0, 0.0]);
     }
 
     #[test]

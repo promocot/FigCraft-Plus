@@ -186,6 +186,8 @@ Pick a Google family and it downloads (every style, as TrueType files) into a **
 folder next to `figcraft.exe`** — on a USB drive the fonts travel with the app — and is applied
 when it arrives (a second or two). Next time it is simply installed.
 
+- Variable families (Inter and others Google serves as one file for all weights) get every style
+  — Thin to Black, and their italics — each drawn at its weight.
 - Open a file that uses a Google family you don't have: it downloads by itself.
 - Offline, installed and downloaded fonts work as usual; the catalog is kept in
   `google-fonts/catalog.json` (refreshed weekly) and the list notes when Google Fonts can't be
