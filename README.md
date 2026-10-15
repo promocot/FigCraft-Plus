@@ -1,7 +1,7 @@
 # FigCraft Plus (OKLCH)
 
 **[FigCraft](https://github.com/storytold/figcraft) with extra tools — OKLCH in the colour
-picker, a resizable picker with labelled fields, colours driven by number variables, variables
+picker, a resizable picker with labelled fields that opens beside what you edit, colours driven by number variables, variables
 for font family, weight and paragraph spacing, "+" to create local styles, Google Fonts, and drag & drop ordering and sorting of
 variables.**
 
@@ -58,6 +58,27 @@ The picker's model menu gains **OKLCH** (Hex / RGB / HSL / HSB / **OKLCH** / CSS
 - **Captions over every field** in every model (R G B, H S L, H S B, L C H, A).
 - **Width adapts** to the chosen model; drag the picker's **left edge** to make it wider
   (double-click the edge to reset).
+
+### A picker that stays with what you're editing
+
+<p>
+<img src="docs/images/21-picker-beside-fill.png" width="420" alt="The picker beside the Design panel, at the fill's height">
+<img src="docs/images/20-picker-beside-variable.png" width="450" alt="The picker beside a colour variable's value, above the Variables editor">
+</p>
+
+As in Figma:
+
+- **It opens beside the control that opened it**: left of the Design panel at the fill's (stroke's,
+  effect's…) height; beside a colour variable's value in the Variables editor; beside a style's
+  paint. When there's no room it opens on the other side, and it always stays inside the window.
+- **It stays on top** of every panel and window, the Variables editor included.
+- **It follows its control** when a panel scrolls, the window is resized or the Variables editor
+  is moved.
+- **Select another layer** (on the canvas or in Layers) and it switches to the same slot of that
+  layer — Fill 1 stays Fill 1. If the layer has no such slot, or nothing is selected, it closes.
+- **Click empty canvas** (or the same layer again) and it closes; the click still does its usual
+  job (an empty spot deselects). Dragging on the canvas (moving layers, gradient handles) leaves
+  it open.
 
 ### Colours driven by number variables
 

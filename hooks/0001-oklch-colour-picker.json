@@ -63,7 +63,7 @@
     "note": "picker: width",
     "file": "crates/ui-egui/src/colorpicker.rs",
     "find": "    let screen = ctx.content_rect();\n",
-    "replace": "    let screen = ctx.content_rect();\n    let w = crate::oklch_fields::picker_width(ctx, &MODELS);\n"
+    "replace": "    // FigCraft Plus: placed by what opened it (picker_place_ui), not at a fixed spot.\n    let w = crate::oklch_fields::picker_width(ctx, &MODELS);\n"
   },
   {
     "note": "picker: position beside plugin panels",
@@ -72,10 +72,10 @@
     "replace": "map(|r| pos2(r.min.x - w - 8.0, r.min.y))"
   },
   {
-    "note": "picker: position",
+    "note": "picker: position (FigCraft Plus places it by what opened it: picker_place_ui)",
     "file": "crates/ui-egui/src/colorpicker.rs",
-    "find": "pos2(screen.max.x - app.ui.right_width - 260.0, 140.0)",
-    "replace": "pos2(screen.max.x - app.ui.right_width - w - 20.0, 140.0)"
+    "find": "    let pos = beside.unwrap_or(pos2(screen.max.x - app.ui.right_width - 260.0, 140.0));\n",
+    "replace": "    let pos = crate::picker_place_ui::position(app, ctx, w, beside);\n"
   },
   {
     "note": "picker: window width",
