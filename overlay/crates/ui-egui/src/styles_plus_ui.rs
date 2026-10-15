@@ -52,6 +52,7 @@ pub(crate) fn header(app: &mut FigApp, ui: &mut Ui, doc: &Document) {
     }
     icons::paint(ui.painter(), b.shrink(5.0), Icon::Plus, t.icon);
     let mut chosen = None;
+    let mut group = None;
     menu_popup(&resp).width(160.0).show(|ui| {
         for (slot, label) in TYPES {
             if menu_item(ui, tr(label), "") {
@@ -59,9 +60,22 @@ pub(crate) fn header(app: &mut FigApp, ui: &mut Ui, doc: &Document) {
                 ui.close();
             }
         }
+        ui.separator();
+        // An empty group of a type, to drag styles into (style_groups_ui).
+        ui.menu_button(tr("New group"), |ui| {
+            for (slot, label) in TYPES {
+                if menu_item(ui, tr(label), "") {
+                    group = Some(slot);
+                    ui.close();
+                }
+            }
+        });
     });
     if let Some(slot) = chosen {
         crate::style_dialog_ui::open_create(app, ui.ctx(), slot, default_value(slot), b.min.y);
+    }
+    if let Some(slot) = group {
+        crate::style_groups_ui::new_group(app, ui.ctx(), slot);
     }
 }
 

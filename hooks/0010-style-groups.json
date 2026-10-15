@@ -1,0 +1,44 @@
+[
+  {
+    "note": "ui: style groups module",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod variables_panel;$",
+    "insert": "mod style_groups_ui;"
+  },
+  {
+    "note": "Local styles in nested groups",
+    "file": "crates/ui-egui/src/right.rs",
+    "find": "    crate::style_picker::local_styles(app, ui, doc);\n",
+    "replace": "    crate::style_groups_ui::local_styles(app, ui, doc);\n"
+  },
+  {
+    "note": "style slot helper for the groups list",
+    "file": "crates/ui-egui/src/style_picker.rs",
+    "find": "    fn holds(self, k: &StyleKind) -> bool {",
+    "replace": "    pub(crate) fn holds(self, k: &StyleKind) -> bool {"
+  },
+  {
+    "note": "style slot helper for the groups list",
+    "file": "crates/ui-egui/src/style_picker.rs",
+    "find": "    fn title(self) -> &'static str {",
+    "replace": "    pub(crate) fn title(self) -> &'static str {"
+  },
+  {
+    "note": "style slot helper for the groups list",
+    "file": "crates/ui-egui/src/style_picker.rs",
+    "find": "    fn icon(self) -> Icon {",
+    "replace": "    pub(crate) fn icon(self) -> Icon {"
+  },
+  {
+    "note": "en: style group strings",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Drag styles here\" = \"Drag styles here\"\n\"New group\" = \"New group\"\n\"Remove from group\" = \"Remove from group\""
+  },
+  {
+    "note": "es: style group strings",
+    "file": "crates/ui-egui/locales/es.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Drag styles here\" = \"Arrastra estilos aquí\"\n\"New group\" = \"Nuevo grupo\"\n\"Remove from group\" = \"Quitar del grupo\""
+  }
+]
