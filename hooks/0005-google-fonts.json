@@ -1,0 +1,44 @@
+[
+  {
+    "note": "ui: Google Fonts module (the app sets its network)",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod variables_panel;$",
+    "insert": "pub mod google_fonts_ui;"
+  },
+  {
+    "note": "ui: Google Fonts start-up and the open file's fonts, each frame",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^    pub fn logic\\(&mut self, ctx: &egui::Context\\) \\{$",
+    "insert": "        crate::google_fonts_ui::tick(self, ctx);"
+  },
+  {
+    "note": "text: the sectioned font list with Google Fonts",
+    "file": "crates/ui-egui/src/typography.rs",
+    "find": "pub(crate) fn font_picker(ui: &mut Ui, current: Option<&str>, just_opened: bool) -> Option<String> {\n",
+    "replace": "pub(crate) fn font_picker(ui: &mut Ui, current: Option<&str>, just_opened: bool) -> Option<String> {\n    crate::google_fonts_ui::font_picker(ui, current, just_opened)\n}\n\n/// FigCraft's own flat list (FigCraft Plus shows the sectioned one).\n#[allow(dead_code)]\nfn font_picker_flat(ui: &mut Ui, current: Option<&str>, just_opened: bool) -> Option<String> {\n"
+  },
+  {
+    "note": "app: HTTPS for Google Fonts",
+    "file": "apps/figcraft/src/main.rs",
+    "after": "^mod services;$",
+    "insert": "mod plus_http;"
+  },
+  {
+    "note": "app: give the font list its network",
+    "file": "apps/figcraft/src/main.rs",
+    "after": "^    let args = args::parse\\(&args\\);$",
+    "insert": "    figcraft_ui_egui::google_fonts_ui::set_transport(plus_http::round_trip);"
+  },
+  {
+    "note": "English catalog: the font list's new words",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Download\" = \"Download\"\n\"Download failed\" = \"Download failed\"\n\"Downloading…\" = \"Downloading…\"\n\"Google Fonts\" = \"Google Fonts\"\n\"In this file\" = \"In this file\"\n\"No connection to Google Fonts\" = \"No connection to Google Fonts\""
+  },
+  {
+    "note": "Spanish (a complete catalog): the font list's new words",
+    "file": "crates/ui-egui/locales/es.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Download\" = \"Descargar\"\n\"Download failed\" = \"Error al descargar\"\n\"Downloading…\" = \"Descargando…\"\n\"Google Fonts\" = \"Google Fonts\"\n\"In this file\" = \"En este archivo\"\n\"No connection to Google Fonts\" = \"Sin conexión con Google Fonts\""
+  }
+]

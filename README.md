@@ -2,7 +2,7 @@
 
 **[FigCraft](https://github.com/storytold/figcraft) with extra tools — OKLCH in the colour
 picker, a resizable picker with labelled fields, colours driven by number variables, variables
-for font family, weight and paragraph spacing, "+" to create local styles, and drag & drop ordering and sorting of
+for font family, weight and paragraph spacing, "+" to create local styles, Google Fonts, and drag & drop ordering and sorting of
 variables.**
 
 This repository holds only the additions. A GitHub Actions workflow takes every new FigCraft
@@ -143,6 +143,35 @@ variable button appears at its right end.
 - Lists respect each variable's **scopes** (below): a variable limited to Font size isn't offered
   for the weight.
 - While editing a range of characters these fields take plain values (bindings are per layer).
+
+### Google Fonts, and every font listed once
+
+<p>
+<img src="docs/images/18-font-list.png" width="300" alt="The font list: In this file, Installed, Google Fonts">
+<img src="docs/images/19-google-download.png" width="300" alt="A Google Fonts family not on this computer, with Download">
+</p>
+
+The font list (Typography ▸ font family, and the text style editor) has sections:
+
+- **Recent** and **In this file** — the families you used lately and the ones this file uses;
+- **Installed** — on this computer: system fonts, fonts bundled with FigCraft and Google families
+  you downloaded (tagged *Google*);
+- **Google Fonts** — every Google Fonts family that isn't installed.
+
+Each family appears **once**: a family that is installed (from any source) is never offered
+again under Google Fonts.
+
+Pick a Google family and it downloads (every style, as TrueType files) into a **`google-fonts`
+folder next to `figcraft.exe`** — on a USB drive the fonts travel with the app — and is applied
+when it arrives (a second or two). Next time it is simply installed.
+
+- Open a file that uses a Google family you don't have: it downloads by itself.
+- Offline, installed and downloaded fonts work as usual; the catalog is kept in
+  `google-fonts/catalog.json` (refreshed weekly) and the list notes when Google Fonts can't be
+  reached.
+- Connections use HTTPS with verified certificates (FigCraft's own TLS client); the requests go
+  only to `fonts.google.com`, `fonts.googleapis.com` and `fonts.gstatic.com`.
+- Google Fonts are open-source (mostly SIL Open Font License) and free to use in your designs.
 
 ### Create local styles with "+"
 
