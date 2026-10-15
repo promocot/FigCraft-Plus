@@ -1,0 +1,32 @@
+[
+  {
+    "note": "ui: fonts module (your fonts folder, the sectioned font list)",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod variables_panel;$",
+    "insert": "mod fonts_ui;"
+  },
+  {
+    "note": "ui: fonts folder at start, the open file's fonts, Add fonts, each frame",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^    pub fn logic\\(&mut self, ctx: &egui::Context\\) \\{$",
+    "insert": "        crate::fonts_ui::tick(self, ctx);"
+  },
+  {
+    "note": "text: the sectioned font list with Add fonts",
+    "file": "crates/ui-egui/src/typography.rs",
+    "find": "pub(crate) fn font_picker(ui: &mut Ui, current: Option<&str>, just_opened: bool) -> Option<String> {\n",
+    "replace": "pub(crate) fn font_picker(ui: &mut Ui, current: Option<&str>, just_opened: bool) -> Option<String> {\n    crate::fonts_ui::font_picker(ui, current, just_opened)\n}\n\n/// FigCraft's own flat list (FigCraft Plus shows the sectioned one).\n#[allow(dead_code)]\nfn font_picker_flat(ui: &mut Ui, current: Option<&str>, just_opened: bool) -> Option<String> {\n"
+  },
+  {
+    "note": "English catalog: the font list's words",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Add fonts\" = \"Add fonts\"\n\"Add fonts…\" = \"Add fonts…\"\n\"Font files are kept in the fonts folder next to the app\" = \"Font files are kept in the fonts folder next to the app\"\n\"In this file\" = \"In this file\""
+  },
+  {
+    "note": "Spanish (a complete catalog): the font list's words",
+    "file": "crates/ui-egui/locales/es.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Add fonts\" = \"Añadir fuentes\"\n\"Add fonts…\" = \"Añadir fuentes…\"\n\"Font files are kept in the fonts folder next to the app\" = \"Los archivos de fuentes se guardan en la carpeta fonts junto a la aplicación\"\n\"In this file\" = \"En este archivo\""
+  }
+]

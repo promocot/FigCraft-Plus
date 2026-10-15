@@ -121,9 +121,19 @@ jobs:
           repository: ${{ env.UPSTREAM }}
           ref: ${{ needs.plan.outputs.ref }}
           path: figcraft
+      # The fonts the official release embeds: craft-fonts at the commit FigCraft's release.yml pins
+      # (Inter, Roboto and the other Latin presentation fonts), not its default branch.
+      - name: Craft fonts version (as the official release)
+        id: fonts
+        shell: bash
+        run: |
+          ref=$(grep -m1 -E '^\s*CRAFT_FONTS_REF:' figcraft/.github/workflows/release.yml 2>/dev/null | awk '{print $2}' | tr -d '"' || true)
+          echo "craft-fonts ref: ${ref:-default branch}"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v4
         with:
           repository: storytold/craft-fonts
+          ref: ${{ steps.fonts.outputs.ref }}
           path: craft-fonts
       - name: Connect custom features
         shell: bash
@@ -140,7 +150,10 @@ jobs:
         shell: pwsh
         env:
           CRAFT_FONTS_DIR: ${{ github.workspace }}/craft-fonts
+          CRAFT_FONTS_REQUIRED: "1"
         run: |
+          # The text crate embeds the fonts: rebuild it so a cached build never ships without them.
+          cargo clean --release --target $env:TARGET -p figcraft-text
           $bins = @('-p', 'figcraft')
           if (Test-Path 'apps/figcraft-cli/Cargo.toml') { $bins += @('-p', 'figcraft-cli') }
           cargo build --release --locked @bins --target $env:TARGET
