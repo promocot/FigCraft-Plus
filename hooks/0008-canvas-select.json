@@ -1,0 +1,26 @@
+[
+  {
+    "note": "engine: canvas picking module",
+    "file": "crates/engine/src/lib.rs",
+    "after": "^pub mod oklch_links;$",
+    "insert": "mod plus_canvas;"
+  },
+  {
+    "note": "a press on a selected layer drags it as a whole",
+    "file": "crates/engine/src/tools.rs",
+    "find": "                .map(|leaf| select_target(&doc, leaf, &sel, ev.cmd))\n        });",
+    "replace": "                .map(|leaf| crate::plus_canvas::press_target(&doc, leaf, &sel, ev.cmd, ev.shift))\n        });"
+  },
+  {
+    "note": "a click on a frame's empty area selects the frame",
+    "file": "crates/engine/src/tools.rs",
+    "find": "            Gesture::TextSelect { .. } | Gesture::Marquee { .. } | Gesture::None => {}\n",
+    "replace": "            Gesture::Marquee { start, additive, base, within } => crate::plus_canvas::marquee_click(self, ev, start, additive, base, within),\n            Gesture::TextSelect { .. } | Gesture::None => {}\n"
+  },
+  {
+    "note": "test: the documented rule changes with it",
+    "file": "crates/engine/src/selection_behaviour_tests.rs",
+    "find": "((390.0, 290.0), NONE, vec![k.r], vec![], \"the background of a top-level frame with layers is like the canvas: a click deselects\"),",
+    "replace": "((390.0, 290.0), NONE, vec![k.r], vec![k.f], \"FigCraft Plus: a click on the empty area of a top-level frame selects the frame\"),"
+  }
+]
