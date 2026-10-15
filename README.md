@@ -2,7 +2,7 @@
 
 **[FigCraft](https://github.com/storytold/figcraft) with extra tools — OKLCH in the colour
 picker, a resizable picker with labelled fields that opens beside what you edit, colours driven by number variables, variables
-for font family, weight and paragraph spacing, "+" to create local styles, Google Fonts, and drag & drop ordering and sorting of
+for font family, weight and paragraph spacing, Figma-like style dialogs with variables, Google Fonts, and drag & drop ordering and sorting of
 variables.**
 
 This repository holds only the additions. A GitHub Actions workflow takes every new FigCraft
@@ -196,27 +196,47 @@ when it arrives (a second or two). Next time it is simply installed.
   only to `fonts.google.com`, `fonts.googleapis.com` and `fonts.gstatic.com`.
 - Google Fonts are open-source (mostly SIL Open Font License) and free to use in your designs.
 
-### Create local styles with "+"
+### Styles: create and edit them as in Figma
 
 <p>
-<img src="docs/images/15-create-style-menu.png" width="300" alt="The + menu on Local styles: Text, Color, Effect, Layout grid">
-<img src="docs/images/16-new-style-editor.png" width="420" alt="A new text style's editor with its name selected">
-<img src="docs/images/17-local-styles.png" width="200" alt="Local styles of every type, in folders">
+<img src="docs/images/15-create-style-menu.png" width="250" alt="The + menu on Local styles: Text, Color, Effect, Layout grid">
+<img src="docs/images/22-style-dialog-text.png" width="380" alt="Create new text style: preview, name, font, weight and size bound to variables">
 </p>
+<p>
+<img src="docs/images/23-style-dialog-effect.png" width="440" alt="Create new effect style with the drop shadow's settings beside it">
+<img src="docs/images/24-style-dialog-grid.png" width="440" alt="Create new layout guide style with the columns' settings">
+</p>
+<img src="docs/images/25-style-dialog-color.png" width="440" alt="Create new color style with the colour picker beside it">
 
-As in Figma, the **Local styles** header (Design panel, nothing selected) has a **+**. Choose the
-type and the style is created right away — no layer needed — and its editor opens with the name
-selected: type a name (`Brand/Primary` puts it in the Brand folder) and set it up.
+The **Local styles** header (Design panel, nothing selected) has a **+**: choose **Text**,
+**Color**, **Effect** or **Layout grid** and the **Create new … style** dialog opens — a preview,
+**Name** and **Description**, and **Properties**:
 
-| Type | Starts as |
+- **Text** — font, style (or weight), size, line height, letter spacing, and under **…**
+  decoration and case.
+- **Color** — its paints: click the swatch for the full colour picker (solid, gradients, image…,
+  OKLCH); hex and opacity in the row; **+** adds a paint.
+- **Effect** — a row per effect; click it for its settings beside the dialog: the **type**
+  (Drop shadow, Inner shadow, Layer blur, Background blur, Noise, Texture, Glass), position,
+  blur, spread, colour, "show behind transparent areas"… **+** adds an effect.
+- **Layout grid** — a row per grid; its settings: **Grid / Columns / Rows**, size or count, type
+  (Stretch, Left, Center, Right), width, margin, gutter, colour. **+** adds a grid.
+
+Every row has a visibility toggle and **−**. **Create style** keeps the style; the cross (or Esc)
+drops it. Click a style in Local styles to open the same dialog (**Edit … style**) — changes
+apply as you make them, each one undo step.
+
+**Variables in styles.** Fields a style can bind take a variable (the hexagon on hover):
+
+| Style | Fields |
 |---|---|
-| **Text** | Inter Regular 12, line height Auto |
-| **Color** | `#D9D9D9` |
-| **Effect** | drop shadow 0 4 blur 4, 25 % black |
-| **Layout grid** | 10 px grid |
+| Text | font family (string), style or weight (string or number, as in the Typography panel), size, line height, letter spacing (numbers) |
+| Color | each solid paint's colour |
+| Effect | shadow X, Y, blur, spread, colour; blur radius |
+| Layout grid | size, count, margin, gutter |
 
-The styles are saved in the file and offered wherever that kind of style applies. (Creating a
-style from a selected layer works as before, from the style picker.)
+Layers using the style follow the variables in their own modes (a frame set to Mobile shows the
+Mobile size). Figma's Shader effect has no FigCraft equivalent yet, so it isn't offered.
 
 ### Variable details & scope, one click away
 

@@ -69,6 +69,24 @@ pub(crate) fn bind_weight_or_style(app: &mut FigApp, ids: &[NodeId], field: &str
     true
 }
 
+/// Bind a variable picked for `field` of the shared style `style`: from a text style's style
+/// dropdown ([`WEIGHT_OR_STYLE`]) a number binds the weight and a string the style, unbinding the
+/// other in the same undo step; any other field binds as usual.
+pub(crate) fn bind_style(app: &mut FigApp, style: &str, field: &str, pick: &Pick) {
+    if field != WEIGHT_OR_STYLE {
+        app.run("style.bind", json!({"style": style, "field": field, "variable": pick.id}));
+        return;
+    }
+    let Some(kind) = pick_kind(app, pick) else { return };
+    let (field, other) = weight_fields(kind);
+    let mut steps = Vec::new();
+    if app.session.doc().ok().and_then(|d| d.style(style)).is_some_and(|s| s.bound.contains_key(other)) {
+        steps.push(json!({"command": "style.bind", "params": {"style": style, "field": other, "variable": null}}));
+    }
+    steps.push(json!({"command": "style.bind", "params": {"style": style, "field": field, "variable": pick.id}}));
+    app.run("command.batch", json!({"label": "Apply variable", "commands": steps}));
+}
+
 /// The font family dropdown (`control`, `width` wide) with a variable button on hover, or the
 /// bound string variable's chip. While text is being edited it is just the dropdown.
 pub(crate) fn family(app: &mut FigApp, ui: &mut Ui, ids: &[NodeId], editing: bool, width: f32, control: impl FnOnce(&mut FigApp, &mut Ui)) {

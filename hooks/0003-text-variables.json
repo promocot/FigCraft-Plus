@@ -33,7 +33,7 @@
     "note": "variable picker: the font style dropdown lists weights and styles",
     "file": "crates/ui-egui/src/variable_ui.rs",
     "find": "        p.kind.is_none_or(|k| v.kind == k)\n            && !(local_only && lib.is_some())\n",
-    "replace": "        (if matches!(&p.target, Target::Bind { field, .. } if field == crate::text_vars_ui::WEIGHT_OR_STYLE) {\n            crate::text_vars_ui::weight_fits(v)\n        } else {\n            p.kind.is_none_or(|k| v.kind == k)\n        })\n            && !(local_only && lib.is_some())\n"
+    "replace": "        (if matches!(&p.target, Target::Bind { field, .. } | Target::Style { field, .. } if field == crate::text_vars_ui::WEIGHT_OR_STYLE) {\n            crate::text_vars_ui::weight_fits(v)\n        } else {\n            p.kind.is_none_or(|k| v.kind == k)\n        })\n            && !(local_only && lib.is_some())\n"
   },
   {
     "note": "variable picker: bind a weight or a style",

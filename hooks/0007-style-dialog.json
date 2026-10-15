@@ -1,0 +1,56 @@
+[
+  {
+    "note": "ui: style dialog module",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod variables_panel;$",
+    "insert": "mod style_dialog_ui;"
+  },
+  {
+    "note": "engine: text styles bind a number variable to the weight",
+    "file": "crates/engine/src/style_vars.rs",
+    "find": "            \"fontSize\" | \"lineHeight\" | \"letterSpacing\" => Some(Number),\n",
+    "replace": "            \"fontSize\" | \"lineHeight\" | \"letterSpacing\" | \"fontWeight\" => Some(Number),\n"
+  },
+  {
+    "note": "engine: a weight variable sets the text style's weight (keeping italic)",
+    "file": "crates/engine/src/style_vars.rs",
+    "find": "        (\"fontStyle\", VariableValue::String(f)) if !f.trim().is_empty() => style.font_style = f.clone(),\n",
+    "replace": "        (\"fontStyle\", VariableValue::String(f)) if !f.trim().is_empty() => style.font_style = f.clone(),\n        (\"fontWeight\", VariableValue::Number(x)) if x.is_finite() => {\n            let italic = style.italic();\n            style.set_font_style(crate::cmd::props::styled_name(crate::cmd::props::weight_name(x.clamp(1.0, 1000.0) as u16), italic));\n        }\n"
+  },
+  {
+    "note": "popups: the style dialog (under the colour picker)",
+    "file": "crates/ui-egui/src/menus.rs",
+    "find": "    crate::colorpicker::show(app, ctx);\n    palette(app, ctx);\n",
+    "replace": "    crate::style_dialog_ui::show(app, ctx);\n    crate::colorpicker::show(app, ctx);\n    palette(app, ctx);\n"
+  },
+  {
+    "note": "Local styles: a click edits the style in the style dialog",
+    "file": "crates/ui-egui/src/style_picker.rs",
+    "find": "fn edit_local(app: &mut FigApp, ui: &Ui, slot: StyleSlot, id: &str) {\n    let y = ui.input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);\n    let edit = app.session.doc().ok().and_then(|d| d.style(id).map(editing));\n    app.ui.style_picker = Some(Picker { slot, ids: app.session.selection(), y, query: String::new(), edit });\n}\n",
+    "replace": "fn edit_local(app: &mut FigApp, ui: &Ui, _slot: StyleSlot, id: &str) {\n    // FigCraft Plus: the Figma-like style dialog.\n    let y = ui.input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);\n    crate::style_dialog_ui::open_edit(app, ui.ctx(), id, y);\n}\n"
+  },
+  {
+    "note": "variable list: a style's weight or style binding",
+    "file": "crates/ui-egui/src/variable_ui.rs",
+    "find": "            (Target::Style { style, field }, _) => {\n                app.run(\"style.bind\", json!({\"style\": style, \"field\": field, \"variable\": pick.id}));\n            }\n",
+    "replace": "            (Target::Style { style, field }, _) => crate::text_vars_ui::bind_style(app, style, field, &pick),\n"
+  },
+  {
+    "note": "English catalog: the style dialog's words",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Add\" = \"Add\"\n\"Create new color style\" = \"Create new color style\"\n\"Create new effect style\" = \"Create new effect style\"\n\"Create new layout guide style\" = \"Create new layout guide style\"\n\"Create new text style\" = \"Create new text style\"\n\"Edit color style\" = \"Edit color style\"\n\"Edit effect style\" = \"Edit effect style\"\n\"Edit layout guide style\" = \"Edit layout guide style\"\n\"Edit text style\" = \"Edit text style\"\n\"More type settings\" = \"More type settings\"\n\"New color style\" = \"New color style\"\n\"New effect style\" = \"New effect style\"\n\"New layout guide style\" = \"New layout guide style\"\n\"New text style\" = \"New text style\""
+  },
+  {
+    "note": "Spanish (a complete catalog): the style dialog's words",
+    "file": "crates/ui-egui/locales/es.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Add\" = \"Añadir\"\n\"Create new color style\" = \"Crear estilo de color\"\n\"Create new effect style\" = \"Crear estilo de efecto\"\n\"Create new layout guide style\" = \"Crear estilo de cuadrícula\"\n\"Create new text style\" = \"Crear estilo de texto\"\n\"Edit color style\" = \"Editar estilo de color\"\n\"Edit effect style\" = \"Editar estilo de efecto\"\n\"Edit layout guide style\" = \"Editar estilo de cuadrícula\"\n\"Edit text style\" = \"Editar estilo de texto\"\n\"More type settings\" = \"Más ajustes de texto\"\n\"New color style\" = \"Nuevo estilo de color\"\n\"New effect style\" = \"Nuevo estilo de efecto\"\n\"New layout guide style\" = \"Nuevo estilo de cuadrícula\"\n\"New text style\" = \"Nuevo estilo de texto\""
+  },
+  {
+    "note": "test: a local style opens in the style dialog",
+    "file": "crates/ui-egui/src/style_picker_tests.rs",
+    "find": "    let editing = app.ui.style_picker.as_ref().and_then(|p| p.edit.as_ref()).map(|e| e.name.clone());\n    assert_eq!(editing.as_deref(), Some(\"Danger\"), \"a local style opens in the style editor\");\n",
+    "replace": "    let editing = crate::style_dialog_ui::editing(&ctx).and_then(|id| app.session.doc().ok()?.style(&id).map(|s| s.name.clone()));\n    assert_eq!(editing.as_deref(), Some(\"Danger\"), \"a local style opens in the style dialog\");\n"
+  }
+]

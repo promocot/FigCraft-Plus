@@ -142,7 +142,11 @@ pub(crate) fn position(app: &FigApp, ctx: &egui::Context, w: f32, beside: Option
     let want = match (beside, a) {
         (Some(p), _) => p,
         (None, Some(r)) => {
-            let x = if r.min.x >= right_panel - 1.0 {
+            // Opened from the style dialog: beside the dialog, not over it.
+            let dialog = ctx.memory(|m| m.area_rect(Id::new("figcraftplus_style_dialog_area"))).filter(|d| d.contains(r.center()));
+            let x = if let Some(d) = dialog {
+                d.min.x - w - 8.0
+            } else if r.min.x >= right_panel - 1.0 {
                 right_panel - w - 12.0
             } else if r.min.x - w - 8.0 >= screen.min.x + 8.0 {
                 r.min.x - w - 8.0

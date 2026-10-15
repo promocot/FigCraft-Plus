@@ -1,6 +1,6 @@
 //! FigCraft Plus: the "+" on the Design panel's Local styles header (as in Figma). It offers the
 //! style types — Text, Color, Effect, Layout grid — and creates the chosen one from default values
-//! (nothing needs to be selected), then opens its editor with the name selected for typing.
+//! (nothing needs to be selected) and opens the style dialog on it (`style_dialog_ui`).
 
 use egui::{Align2, CornerRadius, Rect, Sense, Ui, pos2, vec2};
 use figcraft_color::{Color, Paint};
@@ -61,7 +61,7 @@ pub(crate) fn header(app: &mut FigApp, ui: &mut Ui, doc: &Document) {
         }
     });
     if let Some(slot) = chosen {
-        crate::style_picker::create_local(app, slot, default_value(slot), b.min.y);
+        crate::style_dialog_ui::open_create(app, ui.ctx(), slot, default_value(slot), b.min.y);
     }
 }
 
