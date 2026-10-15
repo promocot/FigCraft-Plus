@@ -1,0 +1,56 @@
+[
+  {
+    "note": "ui: variable picker module",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod variables_panel;$",
+    "insert": "mod var_picker_ui;"
+  },
+  {
+    "note": "picker target readable by the new picker",
+    "file": "crates/ui-egui/src/variable_ui.rs",
+    "find": "#[derive(Clone)]\nenum Target {",
+    "replace": "#[derive(Clone)]\npub(crate) enum Target {"
+  },
+  {
+    "note": "picker state readable by the new picker",
+    "file": "crates/ui-egui/src/variable_ui.rs",
+    "find": "#[derive(Clone)]\nstruct Picker {\n    target: Target,\n    kind: Option<VariableType>,\n    at: Pos2,\n}",
+    "replace": "#[derive(Clone)]\npub(crate) struct Picker {\n    pub(crate) target: Target,\n    pub(crate) kind: Option<VariableType>,\n    pub(crate) at: Pos2,\n}"
+  },
+  {
+    "note": "picker id readable by the new picker",
+    "file": "crates/ui-egui/src/variable_ui.rs",
+    "find": "fn picker_id() -> Id {",
+    "replace": "pub(crate) fn picker_id() -> Id {"
+  },
+  {
+    "note": "the Figma-like picker replaces FigCraft's",
+    "file": "crates/ui-egui/src/variable_ui.rs",
+    "find": "pub fn picker(app: &mut FigApp, ctx: &egui::Context) {\n",
+    "replace": "pub fn picker(app: &mut FigApp, ctx: &egui::Context) {\n    // FigCraft Plus: the Figma-like picker, with scopes everywhere.\n    crate::var_picker_ui::picker(app, ctx);\n}\n\n#[allow(dead_code)]\nfn picker_plain(app: &mut FigApp, ctx: &egui::Context) {\n"
+  },
+  {
+    "note": "where the picker is",
+    "file": "crates/ui-egui/src/variable_ui.rs",
+    "find": "    picker_open(ctx).then(|| ctx.memory(|m| m.area_rect(Id::new(\"variable_picker_area\")))).flatten()",
+    "replace": "    picker_open(ctx).then(|| crate::var_picker_ui::rect(ctx)).flatten()"
+  },
+  {
+    "note": "style picker: colour variables by scope",
+    "file": "crates/ui-egui/src/style_picker.rs",
+    "find": "crate::variable_ui::groups(doc, &libs, |_, v| v.kind == VariableType::Color && (q.is_empty()",
+    "replace": "crate::variable_ui::groups(doc, &libs, |_, v| v.kind == VariableType::Color && crate::var_picker_ui::paint_fits(v, slot == StyleSlot::Stroke) && (q.is_empty()"
+  },
+  {
+    "note": "en: picker strings",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"All libraries\" = \"All libraries\"\n\"Number variables\" = \"Number variables\""
+  },
+  {
+    "note": "es: picker strings",
+    "file": "crates/ui-egui/locales/es.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"All libraries\" = \"Todas las bibliotecas\"\n\"Number variables\" = \"Variables numéricas\""
+  }
+]

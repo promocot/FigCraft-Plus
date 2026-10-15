@@ -18,6 +18,7 @@ use serde_json::json;
 
 use crate::FigApp;
 use crate::colorpicker::PickerTarget;
+use crate::i18n::tr;
 use crate::theme::{Tokens, doc_c32, regular};
 use crate::widgets::{self, BindEvent};
 
@@ -116,8 +117,8 @@ enum Source {
 struct BindCtx {
     source: Option<Source>,
     formula: Option<Formula>,
-    /// The number variables: (name, collection name).
-    numbers: Vec<(String, String)>,
+    /// The number variables (picked by name: formulas name them), hidden ones left out.
+    numbers: Vec<crate::var_picker_ui::Item>,
 }
 
 /// A channel's variable button or detach button used.
@@ -237,8 +238,15 @@ pub(crate) fn prepare(app: &FigApp, ctx: &egui::Context, target: &PickerTarget) 
             d.variables
                 .variables
                 .iter()
-                .filter(|v| v.kind == VariableType::Number)
-                .map(|v| (v.name.clone(), d.variables.collection(&v.collection).map(|c| c.name.clone()).unwrap_or_default()))
+                .filter(|v| v.kind == VariableType::Number && !crate::var_picker_ui::hidden(v))
+                .map(|v| crate::var_picker_ui::Item {
+                    pick: crate::variable_ui::Pick { library: None, id: v.name.clone() },
+                    library: None,
+                    collection: d.variables.collection(&v.collection).map(|c| c.name.clone()).unwrap_or_default(),
+                    name: v.name.clone(),
+                    kind: v.kind,
+                    value: d.variables.resolve(&v.id, &std::collections::BTreeMap::new()),
+                })
                 .collect()
         })
         .unwrap_or_default();
@@ -418,37 +426,14 @@ pub(crate) fn bindings_ui(app: &mut FigApp, ui: &mut Ui, color: Color, models: &
         ctx.data_mut(|d| d.remove_temp::<(usize, String, Pos2)>(popup_id()));
         return;
     };
-    let current = b.formula.as_ref().filter(|f| f.model == m).and_then(|f| f.var(k)).map(str::to_string);
+    let current = b.formula.as_ref().filter(|f| f.model == m).and_then(|f| f.var(k)).map(|n| crate::variable_ui::Pick { library: None, id: n.to_string() });
+    let title = format!("{} — {}", m.letters()[k.min(3)], tr("Number variables"));
     let mut picked: Option<String> = None;
     let mut close = false;
-    let area = egui::Area::new(popup_id()).order(egui::Order::Foreground).fixed_pos(at + vec2(0.0, 4.0)).show(&ctx, |ui| {
-        egui::Frame::popup(&ctx.global_style()).show(ui, |ui| {
-            ui.set_min_width(180.0);
-            ui.set_max_width(240.0);
-            ui.set_max_height(320.0);
-            let t = Tokens::get(&ctx);
-            widgets::label(ui, &format!("{} — number variable", m.letters()[k.min(3)]), t.text_secondary);
-            if b.numbers.is_empty() {
-                widgets::label(ui, "No number variables yet", t.text_secondary);
-            }
-            egui::ScrollArea::vertical().max_height(280.0).auto_shrink([true, true]).show(ui, |ui| {
-                let mut last = String::new();
-                for (name, coll) in &b.numbers {
-                    if *coll != last {
-                        widgets::label(ui, coll, t.text_tertiary);
-                        last = coll.clone();
-                    }
-                    if crate::right::menu_check(ui, current.as_deref() == Some(name.as_str()), name, "") {
-                        picked = Some(name.clone());
-                    }
-                }
-            });
-        });
-    });
-    let list = area.response.rect;
-    let pressed_outside = ctx.input(|i| i.pointer.any_pressed() && i.pointer.press_origin().is_some_and(|p| !list.contains(p)));
-    if ctx.input(|i| i.key_pressed(egui::Key::Escape)) || (pressed_outside && picked.is_none()) {
-        close = true;
+    match crate::var_picker_ui::card(&ctx, popup_id().with("card"), at, &title, &b.numbers, current.as_ref(), tr("No number variables yet. Create them in Local variables.")) {
+        crate::var_picker_ui::Outcome::Open => {}
+        crate::var_picker_ui::Outcome::Close => close = true,
+        crate::var_picker_ui::Outcome::Pick(i) => picked = b.numbers.get(i).map(|it| it.name.clone()),
     }
     if let Some(name) = picked {
         let mut f = match b.formula.clone() {
