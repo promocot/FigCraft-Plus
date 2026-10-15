@@ -1,0 +1,56 @@
+[
+  {
+    "note": "engine: layer classes and HTML tags module",
+    "file": "crates/engine/src/cmd/mod.rs",
+    "after": "^pub mod var_order;$",
+    "insert": "pub mod layer_classes;"
+  },
+  {
+    "note": "engine: register class and tag commands",
+    "file": "crates/engine/src/cmd/mod.rs",
+    "after": "^\\s*list\\.extend\\(var_order::specs\\(\\)\\);$",
+    "insert": "        list.extend(layer_classes::specs());"
+  },
+  {
+    "note": "ui: classes module",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod variables_panel;$",
+    "insert": "mod class_ui;"
+  },
+  {
+    "note": "Design panel: the layer's HTML tag and class",
+    "file": "crates/ui-egui/src/right.rs",
+    "find": "    header(app, ui, &doc, &sel);\n    widgets::separator(ui);\n",
+    "replace": "    header(app, ui, &doc, &sel);\n    widgets::separator(ui);\n    // FigCraft Plus: the layer's HTML tag and class.\n    crate::class_ui::section(app, ui, &doc, &sel);\n"
+  },
+  {
+    "note": "Design panel: Local classes under Local styles",
+    "file": "crates/ui-egui/src/right.rs",
+    "find": "    crate::style_groups_ui::local_styles(app, ui, doc);\n",
+    "replace": "    crate::style_groups_ui::local_styles(app, ui, doc);\n    widgets::separator(ui);\n    crate::class_ui::local_classes(app, ui, doc);\n"
+  },
+  {
+    "note": "test: the effects are scrolled into view (the Class row is above them)",
+    "file": "crates/ui-egui/src/panel_reorder_tests.rs",
+    "find": "    let (a, b) = (grip(&u, \"effects\", 0).unwrap(), grip(&u, \"effects\", 1).unwrap());\n",
+    "replace": "    // FigCraft Plus: the Class row pushes the effects down; scroll them into view.\n    let wheel = Event::MouseWheel {\n        unit: egui::MouseWheelUnit::Point,\n        delta: egui::vec2(0.0, -300.0),\n        phase: egui::TouchPhase::Move,\n        modifiers: Default::default(),\n    };\n    for _ in 0..4 {\n        u.frame(vec![Event::PointerMoved(Pos2::new(1300.0, 500.0)), wheel.clone()]);\n    }\n    u.frame(vec![]);\n    let (a, b) = (grip(&u, \"effects\", 0).unwrap(), grip(&u, \"effects\", 1).unwrap());\n"
+  },
+  {
+    "note": "en: class strings",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Class\" = \"Class\"\n\"Class name, e.g. card or card__title\" = \"Class name, e.g. card or card__title\"\n\"Class options\" = \"Class options\"\n\"Create class\" = \"Create class\"\n\"Create class from layer…\" = \"Create class from layer…\"\n\"Detach class\" = \"Detach class\"\n\"Edit class\" = \"Edit class\"\n\"Edit class…\" = \"Edit class…\"\n\"HTML tag\" = \"HTML tag\"\n\"Local classes\" = \"Local classes\"\n\"No class\" = \"No class\"\n\"Overrides: {list}\" = \"Overrides: {list}\"\n\"Reset to class\" = \"Reset to class\"\n\"Select a layer and choose Class ▸ Create class from layer…\" = \"Select a layer and choose Class ▸ Create class from layer…\"\n\"Select layers\" = \"Select layers\"\n\"The values come from the selected layer.\" = \"The values come from the selected layer.\"\n\"Update class from this layer\" = \"Update class from this layer\"\n\"{section} (kept)\" = \"{section} (kept)\""
+  },
+  {
+    "note": "es: class strings",
+    "file": "crates/ui-egui/locales/es.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Class\" = \"Clase\"\n\"Class name, e.g. card or card__title\" = \"Nombre de la clase, p. ej. card o card__title\"\n\"Class options\" = \"Opciones de la clase\"\n\"Create class\" = \"Crear clase\"\n\"Create class from layer…\" = \"Crear clase desde la capa…\"\n\"Detach class\" = \"Separar clase\"\n\"Edit class\" = \"Editar clase\"\n\"Edit class…\" = \"Editar clase…\"\n\"HTML tag\" = \"Etiqueta HTML\"\n\"Local classes\" = \"Clases locales\"\n\"No class\" = \"Sin clase\"\n\"Overrides: {list}\" = \"Cambios propios: {list}\"\n\"Reset to class\" = \"Restablecer a la clase\"\n\"Select a layer and choose Class ▸ Create class from layer…\" = \"Selecciona una capa y elige Clase ▸ Crear clase desde la capa…\"\n\"Select layers\" = \"Seleccionar capas\"\n\"The values come from the selected layer.\" = \"Los valores se toman de la capa seleccionada.\"\n\"Update class from this layer\" = \"Actualizar la clase desde esta capa\"\n\"{section} (kept)\" = \"{section} (se conserva)\""
+  },
+  {
+    "note": "es: class and tag commands",
+    "file": "crates/ui-egui/locales/es.toml",
+    "after": "^\"variable\\.list\" = ",
+    "insert": "\"class.apply\" = \"Aplicar clase\"\n\"class.create\" = \"Crear clase\"\n\"class.delete\" = \"Eliminar clase\"\n\"class.detach\" = \"Separar clase\"\n\"class.list\" = \"Listar clases\"\n\"class.rename\" = \"Renombrar clase\"\n\"class.reset\" = \"Restablecer a la clase\"\n\"class.update\" = \"Actualizar clase\"\n\"layer.setTag\" = \"Definir etiqueta HTML\""
+  }
+]
