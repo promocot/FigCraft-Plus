@@ -109,6 +109,25 @@ pub(crate) fn open_create(app: &mut FigApp, ctx: &egui::Context, slot: StyleSlot
     );
 }
 
+/// Open the dialog on the style `id` just made from a layer (the style picker's "+"): as being
+/// created, so closing it removes the style again.
+pub(crate) fn open_created(app: &mut FigApp, ctx: &egui::Context, id: &str, y: f32) {
+    discard(app, ctx);
+    put(
+        ctx,
+        Some(Dialog {
+            style: id.to_string(),
+            creating: true,
+            name: String::new(),
+            description: String::new(),
+            open: None,
+            y,
+            more: false,
+            focus_name: true,
+        }),
+    );
+}
+
 /// Open the dialog to edit this file's style `id` (from the Local styles list).
 pub(crate) fn open_edit(app: &mut FigApp, ctx: &egui::Context, id: &str, y: f32) {
     discard(app, ctx);
@@ -246,12 +265,7 @@ pub(crate) fn show(app: &mut FigApp, ctx: &egui::Context) {
             // Name and description.
             ui.add_space(4.0);
             labelled(ui, tr("Name"), &t, |ui| {
-                let r = ui.add(
-                    egui::TextEdit::singleline(&mut d.name)
-                        .hint_text(hint)
-                        .font(regular(11.0))
-                        .desired_width(W - 112.0),
-                );
+                let r = ui.add(egui::TextEdit::singleline(&mut d.name).hint_text(hint).font(regular(11.0)).desired_width(W - 112.0));
                 if d.focus_name {
                     r.request_focus();
                     d.focus_name = false;

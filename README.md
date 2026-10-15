@@ -153,8 +153,12 @@ variable button appears at its right end.
 | **Font family** | string | `family/body` = `Inter` |
 | **Font style / weight** | number (the weight) or string (the style) | `weight/bold` = 700, `style/heading` = `SemiBold Italic` |
 | **Paragraph spacing** | number | `space/para` = 16 |
+| **Paragraph indent** (Typography ▸ …) | number | `space/indent` = 24 |
 
-(Font size, line height and letter spacing could already be bound.)
+(Font size, line height and letter spacing could already be bound. Together with FigCraft's own
+bindings — sizes, min/max, gaps and padding, corners, opacity, stroke widths, effects, layout
+grids, visibility, text content, gradient stops — every property Figma lets you bind takes a
+variable.)
 
 - The style dropdown lists **both** kinds: a number sets the weight (the nearest style the font has
   is used), a string sets the style by name. Binding one replaces the other in one undo step;
@@ -223,7 +227,8 @@ The **Local styles** header (Design panel, nothing selected) has a **+**: choose
   (Stretch, Left, Center, Right), width, margin, gutter, colour. **+** adds a grid.
 
 Every row has a visibility toggle and **−**. **Create style** keeps the style; the cross (or Esc)
-drops it. Click a style in Local styles to open the same dialog (**Edit … style**) — changes
+drops it. Click a style in Local styles — or **+** and edit in a layer's style list — to open the same
+dialog (**Edit … style**; a style made from a layer opens as **Create new … style**) — changes
 apply as you make them, each one undo step.
 
 **Variables in styles.** Fields a style can bind take a variable (the hexagon on hover):
