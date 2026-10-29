@@ -1,0 +1,44 @@
+[
+  {
+    "note": "FigCraft's test picker_closes_when_another_layer_is_selected: replaced by a Plus behaviour",
+    "file": "crates/ui-egui/src/colorpicker_selection_tests.rs",
+    "find": "#[test]\nfn picker_closes_when_another_layer_is_selected() {",
+    "replace": "#[test]\n#[ignore = \"FigCraft Plus: the picker follows the selection to the same slot (picker_place_ui), as in Figma\"]\nfn picker_closes_when_another_layer_is_selected() {"
+  },
+  {
+    "note": "FigCraft's test lch_and_oklch_picker_fields_edit_lightness_keeping_hue: replaced by a Plus behaviour",
+    "file": "crates/ui-egui/src/field_tests.rs",
+    "find": "#[test]\nfn lch_and_oklch_picker_fields_edit_lightness_keeping_hue() {",
+    "replace": "#[test]\n#[ignore = \"FigCraft Plus: draws the RGB, HSL, HSB and OKLCH rows itself (oklch_picker_tests)\"]\nfn lch_and_oklch_picker_fields_edit_lightness_keeping_hue() {"
+  },
+  {
+    "note": "FigCraft's test oklch_keeps_a_hue_typed_on_a_grey: replaced by a Plus behaviour",
+    "file": "crates/ui-egui/src/field_tests.rs",
+    "find": "#[test]\nfn oklch_keeps_a_hue_typed_on_a_grey() {",
+    "replace": "#[test]\n#[ignore = \"FigCraft Plus: draws the OKLCH row itself and keeps a grey's hue (oklch_picker_tests)\"]\nfn oklch_keeps_a_hue_typed_on_a_grey() {"
+  },
+  {
+    "note": "FigCraft's test scrubbing_colour_picker_fields_is_live_and_one_undo_step: replaced by a Plus behaviour",
+    "file": "crates/ui-egui/src/field_tests.rs",
+    "find": "#[test]\nfn scrubbing_colour_picker_fields_is_live_and_one_undo_step() {",
+    "replace": "#[test]\n#[ignore = \"FigCraft Plus: draws the RGB, HSL, HSB and OKLCH rows itself (oklch_picker_tests)\"]\nfn scrubbing_colour_picker_fields_is_live_and_one_undo_step() {"
+  },
+  {
+    "note": "FigCraft's test font_family_and_style_menus_start_with_apply_variable: replaced by a Plus behaviour",
+    "file": "crates/ui-egui/src/panels/typography.rs",
+    "find": "    #[test]\n    fn font_family_and_style_menus_start_with_apply_variable() {",
+    "replace": "    #[test]\n    #[ignore = \"FigCraft Plus: the font style's Apply variable also offers weight (number) variables\"]\n    fn font_family_and_style_menus_start_with_apply_variable() {"
+  },
+  {
+    "note": "FigCraft's test renaming_a_style_folder_keeps_the_focus_in_the_screen_reader_tree: replaced by a Plus behaviour",
+    "file": "crates/ui-egui/src/style_folder_rename_tests.rs",
+    "find": "#[test]\nfn renaming_a_style_folder_keeps_the_focus_in_the_screen_reader_tree() {",
+    "replace": "#[test]\n#[ignore = \"FigCraft Plus: Local styles are drawn as nested groups (style_groups_ui)\"]\nfn renaming_a_style_folder_keeps_the_focus_in_the_screen_reader_tree() {"
+  },
+  {
+    "note": "FigCraft's swatch test finds the picker by its id (Plus keeps it in the foreground)",
+    "file": "crates/ui-egui/src/colorpicker_selection_tests.rs",
+    "find": ".memory(|m| m.areas().visible_layer_ids().into_iter().filter(|l| l.order == egui::Order::Middle).find_map(|l| m.area_rect(l.id)))",
+    "replace": ".memory(|m| m.area_rect(crate::colorpicker::window_id()))"
+  }
+]
