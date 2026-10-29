@@ -1,21 +1,33 @@
 [
   {
-    "note": "ui: fonts module (your fonts folder, the sectioned font list)",
+    "note": "ui: fonts module (your fonts folder, In this file, Add fonts)",
     "file": "crates/ui-egui/src/lib.rs",
-    "after": "^pub mod variables_panel;$",
+    "after": "^pub mod windows;$",
     "insert": "mod fonts_ui;"
   },
   {
     "note": "ui: fonts folder at start, the open file's fonts, Add fonts, each frame",
-    "file": "crates/ui-egui/src/lib.rs",
-    "after": "^    pub fn logic\\(&mut self, ctx: &egui::Context\\) \\{$",
+    "file": "crates/ui-egui/src/app/commands.rs",
+    "after": "^    pub fn background_tick\\(&mut self, ctx: &egui::Context\\) \\{$",
     "insert": "        crate::fonts_ui::tick(self, ctx);"
   },
   {
-    "note": "text: the sectioned font list with Add fonts",
-    "file": "crates/ui-egui/src/typography.rs",
-    "find": "pub(crate) fn font_picker(ui: &mut Ui, current: Option<&str>, just_opened: bool) -> Option<String> {\n",
-    "replace": "pub(crate) fn font_picker(ui: &mut Ui, current: Option<&str>, just_opened: bool) -> Option<String> {\n    crate::fonts_ui::font_picker(ui, current, just_opened)\n}\n\n/// FigCraft's own flat list (FigCraft Plus shows the sectioned one).\n#[allow(dead_code)]\nfn font_picker_flat(ui: &mut Ui, current: Option<&str>, just_opened: bool) -> Option<String> {\n"
+    "note": "font list: Add fonts… above the search field",
+    "file": "crates/ui-egui/src/panels/typography/picker.rs",
+    "find": "                if before_search(ui) {\n                    return Header::default();\n                }\n",
+    "replace": "                if before_search(ui) {\n                    return Header::default();\n                }\n                // FigCraft Plus: font files of your own, kept in the fonts folder next to the app.\n                crate::fonts_ui::add_fonts_row(ui);\n"
+  },
+  {
+    "note": "font list: In this file, after Recent",
+    "file": "crates/ui-egui/src/panels/typography/picker.rs",
+    "find": "                    if !recent.is_empty() {\n                        rows.push(PickRow::Header(tr(\"Recent\")));\n                        rows.extend(recent.into_iter().map(PickRow::Family));\n                        rows.push(PickRow::Header(tr(\"All fonts\")));\n                    }\n",
+    "replace": "                    if !recent.is_empty() {\n                        rows.push(PickRow::Header(tr(\"Recent\")));\n                        rows.extend(recent.into_iter().map(PickRow::Family));\n                    }\n                    // FigCraft Plus: the families the open file uses.\n                    let in_file = crate::fonts_ui::in_file(&all);\n                    if !in_file.is_empty() {\n                        rows.push(PickRow::Header(tr(\"In this file\")));\n                        rows.extend(in_file.into_iter().map(PickRow::Family));\n                    }\n                    if !rows.is_empty() {\n                        rows.push(PickRow::Header(tr(\"All fonts\")));\n                    }\n"
+  },
+  {
+    "note": "font list: families from the fonts folder are tagged Added",
+    "file": "crates/ui-egui/src/panels/typography/picker.rs",
+    "find": "                            let text_min = pos2(rect.min.x + 22.0, rect.min.y);\n                            match crate::font_preview::family(ui.ctx(), f, 13.0, &mut budget) {",
+    "replace": "                            let text_min = pos2(rect.min.x + 22.0, rect.min.y);\n                            crate::fonts_ui::tag(ui, rect, f, hovered);\n                            match crate::font_preview::family(ui.ctx(), f, 13.0, &mut budget) {"
   },
   {
     "note": "English catalog: the font list's words",

@@ -2,30 +2,30 @@
   {
     "note": "ui: style groups module",
     "file": "crates/ui-egui/src/lib.rs",
-    "after": "^pub mod variables_panel;$",
+    "after": "^pub mod windows;$",
     "insert": "mod style_groups_ui;"
   },
   {
     "note": "Local styles in nested groups",
-    "file": "crates/ui-egui/src/right.rs",
+    "file": "crates/ui-egui/src/panels/right.rs",
     "find": "    crate::style_picker::local_styles(app, ui, doc);\n",
     "replace": "    crate::style_groups_ui::local_styles(app, ui, doc);\n"
   },
   {
     "note": "style slot helper for the groups list",
-    "file": "crates/ui-egui/src/style_picker.rs",
+    "file": "crates/ui-egui/src/widgets/style_picker.rs",
     "find": "    fn holds(self, k: &StyleKind) -> bool {",
     "replace": "    pub(crate) fn holds(self, k: &StyleKind) -> bool {"
   },
   {
     "note": "style slot helper for the groups list",
-    "file": "crates/ui-egui/src/style_picker.rs",
+    "file": "crates/ui-egui/src/widgets/style_picker.rs",
     "find": "    fn title(self) -> &'static str {",
     "replace": "    pub(crate) fn title(self) -> &'static str {"
   },
   {
     "note": "style slot helper for the groups list",
-    "file": "crates/ui-egui/src/style_picker.rs",
+    "file": "crates/ui-egui/src/widgets/style_picker.rs",
     "find": "    fn icon(self) -> Icon {",
     "replace": "    pub(crate) fn icon(self) -> Icon {"
   },

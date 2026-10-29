@@ -2,18 +2,18 @@
   {
     "note": "ui: style dialog module",
     "file": "crates/ui-egui/src/lib.rs",
-    "after": "^pub mod variables_panel;$",
+    "after": "^pub mod windows;$",
     "insert": "mod style_dialog_ui;"
   },
   {
     "note": "engine: text styles bind a number variable to the weight",
-    "file": "crates/engine/src/style_vars.rs",
+    "file": "crates/engine/src/assets/style_vars.rs",
     "find": "            \"fontSize\" | \"lineHeight\" | \"letterSpacing\" => Some(Number),\n",
     "replace": "            \"fontSize\" | \"lineHeight\" | \"letterSpacing\" | \"fontWeight\" => Some(Number),\n"
   },
   {
     "note": "engine: a weight variable sets the text style's weight (keeping italic)",
-    "file": "crates/engine/src/style_vars.rs",
+    "file": "crates/engine/src/assets/style_vars.rs",
     "find": "        (\"fontStyle\", VariableValue::String(f)) if !f.trim().is_empty() => style.font_style = f.clone(),\n",
     "replace": "        (\"fontStyle\", VariableValue::String(f)) if !f.trim().is_empty() => style.font_style = f.clone(),\n        (\"fontWeight\", VariableValue::Number(x)) if x.is_finite() => {\n            let italic = style.italic();\n            style.set_font_style(crate::cmd::props::styled_name(crate::cmd::props::weight_name(x.clamp(1.0, 1000.0) as u16), italic));\n        }\n"
   },
@@ -25,13 +25,13 @@
   },
   {
     "note": "Local styles: a click edits the style in the style dialog",
-    "file": "crates/ui-egui/src/style_picker.rs",
+    "file": "crates/ui-egui/src/widgets/style_picker.rs",
     "find": "fn edit_local(app: &mut FigApp, ui: &Ui, slot: StyleSlot, id: &str) {\n    let y = ui.input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);\n    let edit = app.session.doc().ok().and_then(|d| d.style(id).map(editing));\n    app.ui.style_picker = Some(Picker { slot, ids: app.session.selection(), y, query: String::new(), edit });\n}\n",
     "replace": "fn edit_local(app: &mut FigApp, ui: &Ui, _slot: StyleSlot, id: &str) {\n    // FigCraft Plus: the Figma-like style dialog.\n    let y = ui.input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);\n    crate::style_dialog_ui::open_edit(app, ui.ctx(), id, y);\n}\n"
   },
   {
     "note": "variable list: a style's weight or style binding",
-    "file": "crates/ui-egui/src/variable_ui.rs",
+    "file": "crates/ui-egui/src/panels/variable_ui.rs",
     "find": "            (Target::Style { style, field }, _) => {\n                app.run(\"style.bind\", json!({\"style\": style, \"field\": field, \"variable\": pick.id}));\n            }\n",
     "replace": "            (Target::Style { style, field }, _) => crate::text_vars_ui::bind_style(app, style, field, &pick),\n"
   },
@@ -49,13 +49,13 @@
   },
   {
     "note": "test: a local style opens in the style dialog",
-    "file": "crates/ui-egui/src/style_picker_tests.rs",
+    "file": "crates/ui-egui/src/widgets/style_picker/tests.rs",
     "find": "    let editing = app.ui.style_picker.as_ref().and_then(|p| p.edit.as_ref()).map(|e| e.name.clone());\n    assert_eq!(editing.as_deref(), Some(\"Danger\"), \"a local style opens in the style editor\");\n",
     "replace": "    let editing = crate::style_dialog_ui::editing(&ctx).and_then(|id| app.session.doc().ok()?.style(&id).map(|s| s.name.clone()));\n    assert_eq!(editing.as_deref(), Some(\"Danger\"), \"a local style opens in the style dialog\");\n"
   },
   {
     "note": "style picker: create from a layer and edit in the style dialog",
-    "file": "crates/ui-egui/src/style_picker.rs",
+    "file": "crates/ui-egui/src/widgets/style_picker.rs",
     "find": "            if let Some(id) = made.as_ref().and_then(|v| v[\"id\"].as_str()) {\n                p.query.clear();\n                p.edit = Some(Editing { id: id.to_string(), name, description: String::new(), focus: true });\n            }\n        }\n        Some(Act::Edit(id)) => p.edit = doc.style(&id).map(editing),\n",
     "replace": "            if let Some(id) = made.as_ref().and_then(|v| v[\"id\"].as_str()) {\n                // FigCraft Plus: the Figma-like style dialog.\n                crate::style_dialog_ui::open_created(app, ctx, id, p.y);\n                close = true;\n            }\n        }\n        Some(Act::Edit(id)) => {\n            crate::style_dialog_ui::open_edit(app, ctx, &id, p.y);\n            close = true;\n        }\n"
   }

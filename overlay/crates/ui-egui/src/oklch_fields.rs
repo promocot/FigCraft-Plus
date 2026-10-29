@@ -11,7 +11,8 @@
 //! - a picker that widens to fit the chosen model and can be dragged wider by its left edge.
 
 use egui::{Align2, Color32, Id, Mesh, Pos2, Rect, Sense, Stroke, Ui, pos2, vec2};
-use figcraft_color::{Color, ColorProfile, Hsb, OKLCH_FULL_CHROMA, Oklch};
+use figcraft_color::oklch_profile::Oklch;
+use figcraft_color::{Color, ColorProfile, Hsb, OKLCH_FULL_CHROMA};
 use figcraft_doc::{NodeId, VariableType};
 use figcraft_engine::oklch_links::{self, Channel, Formula, Model};
 use serde_json::json;
@@ -37,7 +38,7 @@ const ALPHA_W: f32 = 60.0;
 pub(crate) const OWN_ROWS: bool = true;
 
 fn model_index(ctx: &egui::Context) -> usize {
-    ctx.data(|d| d.get_temp::<usize>(Id::new("cp_model"))).unwrap_or(0)
+    ctx.data(|d| d.get_temp::<usize>(Id::unique("cp_model"))).unwrap_or(0)
 }
 
 /// The value fields a model shows: (caption, width) each, alpha last when it has one.
@@ -47,6 +48,8 @@ fn columns(model: &str) -> Vec<(&'static str, f32)> {
         "HSL" => vec![("H °", FIELD_W), ("S %", FIELD_W), ("L %", FIELD_W), ("A %", ALPHA_W)],
         "HSB" => vec![("H °", FIELD_W), ("S %", FIELD_W), ("B %", FIELD_W), ("A %", ALPHA_W)],
         "OKLCH" => vec![("L", OKLCH_FIELD_W), ("C", OKLCH_FIELD_W), ("H °", FIELD_W), ("A %", ALPHA_W)],
+        // FigCraft's own LCH row (CIE LCH, sRGB): its narrower fields.
+        "LCH" => vec![("L", 27.0), ("C", 27.0), ("H °", 27.0), ("A %", 40.0)],
         "CSS" => vec![("CSS", 152.0)],
         _ => vec![("Hex", 101.0), ("A %", 44.0)],
     }
@@ -60,7 +63,7 @@ fn needed(model: &str) -> f32 {
 }
 
 fn width_id() -> Id {
-    Id::new("cp_width")
+    Id::unique("cp_width")
 }
 
 /// The picker's width now: what the user dragged it to, at least what the chosen model needs.
@@ -75,7 +78,7 @@ pub(crate) fn picker_width(ctx: &egui::Context, models: &[&str]) -> f32 {
 pub(crate) fn resize_handle(ui: &mut Ui, width: f32) {
     let r = ui.min_rect();
     let strip = Rect::from_min_max(pos2(r.min.x, r.min.y), pos2(r.min.x + 6.0, r.max.y));
-    let resp = ui.interact(strip, Id::new("cp_resize"), Sense::drag());
+    let resp = ui.interact(strip, Id::unique("cp_resize"), Sense::drag());
     if resp.hovered() || resp.dragged() {
         ui.ctx().set_cursor_icon(egui::CursorIcon::ResizeHorizontal);
     }
@@ -129,13 +132,13 @@ enum Ev {
 }
 
 fn ctx_id() -> Id {
-    Id::new("cp_bind_ctx")
+    Id::unique("cp_bind_ctx")
 }
 fn events_id() -> Id {
-    Id::new("cp_bind_events")
+    Id::unique("cp_bind_events")
 }
 fn popup_id() -> Id {
-    Id::new("cp_bind_popup")
+    Id::unique("cp_bind_popup")
 }
 
 /// The source of `target`'s colour, if it can hold a formula.
@@ -310,7 +313,7 @@ pub(crate) fn model_row(ui: &mut Ui, c: Color, profile: ColorProfile, label: &st
     let mut new: Option<(usize, f64)> = None;
     for k in 0..4 {
         let w = cols.get(k).map_or(FIELD_W, |(_, w)| *w);
-        let id = Id::new(("cp_ch", label, k));
+        let id = Id::unique(("cp_ch", label, k));
         let name = format!("{} {}", model.label(), if k == 3 { "alpha" } else { names[k] });
         if let Some(var) = bound.and_then(|f| f.var(k)) {
             let (rect, _) = ui.allocate_exact_size(vec2(w, widgets::FIELD_H), Sense::hover());
@@ -457,7 +460,7 @@ pub(crate) fn bindings_ui(app: &mut FigApp, ui: &mut Ui, color: Color, models: &
 }
 
 fn cache_id() -> Id {
-    Id::new("cp_oklch")
+    Id::unique("cp_oklch")
 }
 
 /// The OKLCH of `c` as it is. A grey has no hue of its own: it keeps the hue last set for it (so
@@ -557,7 +560,7 @@ pub(crate) fn plane(ui: &mut Ui, rect: Rect, hsb: &mut Hsb, color: Color, profil
     if profile == ColorProfile::DisplayP3 {
         ui.painter().extend(egui::Shape::dashed_line(&edge(ColorProfile::Srgb), Stroke::new(1.0, t.text_secondary), 3.0, 3.0));
     }
-    let resp = ui.interact(rect, Id::new("cp_sv"), Sense::click_and_drag());
+    let resp = ui.interact(rect, Id::unique("cp_sv"), Sense::click_and_drag());
     let mut changed = false;
     if (resp.dragged() || resp.clicked() || resp.drag_started())
         && let Some(p) = resp.interact_pointer_pos()
@@ -592,7 +595,7 @@ pub(crate) fn hue_strip(ui: &mut Ui, rect: Rect, hsb: &mut Hsb, color: Color, pr
         }
     }
     ui.painter().add(m);
-    let resp = ui.interact(rect.expand(4.0), Id::new("cp_hue"), Sense::click_and_drag());
+    let resp = ui.interact(rect.expand(4.0), Id::unique("cp_hue"), Sense::click_and_drag());
     let mut changed = false;
     if (resp.dragged() || resp.clicked() || resp.drag_started())
         && let Some(p) = resp.interact_pointer_pos()

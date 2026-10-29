@@ -2,12 +2,12 @@
   {
     "note": "ui: Local styles + module",
     "file": "crates/ui-egui/src/lib.rs",
-    "after": "^pub mod variables_panel;$",
+    "after": "^pub mod windows;$",
     "insert": "mod styles_plus_ui;"
   },
   {
     "note": "design panel: Local styles header with +",
-    "file": "crates/ui-egui/src/right.rs",
+    "file": "crates/ui-egui/src/panels/right.rs",
     "find": "    widgets::section_header(ui, tr(\"Local styles\"), &[], figcraft_engine::library::local_styles(doc).next().is_none());\n",
     "replace": "    crate::styles_plus_ui::header(app, ui, doc);\n"
   }

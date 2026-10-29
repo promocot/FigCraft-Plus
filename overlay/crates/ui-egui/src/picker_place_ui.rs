@@ -18,9 +18,9 @@ use crate::FigApp;
 use crate::colorpicker::PickerTarget;
 
 /// The window id of the colour picker: egui names a window's area by its title text
-/// (`Id::new(title.text())`, an `Option<Cow<str>>`).
+/// (`Id::unique(title.text())`, an `Option<Cow<str>>`).
 fn window_id() -> Id {
-    Id::new(Some(std::borrow::Cow::<str>::Borrowed("color_picker")))
+    Id::unique(Some(std::borrow::Cow::<str>::Borrowed("color_picker")))
 }
 
 #[derive(Clone, Debug, Default)]
@@ -37,12 +37,12 @@ struct Anchor {
 }
 
 fn anchor_id() -> Id {
-    Id::new("figcraftplus_picker_anchor")
+    Id::unique("figcraftplus_picker_anchor")
 }
 
 /// The last widget clicked and the pass it was clicked in.
 fn last_click_id() -> Id {
-    Id::new("figcraftplus_picker_last_click")
+    Id::unique("figcraftplus_picker_last_click")
 }
 
 /// What `t` edits, ignoring which layers: "Paint { fills: true, index: 0 }".
@@ -143,7 +143,7 @@ pub(crate) fn position(app: &FigApp, ctx: &egui::Context, w: f32, beside: Option
         (Some(p), _) => p,
         (None, Some(r)) => {
             // Opened from the style dialog: beside the dialog, not over it.
-            let dialog = ctx.memory(|m| m.area_rect(Id::new("figcraftplus_style_dialog_area"))).filter(|d| d.contains(r.center()));
+            let dialog = ctx.memory(|m| m.area_rect(Id::unique("figcraftplus_style_dialog_area"))).filter(|d| d.contains(r.center()));
             let x = if let Some(d) = dialog {
                 d.min.x - w - 8.0
             } else if r.min.x >= right_panel - 1.0 {

@@ -27,7 +27,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use figcraft_color::{Color, ColorProfile, Hsb, Hsl, OKLCH_FULL_CHROMA, Oklch, PaintKind};
+use figcraft_color::oklch_profile::Oklch;
+use figcraft_color::{Color, ColorProfile, Hsb, Hsl, OKLCH_FULL_CHROMA, PaintKind};
 use figcraft_doc::{Document, NodeId, NodeKind, StyleKind, VariableType, VariableValue};
 
 /// The layer data key holding a layer's (or page's) colour formulas, one per line.
