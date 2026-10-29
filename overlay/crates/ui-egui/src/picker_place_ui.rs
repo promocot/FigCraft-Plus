@@ -1,4 +1,4 @@
-//! FigCraft Plus: where the colour picker opens and when it closes, as in Figma.
+//! FigCraft Plus: where the colour picker opens and when it closes.
 //!
 //! - It opens beside the control that opened it (a fill's swatch, a colour variable's value, a
 //!   style's paint…): left of the Design panel at the swatch's height, else beside the swatch, on

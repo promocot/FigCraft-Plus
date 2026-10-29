@@ -3,7 +3,7 @@
     "note": "FigCraft's test picker_closes_when_another_layer_is_selected: replaced by a Plus behaviour",
     "file": "crates/ui-egui/src/colorpicker_selection_tests.rs",
     "find": "#[test]\nfn picker_closes_when_another_layer_is_selected() {",
-    "replace": "#[test]\n#[ignore = \"FigCraft Plus: the picker follows the selection to the same slot (picker_place_ui), as in Figma\"]\nfn picker_closes_when_another_layer_is_selected() {"
+    "replace": "#[test]\n#[ignore = \"FigCraft Plus: the picker follows the selection to the same slot (picker_place_ui)\"]\nfn picker_closes_when_another_layer_is_selected() {"
   },
   {
     "note": "FigCraft's test lch_and_oklch_picker_fields_edit_lightness_keeping_hue: replaced by a Plus behaviour",

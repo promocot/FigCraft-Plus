@@ -1,4 +1,4 @@
-//! FigCraft Plus: the variable picker, as in Figma, and variable scopes everywhere.
+//! FigCraft Plus: the variable picker, and variable scopes everywhere.
 //!
 //! - One picker for every place a variable is applied (layer properties, shared styles, alias
 //!   values, prototype actions, colour channels): a light rounded card (dark in the dark theme) with
@@ -7,7 +7,7 @@
 //!   the variable in use is checked. Arrow keys move through the rows and Enter applies one.
 //! - Scopes: a property offers only the variables scoped to it, a shared style's fields too (a text
 //!   style's size, a shadow's colour…). A variable with every scope off is offered nowhere but the
-//!   Variables editor (prototyping and aliases still see it, as in Figma). Fields without a scope
+//!   Variables editor (prototyping and aliases still see it). Fields without a scope
 //!   (colour channels, layout grids) offer every number variable that isn't hidden.
 
 use egui::{Align2, Color32, CornerRadius, Id, Key, Modifiers, Pos2, Rect, Sense, Stroke, Ui, pos2, vec2};

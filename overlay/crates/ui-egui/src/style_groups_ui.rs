@@ -2,7 +2,7 @@
 //!
 //! Styles of one type (text, colour, effect, layout grid) sit in nested groups, kept as "/" in
 //! their names ("Brand/Blue/500" is the style "500" in the group "Blue" inside "Brand"), so files
-//! stay readable by FigCraft and by Figma. Types never mix: a text style can't go into a colour
+//! stay readable by the official FigCraft. Types never mix: a text style can't go into a colour
 //! group.
 //!
 //! - A click selects a style (Ctrl/Shift-click: several); double-click or the edit button on hover

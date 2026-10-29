@@ -203,9 +203,10 @@ jobs:
 
           Download the .zip, unpack it anywhere (a USB drive is fine) and run figcraft.exe. .figcraft files stay compatible with the official app.
 
-          Add-ons: OKLCH the oklch.com way (L 0-1, file colour profile, OKLCH plane and hue strip), colour channels bound to number variables, a picker that opens beside its control and follows the selection, weight / paragraph spacing / indent variables, Figma-like style dialogs and style groups, a Figma-like variable picker, variable ordering and sorting, a portable fonts folder, derived colours and calculated variables (requested in https://github.com/storytold/figcraft/issues/1280), rem units with a root size per file (requested in https://github.com/storytold/figcraft/issues/1325). See the README for details and for what moved into FigCraft itself."
+          Add-ons: OKLCH the oklch.com way (L 0-1, file colour profile, OKLCH plane and hue strip), colour channels bound to number variables, a picker that opens beside its control and follows the selection, weight / paragraph spacing / indent variables, style dialogs and style groups, a richer variable picker, variable ordering and sorting, a portable fonts folder, derived colours and calculated variables (requested in https://github.com/storytold/figcraft/issues/1280), rem units with a root size per file (requested in https://github.com/storytold/figcraft/issues/1325). See the README for details and for what moved into FigCraft itself."
           if gh release view "$RELEASE" >/dev/null 2>&1; then
             gh release upload "$RELEASE" dist/*.zip --clobber
+            gh release edit "$RELEASE" --title "FigCraft Plus ${PLUS} · FigCraft ${REF}" --notes "$notes"
           else
             gh release create "$RELEASE" dist/*.zip --title "FigCraft Plus ${PLUS} · FigCraft ${REF}" --notes "$notes" --latest
           fi

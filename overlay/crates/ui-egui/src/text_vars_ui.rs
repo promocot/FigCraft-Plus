@@ -1,4 +1,4 @@
-//! FigCraft Plus: more of the text section takes variables, as in Figma: the font weight (a number
+//! FigCraft Plus: more of the text section takes variables: the font weight (a number
 //! variable, besides FigCraft's own style strings), paragraph spacing and paragraph indent; and
 //! the Variables editor's "Edit variable" button (details and scope) on every row.
 //!
@@ -131,7 +131,7 @@ fn details_anchor_id() -> egui::Id {
     egui::Id::unique("figcraftplus_details_anchor")
 }
 
-/// Where the Edit variable window goes, as in Figma: beside the Variables editor (right of it, else
+/// Where the Edit variable window goes: beside the Variables editor (right of it, else
 /// left, else over its right end) at the height of the variable's row, inside the window. It is
 /// drawn above the editor.
 pub(crate) fn details_pos(ctx: &egui::Context) -> egui::Pos2 {

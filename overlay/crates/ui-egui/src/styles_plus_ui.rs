@@ -1,4 +1,4 @@
-//! FigCraft Plus: the "+" on the Design panel's Local styles header (as in Figma). It offers the
+//! FigCraft Plus: the "+" on the Design panel's Local styles header. It offers the
 //! style types — Text, Color, Effect, Layout grid — and creates the chosen one from default values
 //! (nothing needs to be selected) and opens the style dialog on it (`style_dialog_ui`).
 

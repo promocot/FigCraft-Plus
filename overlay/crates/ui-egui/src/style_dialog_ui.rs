@@ -1,4 +1,4 @@
-//! FigCraft Plus: the style dialog, as in Figma — "Create new text / color / effect / layout grid
+//! FigCraft Plus: the style dialog — "Create new text / color / effect / layout grid
 //! style" from the Local styles "+", and the same dialog to edit a style from the Local styles list.
 //!
 //! It shows a preview, the name and description, and the style's properties: a text style's font,

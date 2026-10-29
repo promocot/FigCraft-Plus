@@ -27,7 +27,7 @@
     "note": "Local styles: a click edits the style in the style dialog",
     "file": "crates/ui-egui/src/widgets/style_picker.rs",
     "find": "fn edit_local(app: &mut FigApp, ui: &Ui, slot: StyleSlot, id: &str) {\n    let y = ui.input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);\n    let edit = app.session.doc().ok().and_then(|d| d.style(id).map(editing));\n    app.ui.style_picker = Some(Picker { slot, ids: app.session.selection(), y, query: String::new(), edit });\n}\n",
-    "replace": "fn edit_local(app: &mut FigApp, ui: &Ui, _slot: StyleSlot, id: &str) {\n    // FigCraft Plus: the Figma-like style dialog.\n    let y = ui.input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);\n    crate::style_dialog_ui::open_edit(app, ui.ctx(), id, y);\n}\n"
+    "replace": "fn edit_local(app: &mut FigApp, ui: &Ui, _slot: StyleSlot, id: &str) {\n    // FigCraft Plus: the style dialog.\n    let y = ui.input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);\n    crate::style_dialog_ui::open_edit(app, ui.ctx(), id, y);\n}\n"
   },
   {
     "note": "variable list: a style's weight or style binding",
@@ -57,6 +57,6 @@
     "note": "style picker: create from a layer and edit in the style dialog",
     "file": "crates/ui-egui/src/widgets/style_picker.rs",
     "find": "            if let Some(id) = made.as_ref().and_then(|v| v[\"id\"].as_str()) {\n                p.query.clear();\n                p.edit = Some(Editing { id: id.to_string(), name, description: String::new(), focus: true });\n            }\n        }\n        Some(Act::Edit(id)) => p.edit = doc.style(&id).map(editing),\n",
-    "replace": "            if let Some(id) = made.as_ref().and_then(|v| v[\"id\"].as_str()) {\n                // FigCraft Plus: the Figma-like style dialog.\n                crate::style_dialog_ui::open_created(app, ctx, id, p.y);\n                close = true;\n            }\n        }\n        Some(Act::Edit(id)) => {\n            crate::style_dialog_ui::open_edit(app, ctx, &id, p.y);\n            close = true;\n        }\n"
+    "replace": "            if let Some(id) = made.as_ref().and_then(|v| v[\"id\"].as_str()) {\n                // FigCraft Plus: the style dialog.\n                crate::style_dialog_ui::open_created(app, ctx, id, p.y);\n                close = true;\n            }\n        }\n        Some(Act::Edit(id)) => {\n            crate::style_dialog_ui::open_edit(app, ctx, &id, p.y);\n            close = true;\n        }\n"
   }
 ]

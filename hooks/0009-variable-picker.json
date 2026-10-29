@@ -24,10 +24,10 @@
     "replace": "pub(crate) fn picker_id() -> Id {"
   },
   {
-    "note": "the Figma-like picker replaces FigCraft's",
+    "note": "the richer picker replaces FigCraft's",
     "file": "crates/ui-egui/src/panels/variable_ui.rs",
     "find": "pub fn picker(app: &mut FigApp, ctx: &egui::Context) {\n",
-    "replace": "pub fn picker(app: &mut FigApp, ctx: &egui::Context) {\n    // FigCraft Plus: the Figma-like picker, with scopes everywhere.\n    crate::var_picker_ui::picker(app, ctx);\n}\n\n#[allow(dead_code)]\nfn picker_plain(app: &mut FigApp, ctx: &egui::Context) {\n"
+    "replace": "pub fn picker(app: &mut FigApp, ctx: &egui::Context) {\n    // FigCraft Plus: the richer picker, with scopes everywhere.\n    crate::var_picker_ui::picker(app, ctx);\n}\n\n#[allow(dead_code)]\nfn picker_plain(app: &mut FigApp, ctx: &egui::Context) {\n"
   },
   {
     "note": "where the picker is",
