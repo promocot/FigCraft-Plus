@@ -6,7 +6,7 @@ ships a feature of its own, it is removed here.
 
 | | |
 |---|---|
-| **FigCraft Plus** | **1** |
+| **FigCraft Plus** | **2** |
 | **Built on** | FigCraft **v0.12.1** (the latest official release) |
 | **Files** | `.figcraft` files stay fully compatible with the official app, both ways |
 
@@ -25,6 +25,15 @@ To hear about new builds, use **Watch → Custom → Releases** on this page.
 
 The build is FigCraft from the same release tag, built the same way (release profile, static C
 runtime, embedded fonts, `figcraft-cli.exe` included), plus the add-ons below.
+
+## Requested in FigCraft's issues, made here
+
+Features FigCraft users asked for in the official tracker that FigCraft itself hasn't taken up:
+
+| Request | In FigCraft Plus |
+|---|---|
+| [storytold/figcraft#1280 — Variable Referencing](https://github.com/storytold/figcraft/issues/1280) | 2 — [derived colours and calculated variables](#derived-colours-and-calculated-variables) |
+| [storytold/figcraft#1325 — REM as a typography input unit, with a configurable root size](https://github.com/storytold/figcraft/issues/1325) | 2 — [rem units](#rem-units) |
 
 ## Now in FigCraft itself (removed from Plus)
 
@@ -63,6 +72,51 @@ rainbow kept). In FigCraft Plus the picker's OKLCH model goes further:
   chroma, so dragging the hue keeps the lightness.
 - Verified against the [coloraide](https://github.com/facelessuser/coloraide) reference
   implementation (CSS Color 4) on 6,000 colours: largest difference 0.000001.
+
+### Derived colours and calculated variables
+
+*Requested in [storytold/figcraft#1280](https://github.com/storytold/figcraft/issues/1280).*
+
+A colour can be made from another one, in CSS's own syntax, and stays in step with it — in every
+mode (Light / Dark), and down a chain (a hover from a faded colour from the brand colour):
+
+| Typed | Gives |
+|---|---|
+| `oklch(from {Brand/Primary} l c h / 50%)` | the brand colour, half transparent |
+| `oklch(from {Brand/Primary} calc(l - 0.08) c h)` | a darker hover |
+| `oklch(from {Brand/Primary} l c calc(h + 180))` | its complement |
+| `color-mix(in oklch, {Brand/Primary} 20%, {Surface})` | a tint of the surface |
+| `hsl(from #3A81F6 h s calc(l * {Shade}))` | a fixed colour, shaded by a number variable |
+
+- **Type it into the colour picker's CSS field** (the model menu's last entry) — for a colour
+  variable, a style's paint or a layer's fill, stroke, gradient stop or effect. The picker shows
+  the formula under the fields, with a button that detaches it (the colour stays as it is).
+- `from` takes a colour variable `{name}` or a hex colour; the model's keywords (`l c h`, `h s l`,
+  `h s b`, `r g b`, `alpha`) are the base colour's channels, in the picker's units, and work in
+  `calc()` with numbers and number variables. Without `/ alpha` a derived colour keeps its base's
+  alpha.
+- `color-mix` mixes in `oklch`, `hsl`, `hsb` or `srgb`, hues the shorter way round; editing a mixed
+  colour by hand detaches it.
+
+**Number variables from other number variables:** a line `calc({Space/Base} * 2)` in a number
+variable's description keeps its value at twice `Space/Base`, in every mode. Editing the value by
+hand detaches it; variables that read each other in a loop are left as they are.
+
+The formulas live in the descriptions (and layer data) as text, so the official FigCraft opens
+the files and keeps the last computed values.
+
+### rem units
+
+*Requested in [storytold/figcraft#1325](https://github.com/storytold/figcraft/issues/1325).*
+
+- **Every number field takes `rem`:** `1.5rem` is 1.5 × the file's root size; arithmetic works
+  (`2rem + 4`), and so do line height and letter spacing.
+- **The root size belongs to the file** (16 px unless set): Typography ▸ Type settings (⋯) ▸
+  **Root size (rem)**. The official FigCraft ignores it and opens the file as before.
+- **Show sizes in rem** (same place, a preference): font size, line height, letter spacing and
+  paragraph spacing show in rem; a bare number typed there is then rem too, `px` still means px.
+  Values are stored in px, as FigCraft stores them, so files stay compatible.
+- Dev Mode's px → rem code uses the file's root size instead of a fixed 16.
 
 ### A better picker
 

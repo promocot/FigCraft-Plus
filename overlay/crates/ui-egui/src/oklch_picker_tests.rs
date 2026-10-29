@@ -249,3 +249,26 @@ fn the_oklch_plane_sets_lightness_and_chroma_and_the_hue_strip_keeps_lightness()
     let o = Oklch::from_color(got, ColorProfile::Srgb);
     assert!((o.l - before.l).abs() < 0.02 && (o.h - 130.0).abs() < 4.0, "{o:?} from {before:?}");
 }
+
+#[test]
+fn a_formula_typed_in_the_css_field_derives_the_fill_from_a_variable() {
+    // storytold/figcraft#1280: `oklch(from {Primary} l c h / 50%)` typed where a CSS colour goes.
+    let (mut u, a) = setup("#000000");
+    let c = u.app.session.execute("variable.createCollection", &json!({"name": "Theme"})).unwrap()["id"].as_str().unwrap().to_string();
+    u.app.session.execute("variable.create", &json!({"collection": c, "name": "Primary", "type": "color", "value": "#3A81F6"})).unwrap();
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::unique("cp_model"), 6usize)); // CSS
+    u.frame(vec![]);
+    assert!(crate::oklch_fields::typed_formula(&u.ctx, "oklch(from {Primary} l c h / 50%)"));
+    assert!(!crate::oklch_fields::typed_formula(&u.ctx, "#FF0000"), "a plain colour is the CSS field's own");
+    u.frame(vec![]);
+    u.frame(vec![]);
+    assert_eq!(plus_data(&u, a), "fills/0 oklch(from {Primary} l c h / 50)");
+    let doc = u.app.session.doc().unwrap();
+    let p = &doc.node(a).unwrap().fills[0];
+    assert_eq!((fill(&u, a).to_hex(), (p.opacity * 100.0).round()), ("3A81F6".to_string(), 50.0));
+    // The CSS field shows the formula; the base changes and the fill follows.
+    assert_eq!(crate::oklch_fields::css_text(&u.ctx, fill(&u, a)), "oklch(from {Primary} l c h / 50)");
+    u.app.run("variable.set", json!({"variable": "Primary", "value": "#EF3D88"}));
+    u.frame(vec![]);
+    assert_eq!(fill(&u, a).to_hex(), "EF3D88");
+}

@@ -166,5 +166,23 @@
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
     "find": "        if MODELS.get(model) != Some(&\"CSS\") {\n            let alpha",
     "replace": "        if !matches!(MODELS.get(model).copied(), Some(\"CSS\" | \"RGB\" | \"HSL\" | \"HSB\" | \"OKLCH\"))\n            || !crate::oklch_fields::OWN_ROWS\n        {\n            let alpha"
+  },
+  {
+    "note": "picker: the CSS field shows and takes formulas (oklch(from …), color-mix(…); storytold/figcraft#1280)",
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
+    "find": "                if let Some(text) = widgets::text_field(ui, Id::unique(\"cp_css\"), &c.to_css(), 152.0, \"\") {\n                    out = Color::parse_css(&text);\n                }",
+    "replace": "                if let Some(text) = widgets::text_field(ui, Id::unique(\"cp_css\"), &crate::oklch_fields::css_text(ui.ctx(), c), 152.0, \"\") {\n                    // FigCraft Plus: a formula (a colour from another, a mix) is stored as one.\n                    out = if crate::oklch_fields::typed_formula(ui.ctx(), &text) { None } else { Color::parse_css(&text) };\n                }"
+  },
+  {
+    "note": "English: derived colours",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Detach alias\" = ",
+    "insert": "\"Detach formula\" = \"Detach formula\""
+  },
+  {
+    "note": "Russian: derived colours",
+    "file": "crates/ui-egui/locales/ru.toml",
+    "after": "^\"Detach alias\" = ",
+    "insert": "\"Detach formula\" = \"Отвязать формулу\""
   }
 ]

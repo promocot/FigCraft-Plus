@@ -1,0 +1,104 @@
+[
+  {
+    "note": "ui: rem module (storytold/figcraft#1325)",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod windows;$",
+    "insert": "mod rem_ui;"
+  },
+  {
+    "note": "each frame: the file's root size, the rem display preference",
+    "file": "crates/ui-egui/src/app/commands.rs",
+    "after": "^    pub fn background_tick\\(&mut self, ctx: &egui::Context\\) \\{$",
+    "insert": "        crate::rem_ui::tick(self, ctx);"
+  },
+  {
+    "note": "number fields: reading a typed text starts afresh",
+    "file": "crates/ui-egui/src/widgets/field_math.rs",
+    "after": "^pub fn parse\\(text: &str, percent_unit: bool\\) -> Option<Typed> \\{$",
+    "insert": "    crate::rem_ui::begin_parse();"
+  },
+  {
+    "note": "number fields: rem is the file's root size",
+    "file": "crates/ui-egui/src/widgets/field_math.rs",
+    "find": "        while self.chars.next_if(is_unit).is_some() {}\n        Some(v)\n",
+    "replace": "        let mut unit = String::new();\n        while let Some(c) = self.chars.next_if(is_unit) {\n            unit.push(c);\n        }\n        // FigCraft Plus: `rem` is the file's root size (storytold/figcraft#1325).\n        Some(crate::rem_ui::unit(v, &unit))\n"
+  },
+  {
+    "note": "font size: shown in rem (while editing text)",
+    "file": "crates/ui-egui/src/panels/typography/fields.rs",
+    "find": "widgets::number_field(ui, Id::unique(\"ty_size\"), Lead::None, size, \"\", half - 20.0, 1.0)",
+    "replace": "widgets::number_field(ui, Id::unique(\"ty_size\"), Lead::None, crate::rem_ui::shown(size), crate::rem_ui::suffix(), half - 20.0, 1.0)"
+  },
+  {
+    "note": "font size: shown in rem",
+    "file": "crates/ui-egui/src/panels/typography/fields.rs",
+    "find": "crate::variable_ui::number_field(app, ui, ids, \"fontSize\", Id::unique(\"ty_size\"), Lead::None, size, \"\", half - 20.0)",
+    "replace": "crate::variable_ui::number_field(app, ui, ids, \"fontSize\", Id::unique(\"ty_size\"), Lead::None, crate::rem_ui::shown(size), crate::rem_ui::suffix(), half - 20.0)"
+  },
+  {
+    "note": "font size: a value typed or scrubbed in rem goes back to px",
+    "file": "crates/ui-egui/src/panels/typography/fields.rs",
+    "find": "        };\n        match e {\n            Some(FieldEdit::Set(v)) => apply_style(app, \"fontSize\"",
+    "replace": "        };\n        let e = crate::rem_ui::to_px(e);\n        match e {\n            Some(FieldEdit::Set(v)) => apply_style(app, \"fontSize\""
+  },
+  {
+    "note": "line height: shown in rem",
+    "file": "crates/ui-egui/src/panels/typography/fields.rs",
+    "find": "let lh_label = lh.map(|l| l.label()).unwrap_or_else(|| tr(MIXED).into());",
+    "replace": "let lh_label = crate::rem_ui::label(lh.map(|l| l.label()).unwrap_or_else(|| tr(MIXED).into()));"
+  },
+  {
+    "note": "letter spacing: shown in rem",
+    "file": "crates/ui-egui/src/panels/typography/fields.rs",
+    "find": "let ls_label = ls.map(|l| l.label()).unwrap_or_else(|| tr(MIXED).into());",
+    "replace": "let ls_label = crate::rem_ui::label(ls.map(|l| l.label()).unwrap_or_else(|| tr(MIXED).into()));"
+  },
+  {
+    "note": "paragraph spacing: shown and typed in rem",
+    "file": "crates/ui-egui/src/panels/typography/fields.rs",
+    "find": "let ps_label = ps.map(trim_num).unwrap_or_else(|| tr(MIXED).into());",
+    "replace": "let ps_label = crate::rem_ui::label(ps.map(trim_num).unwrap_or_else(|| tr(MIXED).into()));"
+  },
+  {
+    "note": "paragraph spacing: typed in rem",
+    "file": "crates/ui-egui/src/panels/typography/fields.rs",
+    "find": "&& let Some(v) = widgets::eval(&edit.text(), ps)",
+    "replace": "&& let Some(v) = crate::rem_ui::length(&edit.text(), ps)"
+  },
+  {
+    "note": "line height: typed in rem",
+    "file": "crates/ui-egui/src/panels/typography/spacing.rs",
+    "after": "^pub\\(crate\\) fn parse_line_height\\(s: &str, cur: Option<LineHeight>\\) -> Option<Value> \\{$",
+    "insert": "    // FigCraft Plus: rem (storytold/figcraft#1325).\n    if let Some(v) = crate::rem_ui::spacing(s, !matches!(cur, Some(LineHeight::Percent(_)))) {\n        return Some(json!(v.max(0.0)));\n    }"
+  },
+  {
+    "note": "letter spacing: typed in rem",
+    "file": "crates/ui-egui/src/panels/typography/spacing.rs",
+    "after": "^pub\\(crate\\) fn parse_letter_spacing\\(s: &str, cur: Option<LetterSpacing>\\) -> Option<Value> \\{$",
+    "insert": "    // FigCraft Plus: rem (storytold/figcraft#1325).\n    if let Some(v) = crate::rem_ui::spacing(s, matches!(cur, Some(LetterSpacing::Pixels(_)))) {\n        return Some(json!(v));\n    }"
+  },
+  {
+    "note": "Type settings: Root size and Show sizes in rem",
+    "file": "crates/ui-egui/src/panels/typography/fields.rs",
+    "find": "    let tab_id = Id::unique(\"ty_settings_tab\");\n",
+    "replace": "    // FigCraft Plus: the file's rem root size (storytold/figcraft#1325).\n    crate::rem_ui::settings(app, ui);\n    let tab_id = Id::unique(\"ty_settings_tab\");\n"
+  },
+  {
+    "note": "Dev Mode: px to rem with the file's root size",
+    "file": "crates/ui-egui/src/panels/right/inspect.rs",
+    "find": "figcraft_engine::codegen::px_to_rem(&code, 16.0)",
+    "replace": "figcraft_engine::codegen::px_to_rem(&code, crate::rem_ui::root())"
+  },
+  {
+    "note": "English: rem settings",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Root size (rem)\" = \"Root size (rem)\"\n\"Show sizes in rem\" = \"Show sizes in rem\""
+  },
+  {
+    "note": "Russian: rem settings",
+    "file": "crates/ui-egui/locales/ru.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Root size (rem)\" = \"Корневой размер (rem)\"\n\"Show sizes in rem\" = \"Показывать размеры в rem\""
+  }
+]

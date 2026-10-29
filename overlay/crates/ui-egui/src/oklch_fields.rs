@@ -20,6 +20,7 @@ use serde_json::json;
 use crate::FigApp;
 use crate::colorpicker::PickerTarget;
 use crate::i18n::tr;
+use crate::icons::{self, Icon};
 use crate::theme::{Tokens, doc_c32, regular};
 use crate::widgets::{self, BindEvent};
 
@@ -315,9 +316,9 @@ pub(crate) fn model_row(ui: &mut Ui, c: Color, profile: ColorProfile, label: &st
         let w = cols.get(k).map_or(FIELD_W, |(_, w)| *w);
         let id = Id::unique(("cp_ch", label, k));
         let name = format!("{} {}", model.label(), if k == 3 { "alpha" } else { names[k] });
-        if let Some(var) = bound.and_then(|f| f.var(k)) {
+        if let Some(var) = bound.and_then(|f| f.channel_label(k)) {
             let (rect, _) = ui.allocate_exact_size(vec2(w, widgets::FIELD_H), Sense::hover());
-            match widgets::bound_field(ui, id, widgets::Lead::Named(&name), rect, var) {
+            match widgets::bound_field(ui, id, widgets::Lead::Named(&name), rect, &var) {
                 Some(BindEvent::Open(at)) => push(&ctx, Ev::Open(k, at)),
                 Some(BindEvent::Detach) => push(&ctx, Ev::Detach(k)),
                 None => {}
@@ -403,10 +404,34 @@ pub(crate) fn bindings_ui(app: &mut FigApp, ui: &mut Ui, color: Color, models: &
             _ => {}
         }
     }
+    // A colour typed as a formula in the CSS field (storytold/figcraft#1280).
+    if let Some(text) = ctx.data_mut(|d| d.remove_temp::<String>(typed_id()))
+        && let Some((_, f)) = oklch_links::parse_line(&text)
+    {
+        write_formula(app, &src, Some(&f));
+    }
+    // A derived colour: its formula, and a button that keeps the colour as it is now.
+    if let Some(f) = b.formula.as_ref().filter(|f| f.derive.is_some()) {
+        let t = Tokens::get(&ctx);
+        let mut detach = false;
+        ui.horizontal(|ui| {
+            ui.add_space(16.0);
+            let w = ui.available_width() - 40.0;
+            let text = oklch_links::format(f);
+            let (r, resp) = ui.allocate_exact_size(vec2(w.max(40.0), 16.0), Sense::hover());
+            ui.painter().with_clip_rect(r).text(r.left_center(), Align2::LEFT_CENTER, &text, egui::FontId::monospace(10.0), t.text_secondary);
+            resp.on_hover_text(&text);
+            detach = icons::button(ui, Icon::Detach, 20.0, false, tr("Detach formula")).clicked();
+        });
+        if detach {
+            write_formula(app, &src, None);
+        }
+    }
     // Links made in another model: say so (they stay until a link is made here).
     if let (Some(f), Some(m)) = (&b.formula, model)
         && f.model != m
         && f.linked()
+        && f.derive.is_none()
     {
         let t = Tokens::get(&ctx);
         let linked: Vec<&str> = (0..4).filter(|k| f.var(*k).is_some()).map(|k| f.model.letters()[k]).collect();
@@ -457,6 +482,30 @@ pub(crate) fn bindings_ui(app: &mut FigApp, ui: &mut Ui, color: Color, models: &
     if close {
         ctx.data_mut(|d| d.remove_temp::<(usize, String, Pos2)>(popup_id()));
     }
+}
+
+fn typed_id() -> Id {
+    Id::unique("cp_typed_formula")
+}
+
+/// The CSS field's text: a derived or linked colour's formula, else the colour's CSS.
+pub(crate) fn css_text(ctx: &egui::Context, c: Color) -> String {
+    match bind_ctx(ctx).formula {
+        Some(f) if f.linked() => oklch_links::format(&f),
+        _ => c.to_css(),
+    }
+}
+
+/// What was typed into the CSS field, when it is a formula that reads variables or other colours
+/// (`oklch(from {Primary} l c h / 50%)`, `color-mix(…)`): kept for [`bindings_ui`] to store, and
+/// true. A plain colour is the field's own business.
+pub(crate) fn typed_formula(ctx: &egui::Context, text: &str) -> bool {
+    let Some((None, f)) = oklch_links::parse_line(text) else { return false };
+    if !f.linked() {
+        return false;
+    }
+    ctx.data_mut(|d| d.insert_temp(typed_id(), text.trim().to_string()));
+    true
 }
 
 fn cache_id() -> Id {
