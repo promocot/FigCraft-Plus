@@ -169,8 +169,15 @@ pub(crate) fn tick(app: &mut FigApp, ctx: &egui::Context) {
 
 /// Ask for font files, copy them into the fonts folder and add them.
 fn add_fonts(app: &mut FigApp) {
+    if dir().is_none() {
+        return;
+    }
+    app.pick_open(tr("Add fonts"), &EXTS, |_, src| copy_and_add(&src));
+}
+
+/// Copy the font file `src` into the fonts folder and add it.
+fn copy_and_add(src: &Path) {
     let Some(root) = dir() else { return };
-    let Some(src) = app.services.pick_open(tr("Add fonts"), &EXTS) else { return };
     if std::fs::create_dir_all(&root).is_err() {
         return;
     }

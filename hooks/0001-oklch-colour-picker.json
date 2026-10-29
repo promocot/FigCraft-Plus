@@ -78,6 +78,18 @@
     "replace": "let (hr, _) = ui.allocate_exact_size(vec2(w, 40.0), Sense::hover());"
   },
   {
+    "note": "picker: the blend row knows the picker's width",
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
+    "after": "^fn blend_row\\(ui: &mut Ui, app: &mut FigApp, target: &PickerTarget, paint: &mut Paint\\) \\{$",
+    "insert": "    let w = crate::oklch_fields::picker_width(ui.ctx(), &MODELS);"
+  },
+  {
+    "note": "picker: the gradient controls know the picker's width",
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
+    "find": "    sel_stop_id: Id,\n) -> Option<Color> {\n",
+    "replace": "    sel_stop_id: Id,\n) -> Option<Color> {\n    let w = crate::oklch_fields::picker_width(ui.ctx(), &MODELS);\n"
+  },
+  {
     "note": "picker: gradient bar width",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
     "find": "let (bar, _) = ui.allocate_exact_size(vec2(240.0, 28.0), Sense::hover());",

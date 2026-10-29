@@ -167,7 +167,7 @@ fn source(app: &FigApp, ctx: &egui::Context, target: &PickerTarget) -> Option<So
             Source::Style { id: st.id.clone(), slot: with_stop(format!("paints/{index}"), is_gradient(paint)) }
         }
         PickerTarget::Variable { id, .. } => Source::Variable { id: doc.variables.get(id)?.id.clone() },
-        PickerTarget::TextRange { .. } | PickerTarget::PluginField { .. } => return None,
+        PickerTarget::TextRange { .. } | PickerTarget::PluginField { .. } | PickerTarget::SelectionColor { .. } => return None,
     })
 }
 
@@ -342,7 +342,7 @@ pub(crate) fn model_row(ui: &mut Ui, c: Color, profile: ColorProfile, label: &st
             (Model::Oklch, 2) => (v * 100.0).round() / 100.0,
             _ => v.round(),
         };
-        let (edit, ev) = widgets::number_field_bindable(ui, id, widgets::Lead::Named(&name), Some(shown), "", w, 1.0, bindable.then_some(None), "");
+        let (edit, ev) = widgets::number_field_bindable(ui, id, widgets::Lead::Named(&name), Some(shown), "", w, 1.0, bindable.then_some(None), widgets::Empty::Text(""));
         if let Some(widgets::FieldEdit::Set(x) | widgets::FieldEdit::Scrub(x, _)) = edit.and_then(widgets::Edit::settled) {
             new = Some((k, x));
         }

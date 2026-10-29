@@ -483,7 +483,7 @@ pub(crate) fn local_styles(app: &mut FigApp, ui: &mut Ui, doc: &Document) {
     // The dragged rows follow the pointer; the drop shows as a line (between rows) or an outline
     // (into a group).
     if let (Some(d), Some(p)) = (&st.drag, pointer) {
-        let painter = ctx.layer_painter(egui::LayerId::unique(egui::Order::Tooltip, Id::unique("style_group_drag")));
+        let painter = ctx.layer_painter(egui::LayerId::new(egui::Order::Tooltip, Id::unique("style_group_drag")));
         let font = regular(11.0);
         let g = painter.layout_no_wrap(d.label.clone(), font, t.text);
         let chip = Rect::from_min_size(p + vec2(12.0, 6.0), g.size() + vec2(16.0, 10.0));

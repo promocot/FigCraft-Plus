@@ -603,18 +603,17 @@ fn text_props(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, ts: &Te
     row(ui, 32.0, |ui| {
         bindable(app, ui, doc, st, "fontFamily", VariableType::String, full, |app, ui| {
             let resp = widgets::dropdown(ui, &ts.font_family, full, None).on_hover_text(tr("Font"));
-            menu_popup(&resp).width(260.0).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {
-                if let Some(f) = crate::typography::font_picker(ui, Some(&ts.font_family), resp.clicked()) {
-                    let mut ts2 = ts.clone();
-                    ts2.font_family = f.clone();
-                    let styles = figcraft_text::family_styles(&f);
-                    if !styles.is_empty() && !styles.contains(&ts2.font_style) {
-                        ts2.set_font_style(styles.iter().find(|s| s.eq_ignore_ascii_case("Regular")).or(styles.first()).cloned().unwrap_or_default());
-                    }
-                    set(app, &ts2);
-                    ui.close();
+            // FigCraft's font menu (search, keyboard, the families with ours: In this file, Add fonts).
+            let pick = crate::typography::font_picker(ui, &resp, Some(&ts.font_family), full.max(260.0), |_| false);
+            if let Some(f) = pick.and_then(|p| p.picked) {
+                let mut ts2 = ts.clone();
+                ts2.font_family = f.clone();
+                let styles = figcraft_text::family_styles(&f);
+                if !styles.is_empty() && !styles.contains(&ts2.font_style) {
+                    ts2.set_font_style(styles.iter().find(|s| s.eq_ignore_ascii_case("Regular")).or(styles.first()).cloned().unwrap_or_default());
                 }
-            });
+                set(app, &ts2);
+            }
         });
     });
     // Style (or weight) + size.
@@ -1119,7 +1118,7 @@ fn grid_settings(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, grid
     let num = |app: &mut FigApp, ui: &mut Ui, key: &str, value: Option<f64>, w: f32, empty: &str, apply: &dyn Fn(&mut LayoutGrid, f64)| {
         let field = format!("layoutGrids/{i}/{key}");
         bindable(app, ui, doc, st, &field, VariableType::Number, w, |app, ui| {
-            let (ed, _) = widgets::number_field_bindable(ui, Id::unique(("sd_grid", key, i)), Lead::None, value, "", w, 1.0, None, empty);
+            let (ed, _) = widgets::number_field_bindable(ui, Id::unique(("sd_grid", key, i)), Lead::None, value, "", w, 1.0, None, widgets::Empty::Text(empty));
             let ed = ed.and_then(|e| e.settled());
             edit_with(app, &sid, ed, |v| with(&|x| apply(x, v)));
         });
