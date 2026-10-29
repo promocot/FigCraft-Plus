@@ -335,7 +335,7 @@ fn value_key(doc: &Document, v: &Variable, mode: &str) -> (u8, f64, String) {
     match doc.variables.resolve(&v.id, &modes) {
         Some(VariableValue::Number(n)) if n.is_finite() => (0, n, String::new()),
         // Light to dark (a palette's 50 … 950), so its descending OKLCH lightness.
-        Some(VariableValue::Color(c)) => (1, -figcraft_color::Oklch::from_color(c, doc.color_profile).l, String::new()),
+        Some(VariableValue::Color(c)) => (1, -figcraft_color::oklch_profile::Oklch::from_color(c, doc.color_profile).l, String::new()),
         Some(VariableValue::String(t)) => (2, 0.0, t.to_lowercase()),
         Some(VariableValue::Boolean(b)) => (3, if b { 1.0 } else { 0.0 }, String::new()),
         _ => (4, 0.0, String::new()),

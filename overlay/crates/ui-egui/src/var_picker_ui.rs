@@ -500,6 +500,8 @@ pub(crate) fn picker(app: &mut FigApp, ctx: &egui::Context) {
         let fits = match &p.target {
             Target::Bind { field, .. } if field == crate::text_vars_ui::WEIGHT_OR_STYLE => crate::text_vars_ui::weight_fits(v),
             Target::Style { field, .. } => p.kind.is_none_or(|k| v.kind == k) || field == crate::text_vars_ui::WEIGHT_OR_STYLE,
+            // Text content also takes a number variable (as FigCraft's own picker offers).
+            Target::Bind { field, .. } if field == "characters" => p.kind.is_none_or(|k| v.kind == k || v.kind == VariableType::Number),
             _ => p.kind.is_none_or(|k| v.kind == k),
         };
         let scoped = match &p.target {
@@ -521,7 +523,7 @@ pub(crate) fn picker(app: &mut FigApp, ctx: &egui::Context) {
         Some(VariableType::Boolean) => tr("No boolean variables fit here."),
         None => tr("No variables fit here."),
     };
-    let id = Id::new("figcraftplus_variable_picker");
+    let id = Id::unique("figcraftplus_variable_picker");
     let close = |ctx: &egui::Context| ctx.data_mut(|d| d.remove::<Picker>(variable_ui::picker_id()));
     match card(ctx, id, p.at, tr("Variables"), &items, current.as_ref(), empty) {
         Outcome::Open => {}
@@ -546,7 +548,7 @@ pub(crate) fn picker(app: &mut FigApp, ctx: &egui::Context) {
 
 /// Where the variable picker is on screen.
 pub(crate) fn rect(ctx: &egui::Context) -> Option<Rect> {
-    ctx.memory(|m| m.area_rect(Id::new("figcraftplus_variable_picker").with("area")))
+    ctx.memory(|m| m.area_rect(Id::unique("figcraftplus_variable_picker").with("area")))
 }
 
 #[cfg(test)]

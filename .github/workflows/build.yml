@@ -1,11 +1,11 @@
-# Builds FigCraft for Windows with the custom features from this repository.
+# Builds FigCraft for Windows with the FigCraft Plus add-ons from this repository.
 #
 # Every day it looks at the latest FigCraft release. When there is one this repository hasn't built
 # yet (or the custom features changed: bump CUSTOM_VERSION), it checks that release out, connects
-# overlay/ and patches/ to it (scripts/apply.sh), runs the tests and publishes a portable Windows
+# overlay/ and hooks/ to it (scripts/apply.py), runs the tests and publishes a portable Windows
 # build under Releases. A run that fails leaves the previous release in place, and GitHub e-mails
 # the repository owner.
-name: Build FigCraft + custom
+name: Build FigCraft Plus
 
 on:
   schedule:
@@ -46,6 +46,7 @@ jobs:
     outputs:
       ref: ${{ steps.p.outputs.ref }}
       release: ${{ steps.p.outputs.release }}
+      plus: ${{ steps.p.outputs.plus }}
       build: ${{ steps.p.outputs.build }}
     steps:
       - uses: actions/checkout@v4
@@ -59,8 +60,8 @@ jobs:
           if [ -z "$ref" ]; then
             ref="$(gh release view --repo "$UPSTREAM" --json tagName -q .tagName)"
           fi
-          custom="$(tr -d '[:space:]' < CUSTOM_VERSION)"
-          release="${ref}-custom.${custom}"
+          plus="$(tr -d '[:space:]' < CUSTOM_VERSION)"
+          release="${ref}-plus.${plus}"
           build=true
           if [ "${{ github.event_name }}" = "schedule" ] && gh release view "$release" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             build=false
@@ -68,8 +69,8 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "$FORCE" != "true" ] && gh release view "$release" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             build=false
           fi
-          echo "FigCraft $ref, custom $custom -> $release (build: $build)"
-          { echo "ref=$ref"; echo "release=$release"; echo "build=$build"; } >> "$GITHUB_OUTPUT"
+          echo "FigCraft $ref, FigCraft Plus $plus -> $release (build: $build)"
+          { echo "ref=$ref"; echo "release=$release"; echo "plus=$plus"; echo "build=$build"; } >> "$GITHUB_OUTPUT"
 
   test:
     needs: plan
@@ -99,7 +100,7 @@ jobs:
       - name: Tests (custom features)
         working-directory: figcraft
         run: |
-          cargo test --locked -p figcraft-color oklch
+          cargo test --locked -p figcraft-color oklch_profile
           cargo test --locked -p figcraft-engine --lib oklch_links
           cargo test --locked -p figcraft-engine --lib var_order
           cargo test --locked -p figcraft-engine --lib style
@@ -161,7 +162,8 @@ jobs:
       - name: Package portable zip
         shell: pwsh
         run: |
-          $name = "figcraft-${{ needs.plan.outputs.release }}-windows-x64-portable"
+          $ref = "${{ needs.plan.outputs.ref }}".TrimStart('v')
+          $name = "figcraft-plus-${{ needs.plan.outputs.plus }}-figcraft-$ref-windows-x64-portable"
           $out = Join-Path $env:RUNNER_TEMP $name
           New-Item -ItemType Directory -Force -Path $out | Out-Null
           Copy-Item "figcraft/target/$env:TARGET/release/*.exe" $out
@@ -172,7 +174,7 @@ jobs:
             $lic = Join-Path $_.FullName 'OFL.txt'
             if (Test-Path $lic) { Copy-Item $lic (Join-Path $out "OFL-$($_.Name).txt") }
           }
-          Copy-Item custom/README.md (Join-Path $out 'README-custom.md')
+          Copy-Item custom/README.md (Join-Path $out 'README-FigCraft-Plus.md')
           if (Test-Path "$out/figcraft-cli.exe") { & "$out/figcraft-cli.exe" --version }
           Compress-Archive -Path $out -DestinationPath "$name.zip"
       - uses: actions/upload-artifact@v4
@@ -195,13 +197,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           REF: ${{ needs.plan.outputs.ref }}
           RELEASE: ${{ needs.plan.outputs.release }}
+          PLUS: ${{ needs.plan.outputs.plus }}
         run: |
-          notes="FigCraft ${REF} + custom features (CUSTOM_VERSION $(cat CUSTOM_VERSION)).
+          notes="FigCraft Plus ${PLUS} on the official FigCraft ${REF} (https://github.com/${UPSTREAM}/releases/tag/${REF}).
 
-          Download the .zip, unpack it anywhere (a USB drive is fine) and run figcraft.exe.
-          Custom features: OKLCH in the colour picker (with captions, auto width and links from colour variables to number variables)."
+          Download the .zip, unpack it anywhere (a USB drive is fine) and run figcraft.exe. .figcraft files stay compatible with the official app.
+
+          Add-ons: OKLCH the oklch.com way (L 0-1, file colour profile, OKLCH plane and hue strip), colour channels bound to number variables, a picker that opens beside its control and follows the selection, weight / paragraph spacing / indent variables, Figma-like style dialogs and style groups, a Figma-like variable picker, variable ordering and sorting, a portable fonts folder. See the README for details and for what moved into FigCraft itself."
           if gh release view "$RELEASE" >/dev/null 2>&1; then
             gh release upload "$RELEASE" dist/*.zip --clobber
           else
-            gh release create "$RELEASE" dist/*.zip --title "FigCraft ${REF} + custom" --notes "$notes" --latest
+            gh release create "$RELEASE" dist/*.zip --title "FigCraft Plus ${PLUS} · FigCraft ${REF}" --notes "$notes" --latest
           fi

@@ -47,25 +47,25 @@ struct Visible {
 }
 
 fn drag_id() -> Id {
-    Id::new("vo_drag")
+    Id::unique("vo_drag")
 }
 fn drop_id() -> Id {
-    Id::new("vo_drop")
+    Id::unique("vo_drop")
 }
 fn sel_id() -> Id {
-    Id::new("vo_sel")
+    Id::unique("vo_sel")
 }
 fn anchor_id() -> Id {
-    Id::new("vo_anchor")
+    Id::unique("vo_anchor")
 }
 fn visible_id() -> Id {
-    Id::new("vo_visible")
+    Id::unique("vo_visible")
 }
 fn groups_id() -> Id {
-    Id::new("vo_groups")
+    Id::unique("vo_groups")
 }
 fn colls_id() -> Id {
-    Id::new("vo_colls")
+    Id::unique("vo_colls")
 }
 
 fn group_of(name: &str) -> &str {
@@ -376,7 +376,7 @@ pub(crate) fn finish(app: &mut FigApp, ctx: &egui::Context) {
 
 fn ghost(ctx: &egui::Context, p: Pos2, label: &str) {
     let t = Tokens::get(ctx);
-    egui::Area::new(Id::new("vo_ghost")).order(egui::Order::Tooltip).fixed_pos(p + vec2(14.0, 10.0)).interactable(false).show(ctx, |ui| {
+    egui::Area::new(Id::unique("vo_ghost")).order(egui::Order::Tooltip).fixed_pos(p + vec2(14.0, 10.0)).interactable(false).show(ctx, |ui| {
         egui::Frame::NONE.fill(t.accent).corner_radius(CornerRadius::same(4)).inner_margin(egui::Margin::symmetric(8, 4)).show(ui, |ui| {
             ui.add(egui::Label::new(egui::RichText::new(label).font(regular(11.0)).color(Color32::WHITE)).extend());
         });

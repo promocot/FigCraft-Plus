@@ -52,7 +52,7 @@ struct Dialog {
 }
 
 fn dialog_id() -> Id {
-    Id::new("figcraftplus_style_dialog")
+    Id::unique("figcraftplus_style_dialog")
 }
 
 fn get(ctx: &egui::Context) -> Option<Dialog> {
@@ -205,7 +205,7 @@ fn bindable(
     let area = Rect::from_min_size(ui.cursor().min, vec2(width, widgets::FIELD_H));
     if let Some(name) = bound(doc, st, field) {
         let (r, _) = ui.allocate_exact_size(area.size(), Sense::hover());
-        match widgets::bound_field(ui, Id::new(("sd_chip", &st.id, field)), Lead::None, r, &name) {
+        match widgets::bound_field(ui, Id::unique(("sd_chip", &st.id, field)), Lead::None, r, &name) {
             Some(widgets::BindEvent::Open(at)) => crate::variable_ui::open_style(ui, &st.id, field, kind, at),
             Some(widgets::BindEvent::Detach) => {
                 app.run("style.bind", json!({"style": st.id, "field": field, "variable": null}));
@@ -215,7 +215,7 @@ fn bindable(
         return;
     }
     control(app, ui);
-    if crate::variable_ui::variable_button(ui, area, Id::new(("sd_bind", &st.id, field))) {
+    if crate::variable_ui::variable_button(ui, area, Id::unique(("sd_bind", &st.id, field))) {
         crate::variable_ui::open_style(ui, &st.id, field, kind, area.left_bottom());
     }
 }
@@ -231,7 +231,7 @@ pub(crate) fn show(app: &mut FigApp, ctx: &egui::Context) {
     let t = Tokens::get(ctx);
     let screen = ctx.content_rect();
     let x = (screen.max.x - app.ui.right_width - W - 16.0).max(screen.min.x + 8.0);
-    let h = ctx.memory(|m| m.area_rect(Id::new("figcraftplus_style_dialog_area"))).map_or(420.0, |r| r.height());
+    let h = ctx.memory(|m| m.area_rect(Id::unique("figcraftplus_style_dialog_area"))).map_or(420.0, |r| r.height());
     let y = d.y.clamp(screen.min.y + 48.0, (screen.max.y - h - 8.0).max(screen.min.y + 48.0));
     let mut close = false;
     let mut create = false;
@@ -243,7 +243,7 @@ pub(crate) fn show(app: &mut FigApp, ctx: &egui::Context) {
         StyleKind::Grid { .. } => (tr("Create new layout guide style"), tr("Edit layout guide style"), tr("New layout guide style")),
     };
     let title = if d.creating { create_title } else { edit_title };
-    let area = egui::Area::new(Id::new("figcraftplus_style_dialog_area")).order(egui::Order::Foreground).fixed_pos(pos2(x, y)).show(ctx, |ui| {
+    let area = egui::Area::new(Id::unique("figcraftplus_style_dialog_area")).order(egui::Order::Foreground).fixed_pos(pos2(x, y)).show(ctx, |ui| {
         egui::Frame::NONE.fill(t.panel).corner_radius(CornerRadius::same(12)).stroke(Stroke::new(1.0, t.border)).show(ui, |ui| {
             ui.set_width(W);
             ui.spacing_mut().item_spacing = vec2(8.0, 6.0);
@@ -251,7 +251,7 @@ pub(crate) fn show(app: &mut FigApp, ctx: &egui::Context) {
             let (hr, _) = ui.allocate_exact_size(vec2(W, 44.0), Sense::hover());
             ui.painter().text(pos2(hr.min.x + 16.0, hr.center().y), Align2::LEFT_CENTER, title, semibold(12.0), t.text);
             let cr = Rect::from_center_size(pos2(hr.max.x - 22.0, hr.center().y), vec2(24.0, 24.0));
-            let cresp = ui.interact(cr, Id::new("sd_close"), Sense::click()).tip(tr("Close"));
+            let cresp = ui.interact(cr, Id::unique("sd_close"), Sense::click()).tip(tr("Close"));
             if cresp.hovered() {
                 ui.painter().rect_filled(cr, CornerRadius::same(5), t.hover);
             }
@@ -288,7 +288,7 @@ pub(crate) fn show(app: &mut FigApp, ctx: &egui::Context) {
             ui.painter().text(pos2(pr.min.x + 16.0, pr.center().y), Align2::LEFT_CENTER, tr("Properties"), semibold(11.0), t.text);
             if !matches!(st.kind, StyleKind::Text { .. }) {
                 let ar = Rect::from_center_size(pos2(pr.max.x - 22.0, pr.center().y), vec2(24.0, 24.0));
-                let aresp = ui.interact(ar, Id::new("sd_add"), Sense::click()).tip(tr("Add"));
+                let aresp = ui.interact(ar, Id::unique("sd_add"), Sense::click()).tip(tr("Add"));
                 if aresp.hovered() {
                     ui.painter().rect_filled(ar, CornerRadius::same(5), t.hover);
                 }
@@ -336,7 +336,7 @@ pub(crate) fn show(app: &mut FigApp, ctx: &egui::Context) {
             let px = (dialog_rect.min.x - POP_W - 8.0).max(screen.min.x + 8.0);
             let py = (dialog_rect.min.y + 180.0 + i as f32 * 32.0).min(screen.max.y - 320.0).max(screen.min.y + 48.0);
             let mut shut = false;
-            egui::Area::new(Id::new("figcraftplus_style_popover")).order(egui::Order::Foreground).fixed_pos(pos2(px, py)).show(ctx, |ui| {
+            egui::Area::new(Id::unique("figcraftplus_style_popover")).order(egui::Order::Foreground).fixed_pos(pos2(px, py)).show(ctx, |ui| {
                 egui::Frame::NONE.fill(t.panel).corner_radius(CornerRadius::same(12)).stroke(Stroke::new(1.0, t.border)).show(ui, |ui| {
                     ui.set_width(POP_W);
                     ui.spacing_mut().item_spacing = vec2(8.0, 6.0);
@@ -513,7 +513,7 @@ fn list_rows(app: &mut FigApp, ui: &mut Ui, st: &Style, labels: &[String], visib
     for (i, label) in labels.iter().enumerate().rev() {
         let (r, _) = ui.allocate_exact_size(vec2(W, 32.0), Sense::hover());
         let body = Rect::from_min_max(pos2(r.min.x + 12.0, r.min.y + 3.0), pos2(r.max.x - 64.0, r.max.y - 3.0));
-        let resp = ui.interact(body, Id::new(("sd_row", i)), Sense::click());
+        let resp = ui.interact(body, Id::unique(("sd_row", i)), Sense::click());
         let on = *open == Some(i);
         if on || resp.hovered() {
             ui.painter().rect_filled(body, CornerRadius::same(5), if on { t.selected_row } else { t.hover });
@@ -525,12 +525,12 @@ fn list_rows(app: &mut FigApp, ui: &mut Ui, st: &Style, labels: &[String], visib
         }
         let vis = visible.get(i).copied().unwrap_or(true);
         let er = Rect::from_center_size(pos2(r.max.x - 46.0, r.center().y), vec2(24.0, 24.0));
-        if ui.interact(er, Id::new(("sd_eye", i)), Sense::click()).tip(tr("Toggle visibility")).clicked() {
+        if ui.interact(er, Id::unique(("sd_eye", i)), Sense::click()).tip(tr("Toggle visibility")).clicked() {
             toggle(app, st, i);
         }
         icons::paint(ui.painter(), er.shrink(5.0), if vis { Icon::Eye } else { Icon::EyeOff }, t.icon);
         let mr = Rect::from_center_size(pos2(r.max.x - 20.0, r.center().y), vec2(24.0, 24.0));
-        if ui.interact(mr, Id::new(("sd_minus", i)), Sense::click()).tip(tr("Remove")).clicked() {
+        if ui.interact(mr, Id::unique(("sd_minus", i)), Sense::click()).tip(tr("Remove")).clicked() {
             remove(app, st, i);
             if *open == Some(i) {
                 *open = None;
@@ -603,18 +603,17 @@ fn text_props(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, ts: &Te
     row(ui, 32.0, |ui| {
         bindable(app, ui, doc, st, "fontFamily", VariableType::String, full, |app, ui| {
             let resp = widgets::dropdown(ui, &ts.font_family, full, None).on_hover_text(tr("Font"));
-            menu_popup(&resp).width(260.0).close_behavior(egui::PopupCloseBehavior::CloseOnClickOutside).show(|ui| {
-                if let Some(f) = crate::typography::font_picker(ui, Some(&ts.font_family), resp.clicked()) {
-                    let mut ts2 = ts.clone();
-                    ts2.font_family = f.clone();
-                    let styles = figcraft_text::family_styles(&f);
-                    if !styles.is_empty() && !styles.contains(&ts2.font_style) {
-                        ts2.set_font_style(styles.iter().find(|s| s.eq_ignore_ascii_case("Regular")).or(styles.first()).cloned().unwrap_or_default());
-                    }
-                    set(app, &ts2);
-                    ui.close();
+            // FigCraft's font menu (search, keyboard, the families with ours: In this file, Add fonts).
+            let pick = crate::typography::font_picker(ui, &resp, Some(&ts.font_family), full.max(260.0), |_| false);
+            if let Some(f) = pick.and_then(|p| p.picked) {
+                let mut ts2 = ts.clone();
+                ts2.font_family = f.clone();
+                let styles = figcraft_text::family_styles(&f);
+                if !styles.is_empty() && !styles.contains(&ts2.font_style) {
+                    ts2.set_font_style(styles.iter().find(|s| s.eq_ignore_ascii_case("Regular")).or(styles.first()).cloned().unwrap_or_default());
                 }
-            });
+                set(app, &ts2);
+            }
         });
     });
     // Style (or weight) + size.
@@ -641,13 +640,13 @@ fn text_props(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, ts: &Te
                         }
                     });
                 });
-                if crate::variable_ui::variable_button(ui, area, Id::new(("sd_bind_w", &st.id))) {
+                if crate::variable_ui::variable_button(ui, area, Id::unique(("sd_bind_w", &st.id))) {
                     crate::variable_ui::open_style(ui, &st.id, weight_or_style, VariableType::Number, area.left_bottom());
                 }
             }
         }
         bindable(app, ui, doc, st, "fontSize", VariableType::Number, half, |app, ui| {
-            let e = widgets::number_field(ui, Id::new(("sd_size", &st.id)), Lead::None, Some(ts.font_size), "", half, 1.0);
+            let e = widgets::number_field(ui, Id::unique(("sd_size", &st.id)), Lead::None, Some(ts.font_size), "", half, 1.0);
             edit_with(app, &st.id, e, |v| {
                 let mut ts2 = ts.clone();
                 ts2.font_size = v.clamp(1.0, 5000.0);
@@ -659,7 +658,7 @@ fn text_props(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, ts: &Te
     widgets::sublabels(ui, tr("Line height"), Some(tr("Letter spacing")));
     row(ui, 32.0, |ui| {
         bindable(app, ui, doc, st, "lineHeight", VariableType::Number, half, |app, ui| {
-            if let Some(v) = widgets::text_field(ui, Id::new(("sd_lh", &st.id)), &ts.line_height.label(), half, tr("Line height"))
+            if let Some(v) = widgets::text_field(ui, Id::unique(("sd_lh", &st.id)), &ts.line_height.label(), half, tr("Line height"))
                 && let Some(lh) =
                     crate::typography::parse_line_height(&v, Some(ts.line_height)).and_then(|v| serde_json::from_value::<LineHeight>(v).ok())
             {
@@ -669,7 +668,7 @@ fn text_props(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, ts: &Te
             }
         });
         bindable(app, ui, doc, st, "letterSpacing", VariableType::Number, half - 28.0, |app, ui| {
-            if let Some(v) = widgets::text_field(ui, Id::new(("sd_ls", &st.id)), &ts.letter_spacing.label(), half - 28.0, tr("Letter spacing"))
+            if let Some(v) = widgets::text_field(ui, Id::unique(("sd_ls", &st.id)), &ts.letter_spacing.label(), half - 28.0, tr("Letter spacing"))
                 && let Some(ls) =
                     crate::typography::parse_letter_spacing(&v, Some(ts.letter_spacing)).and_then(|v| serde_json::from_value::<LetterSpacing>(v).ok())
             {
@@ -757,13 +756,13 @@ fn paint_field(app: &mut FigApp, ui: &mut Ui, st: &Style, paints: &[Paint], i: u
     ui.painter().rect_filled(r, CornerRadius::same(5), t.field);
     let sw = Rect::from_center_size(pos2(r.min.x + 13.0, r.center().y), vec2(14.0, 14.0));
     widgets::paint_swatch(ui.painter(), sw, p);
-    if ui.interact(sw.expand(3.0), Id::new(("sd_sw", &st.id, i)), Sense::click()).tip(tr("Edit colour")).clicked() {
+    if ui.interact(sw.expand(3.0), Id::unique(("sd_sw", &st.id, i)), Sense::click()).tip(tr("Edit colour")).clicked() {
         app.ui.picker = Some(crate::colorpicker::PickerTarget::Style { id: st.id.clone(), index: i });
     }
     let text_r = Rect::from_min_max(pos2(sw.max.x + 8.0, r.min.y + 4.0), pos2(r.max.x - 52.0, r.max.y - 4.0));
     match &p.kind {
         PaintKind::Solid { color } => {
-            if let Some(h) = widgets::text_field_inline(ui, Id::new(("sd_hex", &st.id, i)), &color.to_hex(), text_r, regular(11.0))
+            if let Some(h) = widgets::text_field_inline(ui, Id::unique(("sd_hex", &st.id, i)), &color.to_hex(), text_r, regular(11.0))
                 && let Some(c) = Color::from_hex(&h)
             {
                 let mut ps = paints.to_vec();
@@ -780,7 +779,7 @@ fn paint_field(app: &mut FigApp, ui: &mut Ui, st: &Style, paints: &[Paint], i: u
     let op_r = Rect::from_min_max(pos2(r.max.x - 48.0, r.min.y), r.max);
     let mut child = ui.new_child(egui::UiBuilder::new().max_rect(op_r));
     let e =
-        widgets::number_field(&mut child, Id::new(("sd_op", &st.id, i)), Lead::None, Some((f64::from(p.opacity) * 100.0).round()), "%", 48.0, 1.0);
+        widgets::number_field(&mut child, Id::unique(("sd_op", &st.id, i)), Lead::None, Some((f64::from(p.opacity) * 100.0).round()), "%", 48.0, 1.0);
     edit_with(app, &st.id, e, |v| {
         let mut ps = paints.to_vec();
         if let Some(x) = ps.get_mut(i) {
@@ -837,13 +836,13 @@ fn effect_settings(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, ef
         let field = format!("effects/{i}/{key}");
         bindable(app, ui, doc, st, &field, VariableType::Number, w, |app, ui| {
             let lead = if label.is_empty() { Lead::None } else { Lead::Text(label) };
-            let ed = widgets::number_field(ui, Id::new(("sd_fx", key, i)), lead, Some(value), "", w, 1.0);
+            let ed = widgets::number_field(ui, Id::unique(("sd_fx", key, i)), lead, Some(value), "", w, 1.0);
             edit_with(app, &sid, ed, |v| with(&|x| apply(x, v)));
         });
     };
     let plain = |app: &mut FigApp, ui: &mut Ui, key: &str, label: &str, value: f64, suffix: &str, w: f32, apply: &dyn Fn(&mut Effect, f64)| {
         let lead = if label.is_empty() { Lead::None } else { Lead::Text(label) };
-        let ed = widgets::number_field(ui, Id::new(("sd_fx", key, i)), lead, Some(value), suffix, w, 1.0);
+        let ed = widgets::number_field(ui, Id::unique(("sd_fx", key, i)), lead, Some(value), suffix, w, 1.0);
         edit_with(app, &sid, ed, |v| with(&|x| apply(x, v)));
     };
     match &e.kind {
@@ -1032,7 +1031,7 @@ fn color_field(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, field:
         let sw = Rect::from_center_size(pos2(r.min.x + 13.0, r.center().y), vec2(14.0, 14.0));
         widgets::paint_swatch(ui.painter(), sw, &Paint::solid(c));
         let text_r = Rect::from_min_max(pos2(sw.max.x + 8.0, r.min.y + 4.0), pos2(r.max.x - 52.0, r.max.y - 4.0));
-        if let Some(h) = widgets::text_field_inline(ui, Id::new(("sd_ch", &st.id, field)), &c.to_hex(), text_r, regular(11.0))
+        if let Some(h) = widgets::text_field_inline(ui, Id::unique(("sd_ch", &st.id, field)), &c.to_hex(), text_r, regular(11.0))
             && let Some(nc) = Color::from_hex(&h)
         {
             set_value(app, &st.id, value(nc.with_alpha(c.a)), None);
@@ -1040,7 +1039,7 @@ fn color_field(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, field:
         let op_r = Rect::from_min_max(pos2(r.max.x - 48.0, r.min.y), r.max);
         let mut child = ui.new_child(egui::UiBuilder::new().max_rect(op_r));
         let e =
-            widgets::number_field(&mut child, Id::new(("sd_ca", &st.id, field)), Lead::None, Some((f64::from(c.a) * 100.0).round()), "%", 48.0, 1.0);
+            widgets::number_field(&mut child, Id::unique(("sd_ca", &st.id, field)), Lead::None, Some((f64::from(c.a) * 100.0).round()), "%", 48.0, 1.0);
         edit_with(app, &st.id, e, |v| value(c.with_alpha((v / 100.0).clamp(0.0, 1.0) as f32)));
     };
     if field.is_empty() {
@@ -1052,7 +1051,7 @@ fn color_field(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, field:
 
 fn close_button(ui: &mut Ui, header: Rect, shut: &mut bool, t: &Tokens) {
     let cr = Rect::from_center_size(pos2(header.max.x - 22.0, header.center().y), vec2(24.0, 24.0));
-    let resp = ui.interact(cr, Id::new("sd_pop_close"), Sense::click()).tip(tr("Close"));
+    let resp = ui.interact(cr, Id::unique("sd_pop_close"), Sense::click()).tip(tr("Close"));
     if resp.hovered() {
         ui.painter().rect_filled(cr, CornerRadius::same(5), t.hover);
     }
@@ -1119,7 +1118,7 @@ fn grid_settings(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, grid
     let num = |app: &mut FigApp, ui: &mut Ui, key: &str, value: Option<f64>, w: f32, empty: &str, apply: &dyn Fn(&mut LayoutGrid, f64)| {
         let field = format!("layoutGrids/{i}/{key}");
         bindable(app, ui, doc, st, &field, VariableType::Number, w, |app, ui| {
-            let (ed, _) = widgets::number_field_bindable(ui, Id::new(("sd_grid", key, i)), Lead::None, value, "", w, 1.0, None, empty);
+            let (ed, _) = widgets::number_field_bindable(ui, Id::unique(("sd_grid", key, i)), Lead::None, value, "", w, 1.0, None, widgets::Empty::Text(empty));
             let ed = ed.and_then(|e| e.settled());
             edit_with(app, &sid, ed, |v| with(&|x| apply(x, v)));
         });
@@ -1163,7 +1162,7 @@ fn grid_settings(app: &mut FigApp, ui: &mut Ui, doc: &Document, st: &Style, grid
             widgets::sublabels(ui, span, None);
             row(ui, 32.0, |ui| {
                 ui.add_enabled_ui(false, |ui| {
-                    let _ = widgets::text_field(ui, Id::new(("sd_grid_auto", i)), "", full, tr("Auto"));
+                    let _ = widgets::text_field(ui, Id::unique(("sd_grid_auto", i)), "", full, tr("Auto"));
                 });
             });
             widgets::sublabels(ui, tr("Margin"), Some(tr("Gutter")));

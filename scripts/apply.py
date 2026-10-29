@@ -7,7 +7,8 @@
      {"file", "find": text, "replace": text}     replace exact text (it must occur exactly once)
    A hook whose result is already there is skipped, so running twice is harmless.
 
-Usage: python3 scripts/apply.py <path-to-figcraft-checkout>
+Usage: python3 scripts/apply.py [--check] <path-to-figcraft-checkout>
+  --check  report every hook that no longer fits (instead of stopping at the first one)
 Exits non-zero, naming the hook, when an anchor is no longer found in the new FigCraft version.
 """
 
@@ -20,15 +21,32 @@ from pathlib import Path
 here = Path(__file__).resolve().parent.parent
 
 
+KEEP_GOING = False
+FAILED: list[str] = []
+
+
 def fail(msg: str) -> None:
     print(f"error: {msg}", file=sys.stderr)
     sys.exit(1)
 
 
+def miss(msg: str) -> None:
+    """A hook that no longer fits: stop, or with --check note it and go on."""
+    if not KEEP_GOING:
+        fail(msg)
+    print(f"   !! {msg}")
+    FAILED.append(msg)
+
+
 def main() -> None:
-    if len(sys.argv) != 2:
-        fail("usage: apply.py <figcraft-dir>")
-    target = Path(sys.argv[1]).resolve()
+    global KEEP_GOING
+    args = sys.argv[1:]
+    if args[:1] == ["--check"]:
+        KEEP_GOING = True
+        args = args[1:]
+    if len(args) != 1:
+        fail("usage: apply.py [--check] <figcraft-dir>")
+    target = Path(args[0]).resolve()
     if not (target / "Cargo.toml").is_file() or not (target / "crates").is_dir():
         fail(f"{target} is not a FigCraft checkout")
 
@@ -50,7 +68,8 @@ def main() -> None:
             where = f"{hook_file.name} #{n} ({h.get('note', h['file'])})"
             path = target / h["file"]
             if not path.is_file():
-                fail(f"{where}: {h['file']} no longer exists in FigCraft")
+                miss(f"{where}: {h['file']} no longer exists in FigCraft")
+                continue
             text = path.read_text(encoding="utf-8")
             if "after" in h:
                 insert = h["insert"].rstrip("\n") + "\n"
@@ -59,7 +78,8 @@ def main() -> None:
                     continue
                 m = re.search(h["after"], text, re.MULTILINE)
                 if not m:
-                    fail(f"{where}: no line matches {h['after']!r}; FigCraft changed here, update the hook")
+                    miss(f"{where}: no line matches {h['after']!r}; FigCraft changed here, update the hook")
+                    continue
                 end = text.find("\n", m.end())
                 end = len(text) if end < 0 else end + 1
                 text = text[:end] + insert + text[end:]
@@ -70,10 +90,13 @@ def main() -> None:
                     continue
                 count = text.count(find)
                 if count != 1:
-                    fail(f"{where}: expected the anchor text once, found it {count} times; FigCraft changed here, update the hook")
+                    miss(f"{where}: expected the anchor text once, found it {count} times; FigCraft changed here, update the hook")
+                    continue
                 text = text.replace(find, replace)
             path.write_text(text, encoding="utf-8", newline="\n")
             print(f"   ok {where}")
+    if FAILED:
+        fail(f"{len(FAILED)} hook(s) no longer fit")
     print("==> Done: custom features connected")
 
 

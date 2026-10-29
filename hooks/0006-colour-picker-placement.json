@@ -2,19 +2,19 @@
   {
     "note": "ui: picker placement module",
     "file": "crates/ui-egui/src/lib.rs",
-    "after": "^pub mod variables_panel;$",
+    "after": "^pub mod windows;$",
     "insert": "mod picker_place_ui;"
   },
   {
     "note": "picker: follow the opener and the selection, close on a canvas click",
-    "file": "crates/ui-egui/src/colorpicker.rs",
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
     "after": "^pub fn show\\(app: &mut FigApp, ctx: &egui::Context\\) \\{$",
     "insert": "    crate::picker_place_ui::follow(app, ctx, |a, t| current_paint(a, t).is_some());"
   },
   {
     "note": "picker: above every panel and window",
-    "file": "crates/ui-egui/src/colorpicker.rs",
-    "find": "    egui::Window::new(\"color_picker\")\n        .title_bar(false)\n",
-    "replace": "    egui::Window::new(\"color_picker\")\n        .title_bar(false)\n        .order(egui::Order::Foreground)\n"
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
+    "find": "        .id(window_id())\n        .title_bar(false)\n",
+    "replace": "        .id(window_id())\n        .title_bar(false)\n        .order(egui::Order::Foreground)\n"
   }
 ]

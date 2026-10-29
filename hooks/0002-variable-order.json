@@ -1,79 +1,79 @@
 [
   {
     "note": "engine: variable order commands module",
-    "file": "crates/engine/src/cmd/mod.rs",
+    "file": "crates/engine/src/cmd.rs",
     "after": "^pub mod text;$",
     "insert": "pub mod var_order;"
   },
   {
     "note": "engine: register variable order commands",
-    "file": "crates/engine/src/cmd/mod.rs",
+    "file": "crates/engine/src/cmd.rs",
     "after": "^\\s*list\\.extend\\(variables_io::specs\\(\\)\\);$",
     "insert": "        list.extend(var_order::specs());"
   },
   {
     "note": "ui: variable order module",
     "file": "crates/ui-egui/src/lib.rs",
-    "after": "^pub mod variables_panel;$",
+    "after": "^pub mod windows;$",
     "insert": "mod var_order_ui;"
   },
   {
     "note": "variables: finish drags, Alt+arrows",
-    "file": "crates/ui-egui/src/variables_panel.rs",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "    details(app, ctx, &doc.variables, &mut st);\n",
     "replace": "    details(app, ctx, &doc.variables, &mut st);\n    crate::var_order_ui::finish(app, ctx);\n"
   },
   {
     "note": "variables: drag collections",
-    "file": "crates/ui-egui/src/variables_panel.rs",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "    let (r, resp) = ui.allocate_exact_size(vec2(SIDEBAR_W, 30.0), Sense::click());\n",
     "replace": "    let (r, resp) = ui.allocate_exact_size(vec2(SIDEBAR_W, 30.0), if view.editable() { Sense::click_and_drag() } else { Sense::click() });\n    crate::var_order_ui::sidebar_collection(ui, view.editable(), &c.id, r, &resp, &view.collections.iter().map(|x| x.id.clone()).collect::<Vec<_>>());\n"
   },
   {
     "note": "variables: sort a collection",
-    "file": "crates/ui-egui/src/variables_panel.rs",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "            if menu_item(ui, tr(\"Delete collection\"), \"\") {\n",
     "replace": "            crate::var_order_ui::sort_menu(app, ui, &c.id, None);\n            if menu_item(ui, tr(\"Delete collection\"), \"\") {\n"
   },
   {
     "note": "variables: groups in file order (collect names)",
-    "file": "crates/ui-egui/src/variables_panel.rs",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "    let mut out: Vec<String> = Vec::new();\n    for name in names {\n",
     "replace": "    let names: Vec<&str> = names.collect();\n    let mut out: Vec<String> = Vec::new();\n    for name in names.iter().copied() {\n"
   },
   {
     "note": "variables: groups in file order",
-    "file": "crates/ui-egui/src/variables_panel.rs",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "    out.sort();\n    out\n}\n",
     "replace": "    crate::var_order_ui::order_groups(&mut out, &names);\n    out\n}\n"
   },
   {
     "note": "variables: drag groups in the sidebar",
-    "file": "crates/ui-egui/src/variables_panel.rs",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "        let (r, resp) = ui.allocate_exact_size(vec2(SIDEBAR_W, 26.0), Sense::click());\n",
     "replace": "        let (r, resp) = ui.allocate_exact_size(vec2(SIDEBAR_W, 26.0), if view.editable() { Sense::click_and_drag() } else { Sense::click() });\n        crate::var_order_ui::sidebar_group(ui, view.editable(), &coll.id, g.map(String::as_str), r, &resp, &list);\n"
   },
   {
     "note": "variables: sort a group",
-    "file": "crates/ui-egui/src/variables_panel.rs",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "            if menu_item(ui, tr(\"Delete group\"), \"\") {\n",
     "replace": "            crate::var_order_ui::sort_menu(app, ui, &coll.id, Some(g));\n            if menu_item(ui, tr(\"Delete group\"), \"\") {\n"
   },
   {
     "note": "variables: rows in the collection's order",
-    "file": "crates/ui-egui/src/variables_panel.rs",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "    list.sort_by(|a, b| group_of(&a.name).cmp(group_of(&b.name)));\n",
     "replace": "    crate::var_order_ui::sort_rows(&mut list, |v| v.name.as_str());\n    crate::var_order_ui::visible(ui.ctx(), &coll.id, list.iter().map(|v| (v.id.as_str(), v.name.as_str())));\n"
   },
   {
     "note": "variables: group headers take drops, drag, sort",
-    "file": "crates/ui-egui/src/variables_panel.rs",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "                    let (r, _) = ui.allocate_exact_size(vec2(width, 28.0), Sense::hover());\n                    ui.painter().text(pos2(r.min.x + 16.0, r.center().y + 2.0), Align2::LEFT_CENTER, g, semibold(11.0), t.text_secondary);\n",
     "replace": "                    crate::var_order_ui::table_group(app, ui, view.editable(), &coll.id, g, width);\n"
   },
   {
     "note": "variables: drag rows, select several",
-    "file": "crates/ui-egui/src/variables_panel.rs",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "    let (r, resp) = ui.allocate_exact_size(vec2(width, ROW_H), Sense::click());\n",
     "replace": "    let (r, resp) = ui.allocate_exact_size(vec2(width, ROW_H), if view.editable() { Sense::click_and_drag() } else { Sense::click() });\n    crate::var_order_ui::var_row(ui, view.editable(), &coll.id, &v.id, &v.name, r, &resp);\n"
   },
@@ -91,7 +91,7 @@
   },
   {
     "note": "variables test: groups keep the file's order",
-    "file": "crates/ui-egui/src/variables_panel.rs",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "assert_eq!(groups(names.into_iter()), [\"color\", \"color/brand\", \"space\"]);",
     "replace": "assert_eq!(groups(names.into_iter()), [\"space\", \"color\", \"color/brand\"]);"
   }

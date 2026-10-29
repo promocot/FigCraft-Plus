@@ -200,7 +200,7 @@ struct State {
 }
 
 fn state_id() -> Id {
-    Id::new("figcraftplus_style_groups")
+    Id::unique("figcraftplus_style_groups")
 }
 
 /// Where the collapsed groups are kept between sessions (next to the app, like its fonts).
@@ -311,7 +311,7 @@ pub(crate) fn local_styles(app: &mut FigApp, ui: &mut Ui, doc: &Document) {
                     let text_r = Rect::from_min_max(pos2(x + 16.0, r.min.y + 3.0), pos2(r.max.x - widgets::PAD, r.max.y - 3.0));
                     let renaming = st.renaming.as_ref().is_some_and(|(k, p)| k == slot.key() && p == path);
                     if renaming {
-                        let rid = Id::new(("style_group_rename", slot.key(), path));
+                        let rid = Id::unique(("style_group_rename", slot.key(), path));
                         let start = ctx.data(|d| d.get_temp::<bool>(rid.with("started"))).is_none();
                         let (out, open) = widgets::rename_field(ui, rid, last(path), text_r, semibold(11.0), start);
                         ctx.data_mut(|d| d.insert_temp(rid.with("started"), true));
@@ -407,7 +407,7 @@ pub(crate) fn local_styles(app: &mut FigApp, ui: &mut Ui, doc: &Document) {
                     let eb = Rect::from_center_size(pos2(r.max.x - widgets::PAD - 10.0, r.center().y), vec2(22.0, 22.0));
                     let mut edit_clicked = false;
                     if hovered && st.drag.is_none() {
-                        let eresp = ui.interact(eb, Id::new(("style_edit_btn", &s.id)), Sense::click()).tip(tr("Edit style"));
+                        let eresp = ui.interact(eb, Id::unique(("style_edit_btn", &s.id)), Sense::click()).tip(tr("Edit style"));
                         if eresp.hovered() {
                             ui.painter().rect_filled(eb, CornerRadius::same(4), t.field);
                         }
@@ -483,7 +483,7 @@ pub(crate) fn local_styles(app: &mut FigApp, ui: &mut Ui, doc: &Document) {
     // The dragged rows follow the pointer; the drop shows as a line (between rows) or an outline
     // (into a group).
     if let (Some(d), Some(p)) = (&st.drag, pointer) {
-        let painter = ctx.layer_painter(egui::LayerId::new(egui::Order::Tooltip, Id::new("style_group_drag")));
+        let painter = ctx.layer_painter(egui::LayerId::new(egui::Order::Tooltip, Id::unique("style_group_drag")));
         let font = regular(11.0);
         let g = painter.layout_no_wrap(d.label.clone(), font, t.text);
         let chip = Rect::from_min_size(p + vec2(12.0, 6.0), g.size() + vec2(16.0, 10.0));

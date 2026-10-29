@@ -1,22 +1,20 @@
-//! FigCraft Plus: your own fonts and a font list without duplicates.
+//! FigCraft Plus: your own fonts, and more in the font list.
 //!
 //! - Font files (.ttf, .otf, .ttc) in a `fonts` folder next to the app are added at start, so a
 //!   portable copy carries them; "Add fonts…" in the font list copies chosen files there.
-//! - The font list has sections — Recent, In this file, Installed — and lists every family once,
-//!   whatever its source (bundled with FigCraft, the system, the fonts folder); fonts from the
-//!   fonts folder are tagged "Added", fonts a file uses that aren't here "Missing".
+//! - FigCraft's font list gains an "In this file" section (the families the open file uses) and
+//!   tags the families from the fonts folder "Added".
 
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard, OnceLock, PoisonError};
 
-use egui::{Align2, Color32, CornerRadius, Id, Rect, Sense, Ui, pos2, vec2};
+use egui::{Align2, CornerRadius, Rect, Sense, Ui, pos2, vec2};
 
 use crate::FigApp;
 use crate::i18n::tr;
 use crate::icons::{self, Icon};
-use crate::theme::{Tokens, regular, semibold};
-use crate::widgets;
+use crate::theme::{Tokens, regular};
 
 /// The font file types read.
 const EXTS: [&str; 3] = ["ttf", "otf", "ttc"];
@@ -171,8 +169,15 @@ pub(crate) fn tick(app: &mut FigApp, ctx: &egui::Context) {
 
 /// Ask for font files, copy them into the fonts folder and add them.
 fn add_fonts(app: &mut FigApp) {
+    if dir().is_none() {
+        return;
+    }
+    app.pick_open(tr("Add fonts"), &EXTS, |_, src| copy_and_add(&src));
+}
+
+/// Copy the font file `src` into the fonts folder and add it.
+fn copy_and_add(src: &Path) {
     let Some(root) = dir() else { return };
-    let Some(src) = app.services.pick_open(tr("Add fonts"), &EXTS) else { return };
     if std::fs::create_dir_all(&root).is_err() {
         return;
     }
@@ -185,142 +190,35 @@ fn add_fonts(app: &mut FigApp) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// The font list
+// The font list (FigCraft's own menu, with its search, keyboard and hover preview; these add to it)
 
 const ROW: f32 = 26.0;
-const RECENT_KEY: &str = "figcraft_recent_fonts";
 
-#[derive(Debug, PartialEq)]
-enum Row {
-    Header(String),
-    /// A family on this computer; true when it came from the fonts folder.
-    Installed(String, bool),
-    /// A family the file uses that isn't here.
-    Missing(String),
+/// The installed families (of `all`) the open file uses, for the list's "In this file" section.
+pub(crate) fn in_file(all: &[String]) -> Vec<String> {
+    let s = state();
+    s.doc_families.iter().filter_map(|f| all.iter().find(|a| a.eq_ignore_ascii_case(f)).cloned()).collect()
 }
 
-/// The rows for query `q` (lower case): Recent and In this file (without a query), then every
-/// installed family once.
-fn rows(q: &str, installed: &[String], recent: &[String], in_file: &[String], added: &BTreeSet<String>) -> Vec<Row> {
-    let hit = |f: &str| q.is_empty() || f.to_lowercase().contains(q);
-    let local: BTreeSet<String> = installed.iter().map(|f| f.to_lowercase()).collect();
-    let mine = |f: &str| added.contains(&f.to_lowercase());
-    let mut out = Vec::new();
-    if q.is_empty() {
-        let recent: Vec<&String> = recent.iter().filter(|f| local.contains(&f.to_lowercase())).collect();
-        if !recent.is_empty() {
-            out.push(Row::Header(tr("Recent").into()));
-            out.extend(recent.into_iter().map(|f| Row::Installed(f.clone(), mine(f))));
-        }
-        if !in_file.is_empty() {
-            out.push(Row::Header(tr("In this file").into()));
-            for f in in_file {
-                out.push(if local.contains(&f.to_lowercase()) { Row::Installed(f.clone(), mine(f)) } else { Row::Missing(f.clone()) });
-            }
-        }
-    }
-    let list: Vec<&String> = installed.iter().filter(|f| hit(f)).collect();
-    if !list.is_empty() {
-        out.push(Row::Header(tr("Installed").into()));
-        out.extend(list.into_iter().map(|f| Row::Installed(f.clone(), mine(f))));
-    }
-    out
+/// Whether `family` came from the fonts folder next to the app.
+fn added(family: &str) -> bool {
+    state().added.contains(&family.to_lowercase())
 }
 
-/// The searchable, sectioned family list (replaces FigCraft's flat one), with "Add fonts…" at the
-/// bottom. Returns the family picked.
-pub(crate) fn font_picker(ui: &mut Ui, current: Option<&str>, just_opened: bool) -> Option<String> {
+/// "Added" at the right end of a family row from the fonts folder.
+pub(crate) fn tag(ui: &Ui, rect: Rect, family: &str, hovered: bool) {
+    if !added(family) {
+        return;
+    }
     let t = Tokens::get(ui.ctx());
-    let q_id = Id::new("font_query");
-    let mut q: String = ui.data(|d| d.get_temp(q_id)).unwrap_or_default();
-    if just_opened {
-        q.clear();
-    }
-    let search = ui.add(egui::TextEdit::singleline(&mut q).hint_text(tr("Search fonts")).desired_width(ui.available_width()).font(regular(11.5)));
-    if just_opened {
-        search.request_focus();
-    }
-    ui.data_mut(|d| d.insert_temp(q_id, q.clone()));
-    let ql = q.trim().to_lowercase();
-    let installed = figcraft_text::family_names();
-    let recent: Vec<String> = ui.ctx().data_mut(|d| d.get_persisted::<Vec<String>>(Id::new(RECENT_KEY))).unwrap_or_default();
-    let list = {
-        let s = state();
-        rows(&ql, &installed, &recent, &s.doc_families, &s.added)
-    };
-    if search.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-        let first = list.iter().find_map(|r| match r {
-            Row::Installed(f, _) | Row::Missing(f) => Some(f.clone()),
-            Row::Header(_) => None,
-        });
-        if first.is_some() {
-            return first;
-        }
-    }
-    let mut picked = None;
-    if list.iter().all(|r| matches!(r, Row::Header(_))) {
-        widgets::label(ui, tr("No fonts match"), t.text_tertiary);
-    } else {
-        let mut budget = 4;
-        egui::ScrollArea::vertical().max_height(360.0).auto_shrink([false, true]).show_rows(ui, ROW, list.len(), |ui, range| {
-            for r in list.get(range).unwrap_or(&[]) {
-                let w = ui.available_width();
-                let (rect, resp) = ui.allocate_exact_size(vec2(w, ROW), if matches!(r, Row::Header(_)) { Sense::hover() } else { Sense::click() });
-                match r {
-                    Row::Header(h) => {
-                        ui.painter().text(pos2(rect.min.x + 8.0, rect.center().y), Align2::LEFT_CENTER, h, semibold(10.5), t.text_secondary);
-                    }
-                    Row::Installed(f, _) | Row::Missing(f) => {
-                        let hovered = resp.hovered();
-                        if hovered {
-                            ui.painter().rect_filled(rect, CornerRadius::same(5), t.accent);
-                        }
-                        let col = if hovered { Color32::WHITE } else { t.text };
-                        let dim = if hovered { Color32::from_white_alpha(200) } else { t.text_tertiary };
-                        if current.is_some_and(|c| c.eq_ignore_ascii_case(f)) {
-                            icons::paint(
-                                ui.painter(),
-                                Rect::from_center_size(pos2(rect.min.x + 10.0, rect.center().y), vec2(12.0, 12.0)),
-                                Icon::Check,
-                                col,
-                            );
-                        }
-                        let tag = match r {
-                            Row::Installed(_, true) => Some(tr("Added")),
-                            Row::Missing(_) => Some(tr("Missing")),
-                            _ => None,
-                        };
-                        let tag_w = tag.map_or(0.0, |s| ui.painter().layout_no_wrap(s.to_string(), regular(10.0), dim).size().x + 10.0);
-                        if let Some(s) = tag {
-                            ui.painter().text(pos2(rect.max.x - 6.0, rect.center().y), Align2::RIGHT_CENTER, s, regular(10.0), dim);
-                        }
-                        let text_min = pos2(rect.min.x + 22.0, rect.min.y);
-                        let max_w = rect.max.x - text_min.x - 6.0 - tag_w;
-                        let tex = if matches!(r, Row::Missing(_)) { None } else { crate::font_preview::family(ui.ctx(), f, 13.0, &mut budget) };
-                        match tex {
-                            Some(tex) => {
-                                crate::font_preview::paint(ui.painter(), &tex, pos2(text_min.x, rect.center().y), max_w, ROW, col);
-                            }
-                            None => {
-                                ui.painter().with_clip_rect(Rect::from_min_size(text_min, vec2(max_w.max(0.0), ROW))).text(
-                                    pos2(text_min.x, rect.center().y),
-                                    Align2::LEFT_CENTER,
-                                    f,
-                                    regular(12.0),
-                                    col,
-                                );
-                            }
-                        }
-                        if resp.clicked() {
-                            picked = Some(f.clone());
-                        }
-                    }
-                }
-            }
-        });
-    }
-    // "Add fonts…": your font files, kept in the fonts folder next to the app.
-    ui.add_space(4.0);
+    let col = if hovered { t.accent_on } else { t.text_tertiary };
+    ui.painter().text(pos2(rect.max.x - 6.0, rect.center().y), Align2::RIGHT_CENTER, tr("Added"), regular(10.0), col);
+}
+
+/// "Add fonts…" at the top of the font menu: pick font files; they are copied into the fonts
+/// folder next to the app (a portable copy carries them) and added at once.
+pub(crate) fn add_fonts_row(ui: &mut Ui) {
+    let t = Tokens::get(ui.ctx());
     let w = ui.available_width();
     let (r, resp) = ui.allocate_exact_size(vec2(w, ROW), Sense::click());
     if resp.hovered() {
@@ -330,9 +228,9 @@ pub(crate) fn font_picker(ui: &mut Ui, current: Option<&str>, just_opened: bool)
     ui.painter().text(pos2(r.min.x + 22.0, r.center().y), Align2::LEFT_CENTER, tr("Add fonts…"), regular(11.5), t.text);
     if resp.on_hover_text(tr("Font files are kept in the fonts folder next to the app")).clicked() {
         state().want_files = true;
+        ui.close();
         ui.ctx().request_repaint();
     }
-    picked
 }
 
 #[cfg(test)]
@@ -340,21 +238,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn lists_each_family_once() {
-        let installed = vec!["Arial".to_string(), "Inter".to_string(), "My Font".to_string()];
-        let added: BTreeSet<String> = ["my font".to_string()].into();
-        let label = |r: &Row| match r {
-            Row::Header(h) => format!("# {h}"),
-            Row::Installed(f, g) => format!("{f}{}", if *g { " +" } else { "" }),
-            Row::Missing(f) => format!("{f} ?"),
-        };
-        let all: Vec<String> = rows("", &installed, &[], &[], &added).iter().map(label).collect();
-        assert_eq!(all, ["# Installed", "Arial", "Inter", "My Font +"]);
-        let start: Vec<String> =
-            rows("", &installed, &["Inter".into(), "Gone".into()], &["Lora".into(), "Arial".into()], &added).iter().map(label).collect();
-        assert_eq!(&start[..6], ["# Recent", "Inter", "# In this file", "Lora ?", "Arial", "# Installed"]);
-        let found: Vec<String> = rows("in", &installed, &["Inter".into()], &[], &added).iter().map(label).collect();
-        assert_eq!(found, ["# Installed", "Inter"]);
+    fn knows_font_files() {
         assert_eq!(face_count(b"ttcf\0\x01\0\0\0\0\0\x03rest"), 3);
         assert_eq!(face_count(b"\0\x01\0\0"), 1);
         assert!(is_font(Path::new("a/B.TTF")) && is_font(Path::new("x.otf")) && !is_font(Path::new("x.woff2")));

@@ -1,9 +1,14 @@
-# FigCraft Plus (OKLCH)
+# FigCraft Plus
 
-**[FigCraft](https://github.com/storytold/figcraft) with extra tools — OKLCH in the colour
-picker, a resizable picker with labelled fields that opens beside what you edit, colours driven by number variables, variables
-for font family, weight and paragraph spacing, Figma-like style dialogs with variables, Google Fonts, and drag & drop ordering and sorting of
-variables.**
+**Add-ons for [FigCraft](https://github.com/storytold/figcraft), applied to each official release
+and built for Windows.** They only add what FigCraft doesn't have yet: when an official release
+ships a feature of its own, it is removed here.
+
+| | |
+|---|---|
+| **FigCraft Plus** | **1** |
+| **Built on** | FigCraft **v0.12.1** (the latest official release) |
+| **Files** | `.figcraft` files stay fully compatible with the official app, both ways |
 
 This repository holds only the additions. A GitHub Actions workflow takes every new FigCraft
 release, applies them, runs the tests and publishes a ready-to-run Windows build under
@@ -12,27 +17,33 @@ release, applies them, runs the tests and publishes a ready-to-run Windows build
 ## Download
 
 1. Open **[Releases](../../releases)** and take the latest
-   `figcraft-<version>-custom.<n>-windows-x64-portable.zip`.
+   `figcraft-plus-<n>-figcraft-<version>-windows-x64-portable.zip`.
 2. Unzip it anywhere (a USB drive works) and run `figcraft.exe`.
 3. The build isn't code-signed: if Windows SmartScreen warns, choose **More info → Run anyway**.
 
 To hear about new builds, use **Watch → Custom → Releases** on this page.
 
 The build is FigCraft from the same release tag, built the same way (release profile, static C
-runtime, embedded fonts, `figcraft-cli.exe` included), plus the features below. `.figcraft` files
-stay fully compatible with the official app in both directions.
+runtime, embedded fonts, `figcraft-cli.exe` included), plus the add-ons below.
 
-## Features
+## Now in FigCraft itself (removed from Plus)
 
-### OKLCH in the colour picker
+| Was in Plus | In FigCraft since |
+|---|---|
+| Spacing field for several layers in a row or column | 0.7 — smart-selection spacing, with handles on the canvas |
+| OKLCH in the colour picker's model menu | 0.12 — LCH and OKLCH models |
+| Font family and font style bound to string variables | 0.12 |
+| Colour variables offered by fill / stroke scope in the style picker | 0.12 |
+| Google Fonts download | removed earlier (fonts folder instead) |
 
-The picker's model menu gains **OKLCH** (Hex / RGB / HSL / HSB / **OKLCH** / CSS):
+## Add-ons
 
-<p>
-<img src="docs/images/01-model-menu.png" width="230" alt="The colour picker's model menu with OKLCH">
+### OKLCH, done the oklch.com way
+
 <img src="docs/images/02-oklch-picker.png" width="330" alt="The picker in OKLCH: the OKLCH plane, the OKLCH hue strip and the L, C, H, A fields">
-</p>
 
+FigCraft 0.12 has OKLCH fields of its own (lightness in percent, sRGB only, the HSB square and
+rainbow kept). In FigCraft Plus the picker's OKLCH model goes further:
 
 | Field | Meaning | Range |
 |---|---|---|
@@ -43,13 +54,13 @@ The picker's model menu gains **OKLCH** (Hex / RGB / HSL / HSB / **OKLCH** / CSS
 - Same units and precision as [oklch.com](https://oklch.com) and CSS `oklch(L C H)`: paste a hex
   copied from FigCraft into oklch.com and you get the same numbers. Fields also take CSS forms
   (`64.56%` for L, `55%` for C = 0.22).
-- Values are read and written in the file's colour profile (sRGB or Display P3,
+- Values are read and written in the **file's colour profile** (sRGB or Display P3,
   File ▸ Color profile). Colours outside the gamut are mapped in with the CSS Color 4 algorithm
   (chroma reduced, lightness and hue kept).
-- In OKLCH mode the whole picker works in OKLCH: the HSB square becomes an **OKLCH plane**
-  (chroma across, lightness down, at the current hue) with the exact gamut edge — and, in a
-  Display P3 file, the sRGB edge dashed — and the rainbow becomes an **OKLCH hue strip** at the
-  current lightness and chroma, so dragging the hue keeps the lightness.
+- The whole picker works in OKLCH: the HSB square becomes an **OKLCH plane** (chroma across,
+  lightness down, at the current hue) with the exact gamut edge — and, in a Display P3 file, the
+  sRGB edge dashed — and the rainbow becomes an **OKLCH hue strip** at the current lightness and
+  chroma, so dragging the hue keeps the lightness.
 - Verified against the [coloraide](https://github.com/facelessuser/coloraide) reference
   implementation (CSS Color 4) on 6,000 colours: largest difference 0.000001.
 
@@ -138,67 +149,37 @@ model replaces those links.
   are referred to by name: rename one → update the name in the line too. The official FigCraft
   opens such files fine and keeps the last computed colours.
 
-### Variables in text: font family, weight and paragraph spacing
+### Variables in text: weight, paragraph spacing and indent
 
 <p>
 <img src="docs/images/12-text-variables.png" width="560" alt="A text layer with font family, weight and paragraph spacing bound to variables">
 <img src="docs/images/13-weight-or-style-list.png" width="300" alt="The font style dropdown's list: number and string variables">
 </p>
 
-As in Figma, the Typography section binds more of a text layer to variables. Hover a field: the
-variable button appears at its right end.
+FigCraft binds the font family and font style to string variables. FigCraft Plus binds the rest of
+the Typography section, as in Figma:
 
 | Field | Variable | Example |
 |---|---|---|
-| **Font family** | string | `family/body` = `Inter` |
-| **Font style / weight** | number (the weight) or string (the style) | `weight/bold` = 700, `style/heading` = `SemiBold Italic` |
+| **Font style / weight** | a **number** (the weight) as well as a string (the style) | `weight/bold` = 700 |
 | **Paragraph spacing** | number | `space/para` = 16 |
 | **Paragraph indent** (Typography ▸ …) | number | `space/indent` = 24 |
 
-(Font size, line height and letter spacing could already be bound. Together with FigCraft's own
-bindings — sizes, min/max, gaps and padding, corners, opacity, stroke widths, effects, layout
-grids, visibility, text content, gradient stops — every property Figma lets you bind takes a
-variable.)
-
-- The style dropdown lists **both** kinds: a number sets the weight (the nearest style the font has
-  is used), a string sets the style by name. Binding one replaces the other in one undo step;
-  click the bound chip to switch, or its detach button to unbind.
+- *Apply variable* in the font style menu lists **both** kinds: a number sets the weight (the
+  nearest style the font has is used), a string sets the style by name. Binding one replaces the
+  other in one undo step.
 - Variables follow their modes like everywhere else (e.g. a Mobile mode with a smaller paragraph
-  spacing).
-- Lists respect each variable's **scopes** (below): a variable limited to Font size isn't offered
-  for the weight.
+  spacing), and lists respect each variable's **scopes**.
 - While editing a range of characters these fields take plain values (bindings are per layer).
 
-### Google Fonts, and every font listed once
+### Your own fonts, travelling with the app
 
-<p>
-<img src="docs/images/18-font-list.png" width="300" alt="The font list: In this file, Installed, Google Fonts">
-<img src="docs/images/19-google-download.png" width="300" alt="A Google Fonts family not on this computer, with Download">
-</p>
-
-The font list (Typography ▸ font family, and the text style editor) has sections:
-
-- **Recent** and **In this file** — the families you used lately and the ones this file uses;
-- **Installed** — on this computer: system fonts, fonts bundled with FigCraft and Google families
-  you downloaded (tagged *Google*);
-- **Google Fonts** — every Google Fonts family that isn't installed.
-
-Each family appears **once**: a family that is installed (from any source) is never offered
-again under Google Fonts.
-
-Pick a Google family and it downloads (every style, as TrueType files) into a **`google-fonts`
-folder next to `figcraft.exe`** — on a USB drive the fonts travel with the app — and is applied
-when it arrives (a second or two). Next time it is simply installed.
-
-- Variable families (Inter and others Google serves as one file for all weights) get every style
-  — Thin to Black, and their italics — each drawn at its weight.
-- Open a file that uses a Google family you don't have: it downloads by itself.
-- Offline, installed and downloaded fonts work as usual; the catalog is kept in
-  `google-fonts/catalog.json` (refreshed weekly) and the list notes when Google Fonts can't be
-  reached.
-- Connections use HTTPS with verified certificates (FigCraft's own TLS client); the requests go
-  only to `fonts.google.com`, `fonts.googleapis.com` and `fonts.gstatic.com`.
-- Google Fonts are open-source (mostly SIL Open Font License) and free to use in your designs.
+- Font files (`.ttf`, `.otf`, `.ttc`) in a **`fonts` folder next to `figcraft.exe`** are added at
+  start — on a USB drive your fonts travel with the app.
+- **Add fonts…** at the top of the font menu copies chosen files into that folder and adds them at
+  once; they are tagged *Added* in the list.
+- The font menu gains an **In this file** section (the families the open file uses), between
+  FigCraft's *Recent* and *All fonts*.
 
 ### Styles: create and edit them as in Figma
 
@@ -243,6 +224,14 @@ apply as you make them, each one undo step.
 Layers using the style follow the variables in their own modes (a frame set to Mobile shows the
 Mobile size). Figma's Shader effect has no FigCraft equivalent yet, so it isn't offered.
 
+### Style groups in Local styles
+
+Styles sit in **nested groups** (kept as `/` in their names, so files stay readable by FigCraft and
+Figma). Click to select (Ctrl/Shift-click for several), double-click to edit; **Ctrl+G** or
+*Group* puts the selection in a group, **+ ▸ New group** makes an empty one; drag styles and whole
+groups between rows, into a group or out to the top; collapse a group with its arrow, double-click
+its name to rename it, ungroup it from its context menu.
+
 ### Variable details & scope, one click away
 
 <img src="docs/images/14-edit-variable.png" width="640" alt="The Edit variable button on a row and the variable's details and scopes">
@@ -252,6 +241,13 @@ of the name. It opens the variable's name, description, code syntax and **scopin
 properties pickers offer it for (corner radius, gap, font weight, font size, paragraph spacing,
 fills, strokes…). The window opens beside the Variables editor at the variable's row, always above
 it, and follows the editor when it moves. Click the button again to close. (Right-click ▸ Edit variable still works.)
+
+### A Figma-like variable picker
+
+One picker everywhere a variable is applied (layer properties, styles, aliases, prototype
+actions, colour channels): search, a library filter, collections and groups as headers, each
+variable's swatch or type and its value; arrow keys and Enter work. A variable with every scope
+turned off is offered nowhere but the Variables editor, as in Figma.
 
 ### Reorder variables: drag & drop and sorting
 
@@ -290,13 +286,13 @@ in exports. That fixes imports that arrive in the wrong order (`n-xs, n-6xl, n-s
 overlay/          the additions' own files, copied into FigCraft at the same paths
 hooks/            where they connect: "insert after this line" / "replace this text"
 scripts/apply.py  copies overlay/ and applies hooks/ to a FigCraft checkout
-CUSTOM_VERSION    version of the additions (bump after changing them)
+CUSTOM_VERSION    the FigCraft Plus version (bump after changing the additions)
 .github/workflows/build.yml   the daily build
 ```
 
 Every day at 04:17 UTC the workflow checks FigCraft's latest release. If this repository hasn't
 built it yet (or the additions changed), it checks the release out, runs `scripts/apply.py`, runs
-the additions' tests and publishes `v<figcraft version>-custom.<CUSTOM_VERSION>` under Releases.
+the additions' tests and publishes `v<figcraft version>-plus.<CUSTOM_VERSION>` under Releases.
 
 If a FigCraft update moves code a hook relies on, the build stops at **Connect custom features**
 with the hook named (e.g. `0001-oklch-colour-picker.json #5 (picker: OKLCH fields): no line
@@ -312,9 +308,14 @@ anchor text — usually one line — and the next build goes through.
 
 ```sh
 git clone https://github.com/storytold/figcraft
-python3 scripts/apply.py figcraft
+python3 scripts/apply.py figcraft          # --check lists every hook that no longer fits
 cd figcraft && cargo run --release -p figcraft
 ```
+
+### When FigCraft adds a feature of its own
+
+Remove ours: delete its hook (and its `overlay/` files, or the parts of them it no longer needs),
+move it to *Now in FigCraft itself* above and bump `CUSTOM_VERSION`.
 
 ### Add a feature
 

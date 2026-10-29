@@ -3,7 +3,8 @@
 
 use egui::accesskit::Role;
 use egui::{Event, Key, Modifiers, Pos2, pos2};
-use figcraft_color::{ColorProfile, Oklch, PaintKind};
+use figcraft_color::oklch_profile::Oklch;
+use figcraft_color::{ColorProfile, PaintKind};
 use figcraft_doc::NodeId;
 use figcraft_engine::Session;
 use serde_json::json;
@@ -19,7 +20,7 @@ fn setup(hex: &str) -> (Ui, NodeId) {
     u.ctx.enable_accesskit();
     u.app.ui.picker = Some(PickerTarget::Paint { fills: true, index: 0, ids: vec![a] });
     // The OKLCH model (index 4 of the model dropdown).
-    u.ctx.data_mut(|d| d.insert_temp(egui::Id::new("cp_model"), 4usize));
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::unique("cp_model"), 5usize));
     u.frame(vec![]);
     (u, a)
 }
@@ -103,12 +104,12 @@ fn a_display_p3_file_reads_and_writes_p3_values() {
 #[test]
 fn the_picker_widens_for_oklch_and_remembers_a_dragged_width() {
     let (u, _) = setup("#FF0000");
-    let models = ["Hex", "RGB", "HSL", "HSB", "OKLCH", "CSS"];
+    let models = ["Hex", "RGB", "HSL", "HSB", "LCH", "OKLCH", "CSS"];
     let w = crate::oklch_fields::picker_width(&u.ctx, &models);
     assert!(w >= 276.0, "OKLCH needs room for its fields: {w}");
-    u.ctx.data_mut(|d| d.insert_temp(egui::Id::new("cp_model"), 0usize));
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::unique("cp_model"), 0usize));
     assert!(crate::oklch_fields::picker_width(&u.ctx, &models) < w, "Hex needs less");
-    u.ctx.data_mut(|d| d.insert_persisted(egui::Id::new("cp_width"), 400.0f32));
+    u.ctx.data_mut(|d| d.insert_persisted(egui::Id::unique("cp_width"), 400.0f32));
     assert_eq!(crate::oklch_fields::picker_width(&u.ctx, &models), 400.0);
 }
 
@@ -157,7 +158,7 @@ fn a_layer_fill_channel_binds_to_a_number_variable_in_each_model() {
     u.ctx.enable_accesskit();
     u.app.ui.picker = Some(PickerTarget::Paint { fills: true, index: 0, ids: vec![a] });
     // OKLCH: H to Hue, alpha to Opacity.
-    u.ctx.data_mut(|d| d.insert_temp(egui::Id::new("cp_model"), 4usize));
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::unique("cp_model"), 5usize));
     u.frame(vec![]);
     bind(&mut u, "OKLCH H", "Hue");
     assert!(plus_data(&u, a).starts_with("fills/0 oklch("), "{}", plus_data(&u, a));
@@ -174,7 +175,7 @@ fn a_layer_fill_channel_binds_to_a_number_variable_in_each_model() {
     // (out of sRGB at this chroma: CSS gamut mapping may move the hue a little)
     assert!((h.h - 130.0).abs() < 4.0, "{h:?} {}", plus_data(&u, a));
     // In HSL the OKLCH links are noted, and a link there replaces them.
-    u.ctx.data_mut(|d| d.insert_temp(egui::Id::new("cp_model"), 2usize));
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::unique("cp_model"), 2usize));
     bind(&mut u, "HSL H", "Hue");
     let text = plus_data(&u, a);
     assert!(text.starts_with("fills/0 hsl({Hue} ") && !text.contains("oklch"), "{text}");
@@ -204,7 +205,7 @@ fn a_colour_variable_binds_in_its_description() {
     let mut u = Ui::new(s);
     u.ctx.enable_accesskit();
     u.app.ui.picker = Some(PickerTarget::Variable { id: p.clone(), mode });
-    u.ctx.data_mut(|d| d.insert_temp(egui::Id::new("cp_model"), 3usize));
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::unique("cp_model"), 3usize));
     u.frame(vec![]);
     bind(&mut u, "HSB H", "Hue");
     let desc = u.app.session.doc().unwrap().variables.get(&p).unwrap().description.clone();

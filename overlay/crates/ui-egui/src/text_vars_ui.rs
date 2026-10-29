@@ -1,10 +1,10 @@
-//! FigCraft Plus: variables on the text section's font family, font weight / style and paragraph
-//! spacing (as in Figma), and the Variables editor's "Edit variable" button (details and scope)
-//! on every row.
+//! FigCraft Plus: more of the text section takes variables, as in Figma: the font weight (a number
+//! variable, besides FigCraft's own style strings), paragraph spacing and paragraph indent; and
+//! the Variables editor's "Edit variable" button (details and scope) on every row.
 //!
-//! The font style dropdown takes either a number variable (the weight: 400, 700) or a string one
-//! (the style: "Bold", "SemiBold Italic"); the picker lists both, and binding one replaces the
-//! other in one undo step.
+//! The font style dropdown's "Apply variable" lists number variables (the weight: 400, 700) and
+//! string ones (the style: "Bold", "SemiBold Italic"); binding one replaces the other in one
+//! undo step.
 
 use egui::{CornerRadius, Rect, Sense, Ui, pos2, vec2};
 use figcraft_doc::{NodeId, Variable, VariableType};
@@ -87,43 +87,25 @@ pub(crate) fn bind_style(app: &mut FigApp, style: &str, field: &str, pick: &Pick
     app.run("command.batch", json!({"label": "Apply variable", "commands": steps}));
 }
 
-/// The font family dropdown (`control`, `width` wide) with a variable button on hover, or the
-/// bound string variable's chip. While text is being edited it is just the dropdown.
-pub(crate) fn family(app: &mut FigApp, ui: &mut Ui, ids: &[NodeId], editing: bool, width: f32, control: impl FnOnce(&mut FigApp, &mut Ui)) {
-    if editing {
-        control(app, ui);
-    } else {
-        variable_ui::bindable(app, ui, ids, "fontFamily", VariableType::String, width, control);
-    }
+/// The picker field "Apply variable" opens for the font family or style dropdown's `field`: the
+/// style dropdown offers weight (number) and style (string) variables (FigCraft itself offers
+/// style strings only).
+pub(crate) fn picker_field(field: &str) -> &str {
+    if field == "fontStyle" { WEIGHT_OR_STYLE } else { field }
 }
 
-/// The font style dropdown (`control`, `width` wide) with a variable button on hover that offers
-/// weight (number) and style (string) variables, or the bound one's chip.
-pub(crate) fn weight_or_style(app: &mut FigApp, ui: &mut Ui, ids: &[NodeId], editing: bool, width: f32, control: impl FnOnce(&mut FigApp, &mut Ui)) {
-    if editing {
-        control(app, ui);
-        return;
+/// For the font style dropdown (`field` "fontStyle") of whole layers whose weight is bound to the
+/// same number variable: that variable's chip in place of the dropdown (a click picks another
+/// variable, its detach button unbinds it). None otherwise: FigCraft draws its dropdown (and its
+/// own chip for a bound style string).
+pub(crate) fn weight_chip(app: &mut FigApp, ui: &mut Ui, ids: &[NodeId], field: &str, width: f32, editing: bool) -> Option<egui::Response> {
+    if editing || field != "fontStyle" {
+        return None;
     }
-    let area = Rect::from_min_size(ui.cursor().min, vec2(width, widgets::FIELD_H));
-    let bound = app.session.doc().ok().and_then(|d| {
-        ["fontWeight", "fontStyle"].into_iter().find_map(|f| variable_ui::bound_name(d, ids, f).map(|name| (f, name)))
-    });
-    if let Some((field, name)) = bound {
-        // The chip changes to any weight or style variable, or detaches this one.
-        let (r, _) = ui.allocate_exact_size(area.size(), Sense::hover());
-        match widgets::bound_field(ui, egui::Id::new(("bound_chip", WEIGHT_OR_STYLE, ids)), widgets::Lead::None, r, &name) {
-            Some(widgets::BindEvent::Open(at)) => variable_ui::open(ui, ids, WEIGHT_OR_STYLE, VariableType::Number, at),
-            Some(widgets::BindEvent::Detach) => {
-                app.run("variable.bind", json!({"ids": ids, "field": field, "variable": null}));
-            }
-            None => {}
-        }
-        return;
-    }
-    control(app, ui);
-    if variable_ui::variable_button(ui, area, egui::Id::new(("bind_button", WEIGHT_OR_STYLE, ids))) {
-        variable_ui::open(ui, ids, WEIGHT_OR_STYLE, VariableType::Number, area.left_bottom());
-    }
+    app.session.doc().ok().and_then(|d| variable_ui::bound_name(d, ids, "fontWeight"))?;
+    let (rect, resp) = ui.allocate_exact_size(vec2(width, widgets::FIELD_H), Sense::hover());
+    variable_ui::bound_chip(app, ui, ids, "fontWeight", VariableType::Number, rect);
+    Some(resp)
 }
 
 /// The "Edit variable" button at the end of a Variables editor row's name cell (`name_w` wide):
@@ -146,7 +128,7 @@ pub(crate) fn details_button(ui: &mut Ui, row: Rect, name_w: f32, open: bool) ->
 }
 
 fn details_anchor_id() -> egui::Id {
-    egui::Id::new("figcraftplus_details_anchor")
+    egui::Id::unique("figcraftplus_details_anchor")
 }
 
 /// Where the Edit variable window goes, as in Figma: beside the Variables editor (right of it, else
@@ -154,7 +136,7 @@ fn details_anchor_id() -> egui::Id {
 /// drawn above the editor.
 pub(crate) fn details_pos(ctx: &egui::Context) -> egui::Pos2 {
     let screen = ctx.content_rect();
-    let size = ctx.memory(|m| m.area_rect(egui::Id::new("variable_details"))).map_or(vec2(312.0, 600.0), |r| r.size());
+    let size = ctx.memory(|m| m.area_rect(egui::Id::unique("variable_details"))).map_or(vec2(312.0, 600.0), |r| r.size());
     let anchor: Option<(Rect, Option<Rect>)> = ctx.data(|d| d.get_temp(details_anchor_id()));
     let Some((row, editor)) = anchor else { return pos2(screen.center().x - size.x / 2.0, screen.min.y + 80.0) };
     let editor = editor.unwrap_or(row);
