@@ -103,7 +103,8 @@ pub(crate) fn follow(app: &mut FigApp, ctx: &egui::Context, exists: impl Fn(&Fig
         let on_list = crate::variable_ui::picker_rect(ctx).is_some_and(|r| r.contains(p));
         let on_anchor = a.rect.is_some_and(|r| r.expand(2.0).contains(p));
         // The eyedropper's click on the canvas samples a colour for the picker: it keeps it open.
-        let sampling = app.session.tool.tool == figcraft_engine::ToolId::Eyedropper;
+        // (The canvas may already have taken the sample this frame and gone back to Move.)
+        let sampling = app.session.tool.tool == figcraft_engine::ToolId::Eyedropper || app.session.tool.picked.is_some();
         if app.canvas.rect.contains(p) && !sampling && !on_overlay && !on_picker && !on_list && !on_anchor && !egui::Popup::is_any_open(ctx) {
             a.press = Some((p, a.selection.clone()));
         }
