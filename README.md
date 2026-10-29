@@ -14,6 +14,61 @@ This repository holds only the additions. A GitHub Actions workflow takes every 
 release, applies them, runs the tests and publishes a ready-to-run Windows build under
 **[Releases](../../releases)** — usually within a day of the FigCraft release.
 
+## Contents
+
+- [Why FigCraft Plus](#why-figcraft-plus)
+- [Download](#download)
+- [Requested in FigCraft's issues, made here](#requested-in-figcrafts-issues-made-here)
+- [Now in FigCraft itself (removed from Plus)](#now-in-figcraft-itself-removed-from-plus)
+- [Add-ons](#add-ons)
+  - [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way)
+  - [Derived colours and calculated variables](#derived-colours-and-calculated-variables)
+  - [rem units](#rem-units)
+  - [A better picker](#a-better-picker)
+  - [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing)
+  - [Colours driven by number variables](#colours-driven-by-number-variables)
+  - [Variables in text: weight, paragraph spacing and indent](#variables-in-text-weight-paragraph-spacing-and-indent)
+  - [Your own fonts, travelling with the app](#your-own-fonts-travelling-with-the-app)
+  - [Styles: create and edit them as in Figma](#styles-create-and-edit-them-as-in-figma)
+  - [Style groups in Local styles](#style-groups-in-local-styles)
+  - [Variable details & scope, one click away](#variable-details--scope-one-click-away)
+  - [A Figma-like variable picker](#a-figma-like-variable-picker)
+  - [Reorder variables: drag & drop and sorting](#reorder-variables-drag--drop-and-sorting)
+- [How it works](#how-it-works)
+  - [Run a build by hand](#run-a-build-by-hand)
+  - [Build locally](#build-locally)
+  - [When FigCraft adds a feature of its own](#when-figcraft-adds-a-feature-of-its-own)
+  - [Add a feature](#add-a-feature)
+- [License](#license)
+
+## Why FigCraft Plus
+
+FigCraft keeps close to Figma and to its own pace. FigCraft Plus adds, on top of each official
+release, what designers working with design systems, CSS and OKLCH miss today — and steps aside
+as soon as FigCraft ships its own version.
+
+**★ Only in FigCraft Plus (for now)** — FigCraft has nothing like it yet.
+**▲ Better in FigCraft Plus** — FigCraft has a basic version; Plus goes further.
+
+| Feature | In FigCraft v0.12.1 | In FigCraft Plus | |
+|---|---|---|---|
+| [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way) | FigCraft 0.12 has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB. | The whole picker works in OKLCH (an OKLCH plane with the exact gamut edge, an OKLCH hue strip), values match oklch.com and CSS, and Display P3 files are read in P3. | ▲ better |
+| [Derived colours and calculated variables](#derived-colours-and-calculated-variables) | A variable can be an *alias* of another — an exact copy, nothing more. | A colour can be *made from* another (transparency, lighter / darker, its complement, a mix of two), and a number from other numbers, all kept in step in every mode. | ★ only in Plus |
+| [rem units](#rem-units) | Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16. | `rem` in every field, a root size per file, an optional rem display in Typography, and Dev Mode uses the file's root size. | ★ only in Plus |
+| [A better picker](#a-better-picker) | Fields without captions, one fixed width. | A caption over every field, a width that fits the model, and a draggable edge. | ▲ better |
+| [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing) | The picker opens at a fixed place on the right and closes when the selection changes. | It opens beside the swatch you clicked, stays on top, and moves to the same slot of the newly selected layer — as in Figma. | ▲ better |
+| [Colours driven by number variables](#colours-driven-by-number-variables) | A colour can be bound to a colour variable as a whole. | Each channel (L, C, H, R, G, B, H, S, alpha…) can follow its own number variable: one `brand/hue` restyles every colour built on it. | ★ only in Plus |
+| [Variables in text: weight, paragraph spacing and indent](#variables-in-text-weight-paragraph-spacing-and-indent) | Font family and font style take string variables. | The weight takes a number variable too (400, 700), and paragraph spacing and indent take number variables. | ▲ better |
+| [Your own fonts, travelling with the app](#your-own-fonts-travelling-with-the-app) | Fonts come from the system (and Adobe Fonts / font managers on macOS). | A `fonts` folder next to `figcraft.exe` — your fonts travel on the USB drive — with *Add fonts…*, an *In this file* section and *Added* tags. | ★ only in Plus |
+| [Styles: create and edit them as in Figma](#styles-create-and-edit-them-as-in-figma) | Styles are created from the selection and edited in FigCraft's style popover. | A **+** on Local styles creates any kind of style from scratch in a Figma-like dialog, with variables in effect, grid and colour fields too. | ▲ better |
+| [Style groups in Local styles](#style-groups-in-local-styles) | Local styles are grouped by the folders in their names. | Real nested groups: Ctrl+G, New group, drag styles and groups, collapse, rename, ungroup. | ▲ better |
+| [Variable details & scope, one click away](#variable-details--scope-one-click-away) | Right-click a variable ▸ Edit variable. | An *Edit variable* button on every row, opening beside the editor and following it. | ▲ better |
+| [A Figma-like variable picker](#a-figma-like-variable-picker) | A plain list of the variables that fit. | A Figma-like card everywhere: search, library filter, collections and groups, swatches and values, arrow keys and Enter. | ▲ better |
+| [Reorder variables: drag & drop and sorting](#reorder-variables-drag--drop-and-sorting) | Modes can be reordered; variables keep the order they were made in. | Drag variables, groups and collections, multi-select, Alt+↑/↓, and natural or by-value sorting — also as commands for scripts and MCP. | ★ only in Plus |
+
+Everything stays a normal `.figcraft` file: the official app opens it and sees the last computed
+colours and sizes; formulas and settings are kept as text it ignores.
+
 ## Download
 
 1. Open **[Releases](../../releases)** and take the latest
@@ -49,10 +104,13 @@ Features FigCraft users asked for in the official tracker that FigCraft itself h
 
 ### OKLCH, done the oklch.com way
 
-<img src="docs/images/02-oklch-picker.png" width="330" alt="The picker in OKLCH: the OKLCH plane, the OKLCH hue strip and the L, C, H, A fields">
+**▲ Better in FigCraft Plus**
 
-FigCraft 0.12 has OKLCH fields of its own (lightness in percent, sRGB only, the HSB square and
-rainbow kept). In FigCraft Plus the picker's OKLCH model goes further:
+> **FigCraft:** FigCraft 0.12 has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB.
+>
+> **FigCraft Plus:** The whole picker works in OKLCH (an OKLCH plane with the exact gamut edge, an OKLCH hue strip), values match oklch.com and CSS, and Display P3 files are read in P3.
+
+<img src="docs/images/02-oklch-picker.png" width="330" alt="The picker in OKLCH: the OKLCH plane, the OKLCH hue strip and the L, C, H, A fields">
 
 | Field | Meaning | Range |
 |---|---|---|
@@ -74,6 +132,12 @@ rainbow kept). In FigCraft Plus the picker's OKLCH model goes further:
   implementation (CSS Color 4) on 6,000 colours: largest difference 0.000001.
 
 ### Derived colours and calculated variables
+
+**★ Only in FigCraft Plus (for now)**
+
+> **FigCraft:** A variable can be an *alias* of another — an exact copy, nothing more.
+>
+> **FigCraft Plus:** A colour can be *made from* another (transparency, lighter / darker, its complement, a mix of two), and a number from other numbers, all kept in step in every mode.
 
 *Requested in [storytold/figcraft#1280](https://github.com/storytold/figcraft/issues/1280).*
 
@@ -107,6 +171,12 @@ the files and keeps the last computed values.
 
 ### rem units
 
+**★ Only in FigCraft Plus (for now)**
+
+> **FigCraft:** Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16.
+>
+> **FigCraft Plus:** `rem` in every field, a root size per file, an optional rem display in Typography, and Dev Mode uses the file's root size.
+
 *Requested in [storytold/figcraft#1325](https://github.com/storytold/figcraft/issues/1325).*
 
 - **Every number field takes `rem`:** `1.5rem` is 1.5 × the file's root size; arithmetic works
@@ -120,11 +190,23 @@ the files and keeps the last computed values.
 
 ### A better picker
 
+**▲ Better in FigCraft Plus**
+
+> **FigCraft:** Fields without captions, one fixed width.
+>
+> **FigCraft Plus:** A caption over every field, a width that fits the model, and a draggable edge.
+
 - **Captions over every field** in every model (R G B, H S L, H S B, L C H, A).
 - **Width adapts** to the chosen model; drag the picker's **left edge** to make it wider
   (double-click the edge to reset).
 
 ### A picker that stays with what you're editing
+
+**▲ Better in FigCraft Plus**
+
+> **FigCraft:** The picker opens at a fixed place on the right and closes when the selection changes.
+>
+> **FigCraft Plus:** It opens beside the swatch you clicked, stays on top, and moves to the same slot of the newly selected layer — as in Figma.
 
 <p>
 <img src="docs/images/21-picker-beside-fill.png" width="420" alt="The picker beside the Design panel, at the fill's height">
@@ -146,6 +228,12 @@ As in Figma:
   it open.
 
 ### Colours driven by number variables
+
+**★ Only in FigCraft Plus (for now)**
+
+> **FigCraft:** A colour can be bound to a colour variable as a whole.
+>
+> **FigCraft Plus:** Each channel (L, C, H, R, G, B, H, S, alpha…) can follow its own number variable: one `brand/hue` restyles every colour built on it.
 
 <p>
 <img src="docs/images/05-bound-hue-280.png" width="440" alt="H bound to brand/hue = 280: a purple card">
@@ -205,6 +293,12 @@ model replaces those links.
 
 ### Variables in text: weight, paragraph spacing and indent
 
+**▲ Better in FigCraft Plus**
+
+> **FigCraft:** Font family and font style take string variables.
+>
+> **FigCraft Plus:** The weight takes a number variable too (400, 700), and paragraph spacing and indent take number variables.
+
 <p>
 <img src="docs/images/12-text-variables.png" width="560" alt="A text layer with font family, weight and paragraph spacing bound to variables">
 <img src="docs/images/13-weight-or-style-list.png" width="300" alt="The font style dropdown's list: number and string variables">
@@ -228,6 +322,12 @@ the Typography section, as in Figma:
 
 ### Your own fonts, travelling with the app
 
+**★ Only in FigCraft Plus (for now)**
+
+> **FigCraft:** Fonts come from the system (and Adobe Fonts / font managers on macOS).
+>
+> **FigCraft Plus:** A `fonts` folder next to `figcraft.exe` — your fonts travel on the USB drive — with *Add fonts…*, an *In this file* section and *Added* tags.
+
 - Font files (`.ttf`, `.otf`, `.ttc`) in a **`fonts` folder next to `figcraft.exe`** are added at
   start — on a USB drive your fonts travel with the app.
 - **Add fonts…** at the top of the font menu copies chosen files into that folder and adds them at
@@ -236,6 +336,12 @@ the Typography section, as in Figma:
   FigCraft's *Recent* and *All fonts*.
 
 ### Styles: create and edit them as in Figma
+
+**▲ Better in FigCraft Plus**
+
+> **FigCraft:** Styles are created from the selection and edited in FigCraft's style popover.
+>
+> **FigCraft Plus:** A **+** on Local styles creates any kind of style from scratch in a Figma-like dialog, with variables in effect, grid and colour fields too.
 
 <p>
 <img src="docs/images/15-create-style-menu.png" width="250" alt="The + menu on Local styles: Text, Color, Effect, Layout grid">
@@ -280,6 +386,12 @@ Mobile size). Figma's Shader effect has no FigCraft equivalent yet, so it isn't 
 
 ### Style groups in Local styles
 
+**▲ Better in FigCraft Plus**
+
+> **FigCraft:** Local styles are grouped by the folders in their names.
+>
+> **FigCraft Plus:** Real nested groups: Ctrl+G, New group, drag styles and groups, collapse, rename, ungroup.
+
 Styles sit in **nested groups** (kept as `/` in their names, so files stay readable by FigCraft and
 Figma). Click to select (Ctrl/Shift-click for several), double-click to edit; **Ctrl+G** or
 *Group* puts the selection in a group, **+ ▸ New group** makes an empty one; drag styles and whole
@@ -287,6 +399,12 @@ groups between rows, into a group or out to the top; collapse a group with its a
 its name to rename it, ungroup it from its context menu.
 
 ### Variable details & scope, one click away
+
+**▲ Better in FigCraft Plus**
+
+> **FigCraft:** Right-click a variable ▸ Edit variable.
+>
+> **FigCraft Plus:** An *Edit variable* button on every row, opening beside the editor and following it.
 
 <img src="docs/images/14-edit-variable.png" width="640" alt="The Edit variable button on a row and the variable's details and scopes">
 
@@ -298,12 +416,24 @@ it, and follows the editor when it moves. Click the button again to close. (Righ
 
 ### A Figma-like variable picker
 
+**▲ Better in FigCraft Plus**
+
+> **FigCraft:** A plain list of the variables that fit.
+>
+> **FigCraft Plus:** A Figma-like card everywhere: search, library filter, collections and groups, swatches and values, arrow keys and Enter.
+
 One picker everywhere a variable is applied (layer properties, styles, aliases, prototype
 actions, colour channels): search, a library filter, collections and groups as headers, each
 variable's swatch or type and its value; arrow keys and Enter work. A variable with every scope
 turned off is offered nowhere but the Variables editor, as in Figma.
 
 ### Reorder variables: drag & drop and sorting
+
+**★ Only in FigCraft Plus (for now)**
+
+> **FigCraft:** Modes can be reordered; variables keep the order they were made in.
+>
+> **FigCraft Plus:** Drag variables, groups and collections, multi-select, Alt+↑/↓, and natural or by-value sorting — also as commands for scripts and MCP.
 
 Variables, groups and collections keep the order you give them: in the editor, in the file and
 in exports. That fixes imports that arrive in the wrong order (`n-xs, n-6xl, n-s, n-m …` or
