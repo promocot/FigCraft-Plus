@@ -51,6 +51,8 @@ fn columns(model: &str) -> Vec<(&'static str, f32)> {
         "OKLCH" => vec![("L", OKLCH_FIELD_W), ("C", OKLCH_FIELD_W), ("H °", FIELD_W), ("A %", ALPHA_W)],
         // FigCraft's own LCH row (CIE LCH, sRGB): its narrower fields.
         "LCH" => vec![("L", 27.0), ("C", 27.0), ("H °", 27.0), ("A %", 40.0)],
+        // FigCraft Plus's CMYK row (color_tools_ui) and FigCraft's alpha field.
+        "CMYK" => vec![("C %", 40.0), ("M %", 40.0), ("Y %", 40.0), ("K %", 40.0), ("A %", 44.0)],
         "CSS" => vec![("CSS", 152.0)],
         _ => vec![("Hex", 101.0), ("A %", 44.0)],
     }

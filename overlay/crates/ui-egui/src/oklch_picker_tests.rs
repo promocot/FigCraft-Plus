@@ -104,7 +104,7 @@ fn a_display_p3_file_reads_and_writes_p3_values() {
 #[test]
 fn the_picker_widens_for_oklch_and_remembers_a_dragged_width() {
     let (u, _) = setup("#FF0000");
-    let models = ["Hex", "RGB", "HSL", "HSB", "LCH", "OKLCH", "CSS"];
+    let models = ["Hex", "RGB", "HSL", "HSB", "LCH", "OKLCH", "CMYK", "CSS"];
     let w = crate::oklch_fields::picker_width(&u.ctx, &models);
     assert!(w >= 276.0, "OKLCH needs room for its fields: {w}");
     u.ctx.data_mut(|d| d.insert_temp(egui::Id::unique("cp_model"), 0usize));
@@ -256,7 +256,7 @@ fn a_formula_typed_in_the_css_field_derives_the_fill_from_a_variable() {
     let (mut u, a) = setup("#000000");
     let c = u.app.session.execute("variable.createCollection", &json!({"name": "Theme"})).unwrap()["id"].as_str().unwrap().to_string();
     u.app.session.execute("variable.create", &json!({"collection": c, "name": "Primary", "type": "color", "value": "#3A81F6"})).unwrap();
-    u.ctx.data_mut(|d| d.insert_temp(egui::Id::unique("cp_model"), 6usize)); // CSS
+    u.ctx.data_mut(|d| d.insert_temp(egui::Id::unique("cp_model"), 7usize)); // CSS
     u.frame(vec![]);
     assert!(crate::oklch_fields::typed_formula(&u.ctx, "oklch(from {Primary} l c h / 50%)"));
     assert!(!crate::oklch_fields::typed_formula(&u.ctx, "#FF0000"), "a plain colour is the CSS field's own");

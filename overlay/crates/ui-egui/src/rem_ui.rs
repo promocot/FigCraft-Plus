@@ -1,5 +1,8 @@
-//! FigCraft Plus: rem units (requested in storytold/figcraft#1325).
+//! FigCraft Plus: units in number fields — rem (requested in storytold/figcraft#1325) and the
+//! print units mm, cm, in and pt.
 //!
+//! - `mm`, `cm`, `in` and `pt` are what FigCraft's print export means by them: a px is a point
+//!   (1/72 in), so a 210mm × 297mm frame exports as an A4 page.
 //! - Every number field takes `rem`: `1.5rem` is 1.5 × the file's root size (`2rem + 4` works too).
 //! - The root size (16 px unless set) belongs to the file: Typography ▸ Type settings ▸ Root size.
 //!   It is kept in the first page's layer data (`figcraftplus.remRoot`), so the official app opens
@@ -71,17 +74,19 @@ pub(crate) fn begin_parse() {
     EXPLICIT.with(|e| e.set(false));
 }
 
-/// A number `v` typed with `unit`: rem becomes px.
+/// A number `v` typed with `unit`, in px: rem is the root size; mm, cm, in and pt are print
+/// lengths (a px is a point, as in FigCraft's print export).
 pub(crate) fn unit(v: f64, unit: &str) -> f64 {
-    if unit.eq_ignore_ascii_case("rem") {
-        EXPLICIT.with(|e| e.set(true));
-        v * root()
-    } else {
-        if unit.eq_ignore_ascii_case("px") {
-            EXPLICIT.with(|e| e.set(true));
-        }
-        v
-    }
+    let k = match unit.to_ascii_lowercase().as_str() {
+        "rem" => root(),
+        "px" | "pt" => 1.0,
+        "mm" => 72.0 / 25.4,
+        "cm" => 72.0 / 2.54,
+        "in" => 72.0,
+        _ => return v,
+    };
+    EXPLICIT.with(|e| e.set(true));
+    v * k
 }
 
 /// Whether `text` is a bare number or arithmetic (no unit, no %).
@@ -189,6 +194,10 @@ mod tests {
         assert_eq!(widgets::eval("1.5rem", None), Some(24.0));
         assert_eq!(widgets::eval("2rem + 4", None), Some(36.0));
         assert_eq!(widgets::eval("1.5 rem", None), Some(24.0));
+        // Print units, as FigCraft's PDF export reads them (A4 = 595.28 × 841.89 pt).
+        let a4 = |s: &str| widgets::eval(s, None).map(|v| (v * 100.0).round() / 100.0);
+        assert_eq!((a4("210mm"), a4("297 mm"), a4("21cm"), a4("1in"), a4("12pt")), (Some(595.28), Some(841.89), Some(595.28), Some(72.0), Some(12.0)));
+        assert_eq!(widgets::eval("10mm + 2", None).map(|v| (v * 100.0).round() / 100.0), Some(30.35));
         assert_eq!(spacing("1.5rem", true), Some(24.0));
         assert_eq!(spacing("150%", true), None, "FigCraft's own");
         assert_eq!(label("24".into()), "24");

@@ -1,0 +1,38 @@
+[
+  {
+    "note": "ui: colour tools module (CMYK, Copy as, contrast)",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod windows;$",
+    "insert": "mod color_tools_ui;"
+  },
+  {
+    "note": "picker: CMYK in the model menu",
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
+    "find": "const MODELS: [&str; 7] = [\"Hex\", \"RGB\", \"HSL\", \"HSB\", \"LCH\", \"OKLCH\", \"CSS\"];",
+    "replace": "const MODELS: [&str; 8] = [\"Hex\", \"RGB\", \"HSL\", \"HSB\", \"LCH\", \"OKLCH\", \"CMYK\", \"CSS\"];"
+  },
+  {
+    "note": "picker: the CMYK row",
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
+    "find": "            \"CSS\" => {\n                if let Some(text) = widgets::text_field(ui, Id::unique(\"cp_css\"), &crate::oklch_fields::css_text(",
+    "replace": "            // FigCraft Plus: CMYK, converted as FigCraft's CMYK PDF export converts.\n            \"CMYK\" => out = crate::color_tools_ui::cmyk_row(ui, c),\n            \"CSS\" => {\n                if let Some(text) = widgets::text_field(ui, Id::unique(\"cp_css\"), &crate::oklch_fields::css_text("
+  },
+  {
+    "note": "picker: Copy as and contrast under the fields",
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
+    "find": "                crate::oklch_fields::bindings_ui(app, ui, nc, &MODELS);\n",
+    "replace": "                crate::oklch_fields::bindings_ui(app, ui, nc, &MODELS);\n                crate::color_tools_ui::below_fields(app, ui, nc, &target);\n"
+  },
+  {
+    "note": "English: colour tools",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Copied\" = \"Copied\"\n\"Contrast with\" = \"Contrast with\""
+  },
+  {
+    "note": "Russian: colour tools",
+    "file": "crates/ui-egui/locales/ru.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Copied\" = \"Скопировано\"\n\"Contrast with\" = \"Контраст с\""
+  }
+]
