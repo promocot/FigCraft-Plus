@@ -78,12 +78,6 @@
     "insert": "    // FigCraft Plus: rem (storytold/figcraft#1325).\n    if let Some(v) = crate::rem_ui::spacing(s, matches!(cur, Some(LetterSpacing::Pixels(_)))) {\n        return Some(json!(v));\n    }"
   },
   {
-    "note": "Type settings: Root size and Show sizes in rem",
-    "file": "crates/ui-egui/src/panels/typography/fields.rs",
-    "find": "    let tab_id = Id::unique(\"ty_settings_tab\");\n",
-    "replace": "    // FigCraft Plus: the file's rem root size (storytold/figcraft#1325).\n    crate::rem_ui::settings(app, ui);\n    let tab_id = Id::unique(\"ty_settings_tab\");\n"
-  },
-  {
     "note": "Dev Mode: px to rem with the file's root size",
     "file": "crates/ui-egui/src/panels/right/inspect.rs",
     "find": "figcraft_engine::codegen::px_to_rem(&code, 16.0)",
@@ -93,12 +87,12 @@
     "note": "English: rem settings",
     "file": "crates/ui-egui/locales/en.toml",
     "after": "^\"Search fonts\" = ",
-    "insert": "\"Root size (rem)\" = \"Root size (rem)\"\n\"Show sizes in rem\" = \"Show sizes in rem\""
+    "insert": "\"Typography settings\" = \"Typography settings\"\n\"Applies to this document\" = \"Applies to this document\"\n\"Unit\" = \"Unit\"\n\"Root size (1rem =)\" = \"Root size (1rem =)\"\n\"stored in the file\" = \"stored in the file\"\n\"Default for new documents: Preferences\" = \"Default for new documents: Preferences\"\n\"Typography unit\" = \"Typography unit\"\n\"Default root size\" = \"Default root size\"\n\"Applies to new documents. Each file stores its own root size.\" = \"Applies to new documents. Each file stores its own root size.\"\n\"Colour picker opens in\" = \"Colour picker opens in\""
   },
   {
     "note": "Russian: rem settings",
     "file": "crates/ui-egui/locales/ru.toml",
     "after": "^\"Search fonts\" = ",
-    "insert": "\"Root size (rem)\" = \"Корневой размер (rem)\"\n\"Show sizes in rem\" = \"Показывать размеры в rem\""
+    "insert": "\"Typography settings\" = \"Настройки типографики\"\n\"Applies to this document\" = \"Для этого документа\"\n\"Unit\" = \"Единица\"\n\"Root size (1rem =)\" = \"Корневой размер (1rem =)\"\n\"stored in the file\" = \"хранится в файле\"\n\"Default for new documents: Preferences\" = \"По умолчанию для новых документов: Настройки\"\n\"Typography unit\" = \"Единица типографики\"\n\"Default root size\" = \"Корневой размер по умолчанию\"\n\"Applies to new documents. Each file stores its own root size.\" = \"Для новых документов. Каждый файл хранит свой корневой размер.\"\n\"Colour picker opens in\" = \"Пикер цвета открывается в\""
   }
 ]

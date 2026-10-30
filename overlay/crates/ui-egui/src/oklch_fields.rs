@@ -38,8 +38,8 @@ const ALPHA_W: f32 = 60.0;
 /// In the picker's own rows: what draws RGB, HSL, HSB and OKLCH (FigCraft's own rows for them are skipped).
 pub(crate) const OWN_ROWS: bool = true;
 
-fn model_index(ctx: &egui::Context) -> usize {
-    ctx.data(|d| d.get_temp::<usize>(Id::unique("cp_model"))).unwrap_or(0)
+fn model_index(ctx: &egui::Context, models: &[&str]) -> usize {
+    ctx.data(|d| d.get_temp::<usize>(Id::unique("cp_model"))).unwrap_or_else(|| crate::prefs_plus_ui::default_model(models))
 }
 
 /// The value fields a model shows: (caption, width) each, alpha last when it has one.
@@ -71,7 +71,7 @@ fn width_id() -> Id {
 
 /// The picker's width now: what the user dragged it to, at least what the chosen model needs.
 pub(crate) fn picker_width(ctx: &egui::Context, models: &[&str]) -> f32 {
-    let model = models.get(model_index(ctx)).copied().unwrap_or("Hex");
+    let model = models.get(model_index(ctx, models)).copied().unwrap_or("Hex");
     let chosen = ctx.data_mut(|d| d.get_persisted::<f32>(width_id())).unwrap_or(BASE_W);
     chosen.max(needed(model)).clamp(BASE_W, MAX_W)
 }
@@ -382,7 +382,7 @@ pub(crate) fn bindings_ui(app: &mut FigApp, ui: &mut Ui, color: Color, models: &
     let b = bind_ctx(&ctx);
     let events: Vec<Ev> = ctx.data_mut(|d| d.remove_temp::<Vec<Ev>>(events_id())).unwrap_or_default();
     let Some(src) = b.source.clone() else { return };
-    let label = models.get(model_index(&ctx)).copied().unwrap_or("Hex");
+    let label = models.get(model_index(&ctx, models)).copied().unwrap_or("Hex");
     let profile = app.session.doc().map(|d| d.color_profile).unwrap_or_default();
     let model = Model::from_name(label);
     for e in events {
@@ -538,7 +538,7 @@ fn remember_hue(ctx: &egui::Context, c: Color, h: f64) {
 
 /// Whether the picker shows the OKLCH model.
 pub(crate) fn active(ctx: &egui::Context, models: &[&str]) -> bool {
-    models.get(model_index(ctx)).copied() == Some("OKLCH")
+    models.get(model_index(ctx, models)).copied() == Some("OKLCH")
 }
 
 /// The colour for `want` (gamut-mapped into `profile`, alpha `a`) as the picker will hold it (it

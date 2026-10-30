@@ -4,27 +4,27 @@
 //! - `mm`, `cm`, `in` and `pt` are what FigCraft's print export means by them: a px is a point
 //!   (1/72 in), so a 210mm × 297mm frame exports as an A4 page.
 //! - Every number field takes `rem`: `1.5rem` is 1.5 × the file's root size (`2rem + 4` works too).
-//! - The root size (16 px unless set) belongs to the file: Typography ▸ Type settings ▸ Root size.
-//!   It is kept in the first page's layer data (`figcraftplus.remRoot`), so the official app opens
-//!   the file as before.
-//! - "Show sizes in rem" (a preference) shows the font size, line height, letter spacing and
-//!   paragraph spacing in rem; a bare number typed there is then rem too, and `px` still means px.
+//! - The unit (px or rem) and the root size belong to the file: Typography ▸ gear (see
+//!   `prefs_plus_ui`). They are kept in the first page's layer data (`figcraftplus.remUnit`,
+//!   `figcraftplus.remRoot`), so the official app opens the file as before; a file without them
+//!   uses the defaults from Preferences ▸ FigCraft Plus.
+//! - In rem, the font size, line height, letter spacing and paragraph spacing show in rem; a bare
+//!   number typed there is then rem too, and `px` still means px.
 //!   Values are stored in px, as FigCraft stores them.
 //! - Dev Mode's px → rem code uses the same root size.
 
 use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
-use egui::{Id, Ui};
 use figcraft_doc::Document;
-use serde_json::json;
 
 use crate::FigApp;
-use crate::i18n::tr;
-use crate::widgets::{self, FieldEdit, Lead};
+use crate::widgets::{self, FieldEdit};
 
 /// The layer data key (on a page) holding the file's root size in px.
 pub(crate) const PAGE_KEY: &str = "figcraftplus.remRoot";
+/// The layer data key (on a page) holding the file's typography unit ("px" or "rem").
+pub(crate) const UNIT_KEY: &str = "figcraftplus.remUnit";
 
 const DEFAULT_ROOT: f64 = 16.0;
 
@@ -47,24 +47,28 @@ pub(crate) fn show() -> bool {
     SHOW.load(Ordering::Relaxed)
 }
 
-/// The root size a document sets (its first page that has one), else 16.
+/// The root size a document sets (its first page that has one), else the preference.
 pub(crate) fn doc_root(doc: &Document) -> f64 {
     doc.pages
         .iter()
         .find_map(|p| doc.node(*p)?.plugin_data.get(PAGE_KEY)?.trim().parse::<f64>().ok())
         .filter(|r| r.is_finite() && *r > 0.0 && *r <= 1000.0)
-        .unwrap_or(DEFAULT_ROOT)
+        .unwrap_or_else(|| Some(crate::prefs_plus_ui::get().root).filter(|r| r.is_finite() && *r > 0.0).unwrap_or(DEFAULT_ROOT))
 }
 
-fn show_id() -> Id {
-    Id::unique("figcraftplus_rem_show")
+/// Whether a document's typography shows rem (its own choice, else the preference).
+pub(crate) fn doc_rem(doc: &Document) -> bool {
+    doc.pages
+        .iter()
+        .find_map(|p| doc.node(*p)?.plugin_data.get(UNIT_KEY).map(|u| u.trim().eq_ignore_ascii_case("rem")))
+        .unwrap_or_else(|| crate::prefs_plus_ui::get().rem)
 }
 
-/// Each frame: the open file's root size and the display preference.
-pub(crate) fn tick(app: &FigApp, ctx: &egui::Context) {
-    let r = app.session.doc().map(doc_root).unwrap_or(DEFAULT_ROOT);
+/// Each frame: the open file's root size and unit.
+pub(crate) fn tick(app: &FigApp, _ctx: &egui::Context) {
+    let (r, rem) = app.session.doc().map(|d| (doc_root(d), doc_rem(d))).unwrap_or((DEFAULT_ROOT, false));
     ROOT.store(r.to_bits(), Ordering::Relaxed);
-    SHOW.store(ctx.data_mut(|d| d.get_persisted::<bool>(show_id())).unwrap_or(false), Ordering::Relaxed);
+    SHOW.store(rem, Ordering::Relaxed);
 }
 
 // ---- reading what was typed -------------------------------------------------------------------
@@ -156,30 +160,6 @@ pub(crate) fn to_px(e: Option<FieldEdit>) -> Option<FieldEdit> {
         FieldEdit::Set(v) => Some(FieldEdit::Set(v * r)),
         FieldEdit::Scrub(v, done) => Some(FieldEdit::Scrub(v * r, done)),
     }
-}
-
-// ---- settings ---------------------------------------------------------------------------------------
-
-/// Root size and "Show sizes in rem", at the top of Type settings.
-pub(crate) fn settings(app: &mut FigApp, ui: &mut Ui) {
-    let Ok(doc) = app.session.doc() else { return };
-    let current = doc_root(doc);
-    let page = doc.pages.first().copied();
-    let field = crate::typography::field_row(ui, tr("Root size (rem)"), |ui, fw| {
-        widgets::number_field(ui, Id::unique("figcraftplus_rem_root"), Lead::None, Some(current), "px", fw, 1.0)
-    });
-    if let (Some(FieldEdit::Set(v) | FieldEdit::Scrub(v, true)), Some(page)) = (field, page) {
-        let v = v.clamp(1.0, 1000.0);
-        let value = if (v - DEFAULT_ROOT).abs() < 1e-9 { serde_json::Value::Null } else { json!(widgets::fmt_num(v)) };
-        app.run("node.set", json!({"ids": [page], "props": {"pluginData": {PAGE_KEY: value}}}));
-    }
-    let on = show();
-    if widgets::checkbox(ui, on, tr("Show sizes in rem")) {
-        ui.ctx().data_mut(|d| d.insert_persisted(show_id(), !on));
-        SHOW.store(!on, Ordering::Relaxed);
-    }
-    ui.add_space(4.0);
-    ui.separator();
 }
 
 #[cfg(test)]

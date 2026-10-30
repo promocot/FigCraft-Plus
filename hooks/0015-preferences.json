@@ -1,0 +1,32 @@
+[
+  {
+    "note": "ui: FigCraft Plus preferences and Typography settings module",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod windows;$",
+    "insert": "mod prefs_plus_ui;"
+  },
+  {
+    "note": "Typography header: a settings button (unit and root size, storytold/figcraft#1325)",
+    "file": "crates/ui-egui/src/panels/typography.rs",
+    "find": "widgets::section_header(ui, tr(\"Typography\"), &[(Icon::Variable, tr(\"Apply variable to text\")), (Icon::Styles, tr(\"Text styles\"))], false);",
+    "replace": "widgets::section_header(ui, tr(\"Typography\"), &[(Icon::Variable, tr(\"Apply variable to text\")), (Icon::Styles, tr(\"Text styles\")), (Icon::Adjust, tr(\"Typography settings\"))], false);"
+  },
+  {
+    "note": "Typography header: the settings popover",
+    "file": "crates/ui-egui/src/panels/typography.rs",
+    "find": "    if hdr == Some(1) {\n        crate::style_picker::open(app, ui, &ids, crate::style_picker::StyleSlot::Text);\n    }\n",
+    "replace": "    if hdr == Some(1) {\n        crate::style_picker::open(app, ui, &ids, crate::style_picker::StyleSlot::Text);\n    }\n    // FigCraft Plus: this document's unit and root size.\n    crate::prefs_plus_ui::typography_settings(app, ui, hdr == Some(2));\n"
+  },
+  {
+    "note": "Preferences: the FigCraft Plus section",
+    "file": "crates/ui-egui/src/dialogs.rs",
+    "after": "^            interface_size\\(app, ui, prefs\\.ui_scale\\);$",
+    "insert": "            crate::prefs_plus_ui::preferences(ui);"
+  },
+  {
+    "note": "picker: opens in the model chosen in Preferences",
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
+    "find": "let model: usize = ui.data(|d| d.get_temp(model_id)).unwrap_or(0).min(MODELS.len() - 1);",
+    "replace": "let model: usize = ui.data(|d| d.get_temp(model_id)).unwrap_or_else(|| crate::prefs_plus_ui::default_model(&MODELS)).min(MODELS.len() - 1);"
+  }
+]
