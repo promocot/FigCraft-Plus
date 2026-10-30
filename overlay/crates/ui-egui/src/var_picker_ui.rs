@@ -186,40 +186,10 @@ pub(crate) fn card(ctx: &egui::Context, id: Id, at: Pos2, title: &str, items: &[
     let t = Tokens::get(ctx);
     let fresh = ctx.data(|d| d.get_temp::<State>(id)).is_none();
     let mut st: State = ctx.data(|d| d.get_temp(id)).unwrap_or_default();
-    let libs: Vec<Option<String>> = items.iter().fold(Vec::new(), |mut acc, it| {
-        if !acc.contains(&it.library) {
-            acc.push(it.library.clone());
-        }
-        acc
-    });
-    let list = lines(items, &st.query, &st.filter);
-    let visible: Vec<usize> = list.iter().filter_map(|l| if let Line::Item(i) = l { Some(*i) } else { None }).collect();
-    // It opens on the variable in use.
-    if fresh && let Some(k) = visible.iter().position(|i| items.get(*i).is_some_and(|it| current == Some(&it.pick))) {
-        st.highlight = k;
-        st.reveal = true;
-    }
-    // Keys: arrows move the highlight, Enter applies it, Escape closes.
-    let (down, up, enter, esc) = ctx.input_mut(|i| {
-        (
-            i.consume_key(Modifiers::NONE, Key::ArrowDown),
-            i.consume_key(Modifiers::NONE, Key::ArrowUp),
-            i.key_pressed(Key::Enter),
-            i.key_pressed(Key::Escape),
-        )
-    });
-    if down && !visible.is_empty() {
-        st.highlight = (st.highlight + 1).min(visible.len() - 1);
-        st.reveal = true;
-    }
-    if up {
-        st.highlight = st.highlight.saturating_sub(1);
-        st.reveal = true;
-    }
-    st.highlight = st.highlight.min(visible.len().saturating_sub(1));
+    let esc = ctx.input(|i| i.key_pressed(Key::Escape));
     let mut out = if esc { Outcome::Close } else { Outcome::Open };
-    if enter && let Some(i) = visible.get(st.highlight) {
-        out = Outcome::Pick(*i);
+    if let Some(i) = keys(ctx, &mut st, items, current, fresh) {
+        out = Outcome::Pick(i);
     }
     // Under the field, inside the window (above it when there's no room below).
     let screen = ctx.content_rect();
@@ -231,11 +201,12 @@ pub(crate) fn card(ctx: &egui::Context, id: Id, at: Pos2, title: &str, items: &[
     }
     let query_before = st.query.clone();
     let area = egui::Area::new(id.with("area")).order(egui::Order::Foreground).fixed_pos(pos2(x, y)).show(ctx, |ui| {
-        let frame = egui::Frame::NONE
-            .fill(t.panel)
-            .stroke(Stroke::new(1.0, t.border))
-            .corner_radius(CornerRadius::same(12))
-            .shadow(egui::Shadow { offset: [0, 6], blur: 20, spread: 0, color: t.shadow });
+        let frame = egui::Frame::NONE.fill(t.panel).stroke(Stroke::new(1.0, t.border)).corner_radius(CornerRadius::same(12)).shadow(egui::Shadow {
+            offset: [0, 6],
+            blur: 20,
+            spread: 0,
+            color: t.shadow,
+        });
         frame.show(ui, |ui| {
             ui.set_width(W);
             ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
@@ -253,81 +224,9 @@ pub(crate) fn card(ctx: &egui::Context, id: Id, at: Pos2, title: &str, items: &[
                 out = Outcome::Close;
             }
             ui.painter().hline(hr.x_range(), hr.max.y - 0.5, Stroke::new(1.0, t.border));
-            // Search.
-            let (sr, _) = ui.allocate_exact_size(vec2(W, 44.0), Sense::hover());
-            let field = Rect::from_min_max(pos2(sr.min.x + 10.0, sr.min.y + 8.0), pos2(sr.max.x - 10.0, sr.max.y - 6.0));
-            ui.painter().rect_filled(field, CornerRadius::same(6), t.field);
-            icons::paint(ui.painter(), Rect::from_center_size(pos2(field.min.x + 14.0, field.center().y), vec2(12.0, 12.0)), Icon::Search, t.icon_secondary);
-            let te = Rect::from_min_max(pos2(field.min.x + 28.0, field.center().y - 8.0), pos2(field.max.x - 8.0, field.center().y + 8.0));
-            let mut child = ui.new_child(egui::UiBuilder::new().max_rect(te));
-            let r = child.add(
-                egui::TextEdit::singleline(&mut st.query)
-                    .id(id.with("search"))
-                    .frame(egui::Frame::NONE)
-                    .font(regular(12.0))
-                    .text_color(t.text)
-                    .hint_text(tr("Search"))
-                    .vertical_align(egui::Align::Center)
-                    .desired_width(te.width()),
-            );
-            if r.has_focus() {
-                ui.painter().rect_stroke(field, CornerRadius::same(6), Stroke::new(1.0, t.accent), egui::StrokeKind::Inside);
-            } else if !crate::a11y::field_focused(ui.ctx()) {
-                r.request_focus();
+            if let Some(i) = body(ui, &t, id, &mut st, items, current, empty, W, 0.0) {
+                out = Outcome::Pick(i);
             }
-            // The library filter, when variables come from more than one place.
-            if libs.len() > 1 {
-                filter_row(ui, &t, id, &mut st, &libs);
-            }
-            ui.painter().hline(ui.min_rect().x_range(), ui.min_rect().max.y + 0.5, Stroke::new(1.0, t.border));
-            ui.add_space(4.0);
-            egui::ScrollArea::vertical().id_salt(id.with("scroll")).max_height(320.0).auto_shrink([false, true]).show(ui, |ui| {
-                ui.set_width(W);
-                ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
-                if visible.is_empty() {
-                    let msg = if items.is_empty() { empty } else { tr("No matching variables") };
-                    let galley = ui.painter().layout(msg.to_string(), regular(11.0), t.text_secondary, W - 28.0);
-                    let (r, _) = ui.allocate_exact_size(vec2(W, galley.size().y + 20.0), Sense::hover());
-                    ui.painter().galley(pos2(r.min.x + 14.0, r.min.y + 10.0), galley, t.text_secondary);
-                }
-                let mut k = 0usize;
-                for line in &list {
-                    match line {
-                        Line::Source(s) => {
-                            let (r, _) = ui.allocate_exact_size(vec2(W, 28.0), Sense::hover());
-                            let s = widgets::elide_font(ui, s, W - 28.0, semibold(11.0));
-                            ui.painter().text(pos2(r.min.x + 14.0, r.center().y + 2.0), Align2::LEFT_CENTER, s, semibold(11.0), t.text);
-                        }
-                        Line::Group(g) => {
-                            let (r, _) = ui.allocate_exact_size(vec2(W, 24.0), Sense::hover());
-                            let g = widgets::elide_font(ui, g, W - 28.0, regular(11.0));
-                            ui.painter().text(pos2(r.min.x + 14.0, r.center().y), Align2::LEFT_CENTER, g, regular(11.0), t.text_secondary);
-                        }
-                        Line::Item(i) => {
-                            let Some(it) = items.get(*i) else { continue };
-                            let on = current == Some(&it.pick);
-                            let (r, resp) = ui.allocate_exact_size(vec2(W, ROW_H), Sense::click());
-                            resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, on, &it.name));
-                            if resp.hovered() && ui.input(|i| i.pointer.delta() != egui::Vec2::ZERO) {
-                                st.highlight = k;
-                            }
-                            if k == st.highlight {
-                                ui.painter().rect_filled(r.shrink2(vec2(6.0, 1.0)), CornerRadius::same(6), t.hover);
-                                if st.reveal {
-                                    ui.scroll_to_rect(r, None);
-                                    st.reveal = false;
-                                }
-                            }
-                            row(ui, &t, r, it, on);
-                            if resp.clicked() {
-                                out = Outcome::Pick(*i);
-                            }
-                            k += 1;
-                        }
-                    }
-                }
-                ui.add_space(6.0);
-            });
         });
     });
     if st.query != query_before {
@@ -347,14 +246,154 @@ pub(crate) fn card(ctx: &egui::Context, id: Id, at: Pos2, title: &str, items: &[
     out
 }
 
+/// The rows a card lists now and the items among them (in order).
+fn visible_items(items: &[Item], st: &State) -> (Vec<Line>, Vec<usize>) {
+    let list = lines(items, &st.query, &st.filter);
+    let visible = list.iter().filter_map(|l| if let Line::Item(i) = l { Some(*i) } else { None }).collect();
+    (list, visible)
+}
+
+/// Arrow keys move the highlight (a fresh list starts on the variable in use); Enter picks it.
+fn keys(ctx: &egui::Context, st: &mut State, items: &[Item], current: Option<&Pick>, fresh: bool) -> Option<usize> {
+    let (_, visible) = visible_items(items, st);
+    if fresh && let Some(k) = visible.iter().position(|i| items.get(*i).is_some_and(|it| current == Some(&it.pick))) {
+        st.highlight = k;
+        st.reveal = true;
+    }
+    let (down, up, enter) =
+        ctx.input_mut(|i| (i.consume_key(Modifiers::NONE, Key::ArrowDown), i.consume_key(Modifiers::NONE, Key::ArrowUp), i.key_pressed(Key::Enter)));
+    if down && !visible.is_empty() {
+        st.highlight = (st.highlight + 1).min(visible.len() - 1);
+        st.reveal = true;
+    }
+    if up {
+        st.highlight = st.highlight.saturating_sub(1);
+        st.reveal = true;
+    }
+    st.highlight = st.highlight.min(visible.len().saturating_sub(1));
+    if enter { visible.get(st.highlight).copied() } else { None }
+}
+
+/// A card's contents, `w` wide: the search field, the library filter and the list. The item
+/// clicked, if any.
+#[allow(clippy::too_many_arguments)]
+fn body(ui: &mut Ui, t: &Tokens, id: Id, st: &mut State, items: &[Item], current: Option<&Pick>, empty: &str, w: f32, min_h: f32) -> Option<usize> {
+    let libs: Vec<Option<String>> = items.iter().fold(Vec::new(), |mut acc, it| {
+        if !acc.contains(&it.library) {
+            acc.push(it.library.clone());
+        }
+        acc
+    });
+    let (list, visible) = visible_items(items, st);
+    let mut picked = None;
+    // Search.
+    let (sr, _) = ui.allocate_exact_size(vec2(w, 44.0), Sense::hover());
+    let field = Rect::from_min_max(pos2(sr.min.x + 10.0, sr.min.y + 8.0), pos2(sr.max.x - 10.0, sr.max.y - 6.0));
+    ui.painter().rect_filled(field, CornerRadius::same(6), t.field);
+    icons::paint(ui.painter(), Rect::from_center_size(pos2(field.min.x + 14.0, field.center().y), vec2(12.0, 12.0)), Icon::Search, t.icon_secondary);
+    let te = Rect::from_min_max(pos2(field.min.x + 28.0, field.center().y - 8.0), pos2(field.max.x - 8.0, field.center().y + 8.0));
+    let mut child = ui.new_child(egui::UiBuilder::new().max_rect(te));
+    let r = child.add(
+        egui::TextEdit::singleline(&mut st.query)
+            .id(id.with("search"))
+            .frame(egui::Frame::NONE)
+            .font(regular(12.0))
+            .text_color(t.text)
+            .hint_text(tr("Search"))
+            .vertical_align(egui::Align::Center)
+            .desired_width(te.width()),
+    );
+    if r.has_focus() {
+        ui.painter().rect_stroke(field, CornerRadius::same(6), Stroke::new(1.0, t.accent), egui::StrokeKind::Inside);
+    } else if !crate::a11y::field_focused(ui.ctx()) {
+        r.request_focus();
+    }
+    // The library filter, when variables come from more than one place.
+    if libs.len() > 1 {
+        filter_row(ui, t, id, st, &libs, w);
+    }
+    ui.painter().hline(ui.min_rect().x_range(), ui.min_rect().max.y + 0.5, Stroke::new(1.0, t.border));
+    ui.add_space(4.0);
+    egui::ScrollArea::vertical().id_salt(id.with("scroll")).max_height(320.0f32.max(min_h)).min_scrolled_height(min_h).auto_shrink([false, true]).show(ui, |ui| {
+        ui.set_width(w);
+        ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
+        if visible.is_empty() {
+            let msg = if items.is_empty() { empty } else { tr("No matching variables") };
+            let galley = ui.painter().layout(msg.to_string(), regular(11.0), t.text_secondary, w - 28.0);
+            let (r, _) = ui.allocate_exact_size(vec2(w, galley.size().y + 20.0), Sense::hover());
+            ui.painter().galley(pos2(r.min.x + 14.0, r.min.y + 10.0), galley, t.text_secondary);
+        }
+        let mut k = 0usize;
+        for line in &list {
+            match line {
+                Line::Source(s) => {
+                    let (r, _) = ui.allocate_exact_size(vec2(w, 28.0), Sense::hover());
+                    let s = widgets::elide_font(ui, s, w - 28.0, semibold(11.0));
+                    ui.painter().text(pos2(r.min.x + 14.0, r.center().y + 2.0), Align2::LEFT_CENTER, s, semibold(11.0), t.text);
+                }
+                Line::Group(g) => {
+                    let (r, _) = ui.allocate_exact_size(vec2(w, 24.0), Sense::hover());
+                    let g = widgets::elide_font(ui, g, w - 28.0, regular(11.0));
+                    ui.painter().text(pos2(r.min.x + 14.0, r.center().y), Align2::LEFT_CENTER, g, regular(11.0), t.text_secondary);
+                }
+                Line::Item(i) => {
+                    let Some(it) = items.get(*i) else { continue };
+                    let on = current == Some(&it.pick);
+                    let (r, resp) = ui.allocate_exact_size(vec2(w, ROW_H), Sense::click());
+                    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, on, &it.name));
+                    if resp.hovered() && ui.input(|i| i.pointer.delta() != egui::Vec2::ZERO) {
+                        st.highlight = k;
+                    }
+                    if k == st.highlight {
+                        ui.painter().rect_filled(r.shrink2(vec2(6.0, 1.0)), CornerRadius::same(6), t.hover);
+                        if st.reveal {
+                            ui.scroll_to_rect(r, None);
+                            st.reveal = false;
+                        }
+                    }
+                    row(ui, t, r, it, on);
+                    if resp.clicked() {
+                        picked = Some(*i);
+                    }
+                    k += 1;
+                }
+            }
+        }
+        ui.add_space(6.0);
+    });
+    picked
+}
+
+/// The variable list inside another window (the colour picker's Libraries tab), `w` wide: the
+/// item picked (a click, or Enter on the highlighted one).
+pub(crate) fn embedded(ui: &mut Ui, id: Id, items: &[Item], current: Option<&Pick>, empty: &str, w: f32) -> Option<usize> {
+    let ctx = ui.ctx().clone();
+    let t = Tokens::get(&ctx);
+    let fresh = ctx.data(|d| d.get_temp::<State>(id)).is_none();
+    let mut st: State = ctx.data(|d| d.get_temp(id)).unwrap_or_default();
+    let mut out = keys(&ctx, &mut st, items, current, fresh);
+    let before = st.query.clone();
+    ui.scope(|ui| {
+        ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
+        if let Some(i) = body(ui, &t, id, &mut st, items, current, empty, w, 360.0) {
+            out = Some(i);
+        }
+    });
+    if st.query != before {
+        st.highlight = 0;
+    }
+    ctx.data_mut(|d| d.insert_temp(id, st));
+    out
+}
+
 /// The library filter: "All libraries" with a chevron; open, the choices under it.
-fn filter_row(ui: &mut Ui, t: &Tokens, id: Id, st: &mut State, libs: &[Option<String>]) {
+fn filter_row(ui: &mut Ui, t: &Tokens, id: Id, st: &mut State, libs: &[Option<String>], w: f32) {
     let label = |f: &Option<Option<String>>| match f {
         None => tr("All libraries").to_string(),
         Some(None) => tr("This file").to_string(),
         Some(Some(l)) => l.clone(),
     };
-    let (r, resp) = ui.allocate_exact_size(vec2(W, 28.0), Sense::click());
+    let (r, resp) = ui.allocate_exact_size(vec2(w, 28.0), Sense::click());
     let text = label(&st.filter);
     resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, &text));
     let w = ui.painter().layout_no_wrap(text.clone(), regular(11.0), t.text).size().x;
@@ -373,7 +412,7 @@ fn filter_row(ui: &mut Ui, t: &Tokens, id: Id, st: &mut State, libs: &[Option<St
     let mut choices: Vec<Option<Option<String>>> = vec![None];
     choices.extend(libs.iter().cloned().map(Some));
     for c in choices {
-        let (r, resp) = ui.allocate_exact_size(vec2(W, 26.0), Sense::click());
+        let (r, resp) = ui.allocate_exact_size(vec2(w, 26.0), Sense::click());
         resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, st.filter == c, label(&c)));
         if resp.hovered() {
             ui.painter().rect_filled(r.shrink2(vec2(6.0, 1.0)), CornerRadius::same(6), t.hover);
@@ -461,7 +500,9 @@ fn current(doc: &Document, target: &Target) -> Option<Pick> {
             let fields: Vec<&str> =
                 if field == crate::text_vars_ui::WEIGHT_OR_STYLE { vec!["fontWeight", "fontStyle"] } else { vec![field.as_str()] };
             let first = ids.first().and_then(|i| doc.node(*i))?;
-            fields.iter().find_map(|f| first.bound.get(*f)).cloned()?
+            // A paint's colour has two spellings ("fill" is "fills/0/color").
+            let same = |k: &str, f: &str| k == f || list_binding(k).is_some_and(|b| list_binding(f) == Some(b));
+            fields.iter().find_map(|f| first.bound.iter().find(|(k, _)| same(k, f)).map(|(_, v)| v.clone()))?
         }
         Target::Style { style, field } => {
             let st = doc.style(style)?;
@@ -478,34 +519,33 @@ fn current(doc: &Document, target: &Target) -> Option<Pick> {
     Some(Pick { library: None, id })
 }
 
-/// The variable picker (replaces FigCraft's): call once per frame.
-pub(crate) fn picker(app: &mut FigApp, ctx: &egui::Context) {
-    let Some(p) = ctx.data(|d| d.get_temp::<Picker>(variable_ui::picker_id())) else { return };
-    let Ok(doc) = app.session.ds().map(|d| d.doc.clone()) else { return };
-    let libs = variable_ui::libraries(app, &doc);
-    // Bindings offer variables scoped to the property (styles: to the same property of a layer);
-    // aliases any that wouldn't loop (library variables never lead back to this file's).
-    let (scope, own) = match &p.target {
-        Target::Bind { ids, field } => (ids.first().and_then(|id| figcraft_engine::cmd::variables::field_scope(&doc, *id, field)), None),
-        Target::Alias { variable, .. } => (None, doc.variables.get(variable)),
-        Target::Proto(_) | Target::Style { .. } => (None, None),
+/// The variables a picker for `target` offers (of type `kind`; None: any), and the one in use.
+pub(crate) fn offered(app: &FigApp, doc: &Document, target: &Target, kind: Option<VariableType>) -> (Vec<Item>, Option<Pick>) {
+    let libs = variable_ui::libraries(app, doc);
+    // Bindings offer variables scoped to the property on every layer (styles: to the same
+    // property of a layer); aliases any that wouldn't loop (library variables never lead back to
+    // this file's).
+    let (scopes, own): (Vec<&str>, _) = match target {
+        Target::Bind { ids, field } => (ids.iter().filter_map(|id| figcraft_engine::cmd::variables::field_scope(doc, *id, field)).collect(), None),
+        Target::Alias { variable, .. } => (Vec::new(), doc.variables.get(variable)),
+        Target::Proto(_) | Target::Style { .. } => (Vec::new(), None),
     };
-    let style_kind = match &p.target {
+    let style_kind = match target {
         Target::Style { style, .. } => doc.style(style).map(|s| s.kind.clone()),
         _ => None,
     };
     // Prototypes and styles use this file's variables.
-    let local_only = matches!(p.target, Target::Proto(_) | Target::Style { .. });
+    let local_only = matches!(target, Target::Proto(_) | Target::Style { .. });
     let keep = |lib: Option<&figcraft_doc::PublishedLibrary>, v: &Variable| {
-        let fits = match &p.target {
+        let fits = match target {
             Target::Bind { field, .. } if field == crate::text_vars_ui::WEIGHT_OR_STYLE => crate::text_vars_ui::weight_fits(v),
-            Target::Style { field, .. } => p.kind.is_none_or(|k| v.kind == k) || field == crate::text_vars_ui::WEIGHT_OR_STYLE,
+            Target::Style { field, .. } => kind.is_none_or(|k| v.kind == k) || field == crate::text_vars_ui::WEIGHT_OR_STYLE,
             // Text content also takes a number variable (as FigCraft's own picker offers).
-            Target::Bind { field, .. } if field == "characters" => p.kind.is_none_or(|k| v.kind == k || v.kind == VariableType::Number),
-            _ => p.kind.is_none_or(|k| v.kind == k),
+            Target::Bind { field, .. } if field == "characters" => kind.is_none_or(|k| v.kind == k || v.kind == VariableType::Number),
+            _ => kind.is_none_or(|k| v.kind == k),
         };
-        let scoped = match &p.target {
-            Target::Bind { .. } => !hidden(v) && scope.is_none_or(|s| v.in_scope(s)),
+        let scoped = match target {
+            Target::Bind { .. } => !hidden(v) && scopes.iter().all(|s| v.in_scope(s)),
             Target::Style { field, .. } => style_fits(style_kind.as_ref(), field, v),
             Target::Alias { .. } | Target::Proto(_) => true,
         };
@@ -513,9 +553,30 @@ pub(crate) fn picker(app: &mut FigApp, ctx: &egui::Context) {
             && !(local_only && lib.is_some())
             && (lib.is_some() || own.is_none_or(|o| figcraft_engine::cmd::variables::alias_target(&doc.variables, o, &v.id).is_ok()))
     };
-    let groups = variable_ui::groups(&doc, &libs, keep);
-    let items = items(&doc, &groups);
-    let current = current(&doc, &p.target);
+    let groups = variable_ui::groups(doc, &libs, keep);
+    (items(doc, &groups), current(doc, target))
+}
+
+/// Apply `pick` where `target` says.
+pub(crate) fn apply(app: &mut FigApp, target: &Target, pick: &Pick) {
+    match (target, &pick.library) {
+        (Target::Bind { ids, field }, _) => variable_ui::bind(app, ids, field, pick),
+        (Target::Alias { variable, mode }, None) => {
+            app.run("variable.set", json!({"variable": variable, "mode": mode, "value": {"alias": pick.id}}));
+        }
+        (Target::Alias { variable, mode }, Some(lib)) => {
+            app.run("library.aliasVariable", json!({"library": lib, "alias": pick.id, "variable": variable, "mode": mode}));
+        }
+        (Target::Proto(slot), _) => crate::proto_editor::pick_variable(app, slot, &pick.id),
+        (Target::Style { style, field }, _) => crate::text_vars_ui::bind_style(app, style, field, pick),
+    }
+}
+
+/// The variable picker (replaces FigCraft's): call once per frame.
+pub(crate) fn picker(app: &mut FigApp, ctx: &egui::Context) {
+    let Some(p) = ctx.data(|d| d.get_temp::<Picker>(variable_ui::picker_id())) else { return };
+    let Ok(doc) = app.session.ds().map(|d| d.doc.clone()) else { return };
+    let (items, current) = offered(app, &doc, &p.target, p.kind);
     let empty = match p.kind {
         Some(VariableType::Color) => tr("No colour variables fit here."),
         Some(VariableType::Number) => tr("No number variables fit here."),
@@ -531,17 +592,7 @@ pub(crate) fn picker(app: &mut FigApp, ctx: &egui::Context) {
         Outcome::Pick(i) => {
             close(ctx);
             let Some(pick) = items.get(i).map(|it| it.pick.clone()) else { return };
-            match (&p.target, &pick.library) {
-                (Target::Bind { ids, field }, _) => variable_ui::bind(app, ids, field, &pick),
-                (Target::Alias { variable, mode }, None) => {
-                    app.run("variable.set", json!({"variable": variable, "mode": mode, "value": {"alias": pick.id}}));
-                }
-                (Target::Alias { variable, mode }, Some(lib)) => {
-                    app.run("library.aliasVariable", json!({"library": lib, "alias": pick.id, "variable": variable, "mode": mode}));
-                }
-                (Target::Proto(slot), _) => crate::proto_editor::pick_variable(app, slot, &pick.id),
-                (Target::Style { style, field }, _) => crate::text_vars_ui::bind_style(app, style, field, &pick),
-            }
+            apply(app, &p.target, &pick);
         }
     }
 }

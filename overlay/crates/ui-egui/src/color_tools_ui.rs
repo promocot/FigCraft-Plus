@@ -129,28 +129,69 @@ pub(crate) fn apca(text: Color, bg: Color) -> f64 {
     out * 100.0
 }
 
-/// What a layer's colour sits on: the nearest frame (or other ancestor) with a visible, opaque
-/// solid fill, else the page's background.
+/// What layer `id` is seen over, at its centre: the layers painted before it there (its frames,
+/// and any layer under it — a rectangle behind a button counts, not only the frame it sits in),
+/// top down to the first opaque fill, half-transparent ones blended over it; the page's
+/// background under all. Locked and hidden-by-clipping layers are taken as they are seen.
 fn backdrop(doc: &Document, id: Option<NodeId>) -> Color {
-    let page_bg = doc.pages.iter().find_map(|p| match &doc.node(*p)?.kind {
-        figcraft_doc::NodeKind::Page { background, .. } if Some(*p) == doc.current_page => Some(*background),
+    let page_bg = |p: NodeId| match doc.node(p).map(|n| &n.kind) {
+        Some(figcraft_doc::NodeKind::Page { background, .. }) => Some(background.with_alpha(1.0)),
         _ => None,
-    });
-    let page_bg = page_bg.unwrap_or(Color::WHITE);
-    let Some(id) = id else { return page_bg };
-    for a in doc.ancestors(id) {
-        let Some(n) = doc.node(a) else { continue };
-        if n.is_page() {
-            if let figcraft_doc::NodeKind::Page { background, .. } = &n.kind {
-                return *background;
+    };
+    let current = doc.current_page.and_then(page_bg).unwrap_or(Color::WHITE);
+    let Some(id) = id else { return current };
+    let Some(page) = doc.ancestors(id).into_iter().find(|a| doc.node(*a).is_some_and(|n| n.is_page())) else { return current };
+    let base = page_bg(page).unwrap_or(current);
+    let Some(pt) = doc.world_bounds(id).map(|b| b.center()) else { return base };
+    // Every layer seen at `pt`, back to front, up to `id`.
+    fn walk(doc: &Document, n: NodeId, pt: figcraft_geom::Point, stop: NodeId, out: &mut Vec<NodeId>) -> bool {
+        if n == stop {
+            return true;
+        }
+        let Some(node) = doc.node(n) else { return false };
+        if !node.visible {
+            return false;
+        }
+        let inside = doc.world_bounds(n).is_some_and(|b| b.contains(pt));
+        if inside {
+            out.push(n);
+        }
+        // Children of a clipping frame show only inside it.
+        if node.clip && node.kind.is_frame_like() && !inside && !doc.ancestors(stop).contains(&n) {
+            return false;
+        }
+        node.paint_order().any(|c| walk(doc, c, pt, stop, out))
+    }
+    let mut under = Vec::new();
+    if let Some(p) = doc.node(page) {
+        let _ = p.children.iter().any(|c| walk(doc, *c, pt, id, &mut under));
+    }
+    // From the top: each layer's fills (top fill first), down to an opaque one.
+    let mut layers: Vec<Color> = Vec::new();
+    'down: for n in under.iter().rev() {
+        let Some(node) = doc.node(*n) else { continue };
+        if matches!(node.kind, figcraft_doc::NodeKind::Text(_)) {
+            continue;
+        }
+        for p in node.fills.iter().rev().filter(|p| p.visible) {
+            let c = match &p.kind {
+                PaintKind::Solid { color } => *color,
+                // A gradient: its stops' average.
+                PaintKind::Gradient(g) if !g.stops.is_empty() => {
+                    let k = g.stops.len() as f32;
+                    let sum = g.stops.iter().fold([0.0f32; 4], |a, s| [a[0] + s.color.r, a[1] + s.color.g, a[2] + s.color.b, a[3] + s.color.a]);
+                    Color::new(sum[0] / k, sum[1] / k, sum[2] / k, sum[3] / k)
+                }
+                _ => continue,
+            };
+            let a = (c.a * p.opacity * node.opacity).clamp(0.0, 1.0);
+            layers.push(c.with_alpha(a));
+            if a >= 0.999 {
+                break 'down;
             }
         }
-        let fill = n.fills.iter().rev().find(|p| p.visible && p.opacity >= 0.999 && matches!(p.kind, PaintKind::Solid { .. }));
-        if let Some(PaintKind::Solid { color }) = fill.map(|p| &p.kind) {
-            return color.with_alpha(1.0);
-        }
     }
-    page_bg
+    layers.iter().rev().fold(base, |bg, c| over(*c, bg))
 }
 
 /// `c` seen over `bg` (alpha composited).

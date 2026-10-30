@@ -1,0 +1,32 @@
+[
+  {
+    "note": "ui: the colour picker's Libraries tab",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod windows;$",
+    "insert": "mod picker_libraries_ui;"
+  },
+  {
+    "note": "picker: Custom | Libraries tabs in the header",
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
+    "find": "            ui.painter().text(pos2(hr.min.x + 16.0, hr.center().y), Align2::LEFT_CENTER, tr(\"Custom\"), semibold(11.0), t.text);\n",
+    "replace": "            // FigCraft Plus: Custom | Libraries (colour variables that fit what this picker edits).\n            let libraries_tab = crate::picker_libraries_ui::header(ui, hr, &target);\n"
+  },
+  {
+    "note": "picker: the Libraries tab's list instead of the colour controls",
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
+    "find": "            if cresp.clicked() {\n                close_now = true;\n            }\n            // Paint type.\n",
+    "replace": "            if cresp.clicked() {\n                close_now = true;\n            }\n            if libraries_tab {\n                crate::picker_libraries_ui::list(app, ui, w, &target);\n                ui.add_space(8.0);\n                crate::oklch_fields::resize_handle(ui, w);\n                return;\n            }\n            // Paint type.\n"
+  },
+  {
+    "note": "English: Libraries tab",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"No colour variables are scoped to this property. Turn it on in a variable's scope (Variables ▸ Edit variable).\" = \"No colour variables are scoped to this property. Turn it on in a variable's scope (Variables ▸ Edit variable).\""
+  },
+  {
+    "note": "Russian: Libraries tab",
+    "file": "crates/ui-egui/locales/ru.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"No colour variables are scoped to this property. Turn it on in a variable's scope (Variables ▸ Edit variable).\" = \"Нет цветовых переменных с областью для этого свойства. Включите её в области переменной (Переменные ▸ Изменить переменную).\""
+  }
+]

@@ -6,17 +6,17 @@ ships a feature of its own, it is removed here.
 
 | | |
 |---|---|
-| **FigCraft Plus** | **5** |
+| **FigCraft Plus** | **6** |
 | **Built on** | FigCraft **v0.12.1** (the latest official release) |
 | **Files** | `.figcraft` files stay fully compatible with the official app, both ways |
 
 > ### 🗺 Roadmap — what's next
 >
-> **Next, after FigCraft 0.13 — Plus 6, design system ↔ code:** export variables as CSS
+> **Next, after FigCraft 0.13 — design system ↔ code:** export variables as CSS
 > (`oklch()`, `rem`, relative colours) · import CSS custom properties as variables · remember
 > missing-font replacements · edit several text styles at once.
 >
-> **Then — Plus 7, layout:** sizes in % of the parent · auto layout direction from a variable ·
+> **Then — layout:** sizes in % of the parent · auto layout direction from a variable ·
 > align to a key object.
 >
 > **[See the full roadmap →](ROADMAP.md)** · **[Ask for a feature →](../../issues/new?template=feature_request.yml)**
@@ -40,6 +40,7 @@ release, applies them, runs the tests and publishes a ready-to-run Windows build
   - [Print units: mm, cm, in and pt in every field](#print-units-mm-cm-in-and-pt-in-every-field)
   - [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker)
   - [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca)
+  - [Colour variables in the picker: the Libraries tab](#colour-variables-in-the-picker-the-libraries-tab)
   - [FigCraft Plus preferences](#figcraft-plus-preferences)
   - [A better picker](#a-better-picker)
   - [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing)
@@ -75,7 +76,8 @@ as soon as FigCraft ships its own version: the goal is a better FigCraft, not a 
 | [rem units](#rem-units) | Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16. | A px / rem switch and a root size per file (the gear in Typography), defaults in Preferences, `rem` in every field. | ★ only in Plus |
 | [Print units: mm, cm, in and pt in every field](#print-units-mm-cm-in-and-pt-in-every-field) | Number fields read px; mm, cm and in exist only in the PDF export's print settings. | Every number field takes `mm`, `cm`, `in` and `pt` — and mixes them (`10mm + 2`). | ★ only in Plus |
 | [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker) | The picker offers Hex, RGB, HSL, HSB, LCH, OKLCH and CSS; CMYK exists only as a PDF export option. | **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click. | ★ only in Plus |
-| [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca) | No contrast check in the interface. | Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what the colour sits on. | ★ only in Plus |
+| [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca) | No contrast check in the interface. | Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what is really under the layer — any shape behind it, not only its frame. | ★ only in Plus |
+| [Colour variables in the picker: the Libraries tab](#colour-variables-in-the-picker-the-libraries-tab) | Colour variables are applied from the style menu next to Fill or Stroke; the picker itself only edits a colour. | A **Libraries** tab beside **Custom** in the colour picker: this file's and the enabled libraries' colour variables, with search — only those whose scope fits what you edit (a stroke offers stroke colours). | ▲ better |
 | [FigCraft Plus preferences](#figcraft-plus-preferences) | The colour picker always opens in Hex; there is no typography unit to choose. | Preferences ▸ FigCraft Plus: the typography unit and root size for new files, and the model the colour picker opens in. | ★ only in Plus |
 | [A better picker](#a-better-picker) | Fields without captions, one fixed width. | A caption over every field, a width that fits the model, and a draggable edge. | ▲ better |
 | [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing) | The picker opens at a fixed place on the right and closes when the selection changes. | It opens beside the swatch you clicked, stays on top, and moves to the same slot of the newly selected layer, so you keep editing without reopening it. | ▲ better |
@@ -260,12 +262,38 @@ the files and keeps the last computed values.
 
 > **FigCraft:** No contrast check in the interface.
 >
-> **FigCraft Plus:** Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what the colour sits on.
+> **FigCraft Plus:** Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what is really under the layer.
 
-- The backdrop is found for you: the nearest frame with a solid fill under the layer, else the
-  page (hover the line to see which colour). Transparent colours are blended over it first.
+<img src="docs/images/34-contrast-backdrop.png" width="350" alt="A white button on a magenta rectangle: the picker shows 6.46:1 AA · Lc -86 against the magenta">
+
+- **The backdrop is what is really under the layer**, at its centre: any shape, frame or
+  gradient behind it (a button on a coloured rectangle is checked against the rectangle, not the
+  page), hidden and clipped-away layers left out. Half-transparent layers are blended in, down to
+  the first opaque one and the page's background. The small swatch shows the colour it found;
+  hover the line to see it.
 - WCAG levels for normal text: **AAA** ≥ 7, **AA** ≥ 4.5, **AA Large** ≥ 3; below 4.5 the line is
   highlighted. APCA Lc follows APCA-W3 (black on white ≈ 106, white on black ≈ −108).
+
+### Colour variables in the picker: the Libraries tab
+
+**▲ Better in FigCraft Plus**
+
+> **FigCraft:** Colour variables are applied from the style menu next to Fill or Stroke; the picker itself only edits a colour.
+>
+> **FigCraft Plus:** A **Libraries** tab beside **Custom** in the colour picker: this file's and the enabled libraries' colour variables, with search — only those whose scope fits what you edit.
+
+<img src="docs/images/35-picker-libraries.png" width="548" alt="Libraries for a fill: Primary and Blue colours; for a stroke of the same layer: only the Border colours">
+
+- **Only variables whose scope fits** are listed: a fill lists the variables scoped to frame,
+  shape or text fills (by what the layer is), a stroke those scoped to strokes, a shadow's colour
+  those scoped to effects. Set a variable's scope in **Variables ▸ Edit variable**; with nothing
+  fitting, the tab says so.
+- Collections and groups as headers, the swatch and value of each colour, **search**, a library
+  filter, arrow keys and Enter. The variable in use is checked; a click applies it.
+- Works for a layer's fills, strokes and effect colours, a colour style's paint, and a colour
+  variable's value in the Variables editor (it becomes an alias; variables that would loop are left
+  out).
+- The picker opens on the tab you used last.
 
 ### FigCraft Plus preferences
 

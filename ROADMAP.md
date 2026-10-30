@@ -11,7 +11,7 @@ continue down this list. There are no dates: a step starts when the previous one
 
 ---
 
-## 🔜 Next — FigCraft Plus 6: design system ↔ code
+## 🔜 Next: design system ↔ code
 
 *Starts after FigCraft 0.13, once the add-ons are checked on it.*
 
@@ -22,7 +22,7 @@ continue down this list. There are no dates: a step starts when the previous one
 | ⬜ | **Remember missing-font replacements** — "always use Inter for Helvetica" | Open files from others without choosing the same replacements again |
 | ⬜ | **Edit several text styles at once** — select styles in Local styles, change font, size or line height for all | Restyle a whole type scale in one go |
 
-## 🧭 Then — FigCraft Plus 7: layout
+## 🧭 Then: layout
 
 | | Feature | What it gives you |
 |---|---|---|
@@ -50,6 +50,7 @@ decide.
 
 | Release | Highlights |
 |---|---|
+| **Plus 6** | Contrast check against what is really under the layer (any shape behind it) · a **Libraries** tab in the colour picker with the colour variables whose scope fits |
 | **Plus 5** | The Typography settings popover opens reliably, beside the panel, inside the window · screenshots of every new setting in the README |
 | **Plus 4** | Typography settings (the gear): px / rem and root size per file ([FigCraft #1325](https://github.com/storytold/figcraft/issues/1325)) · Preferences ▸ FigCraft Plus: default typography unit and root size, the model the colour picker opens in |
 | **Plus 3** | Print units (mm, cm, in, pt) in every field · CMYK and *Copy as* in the colour picker · WCAG / APCA contrast check |
