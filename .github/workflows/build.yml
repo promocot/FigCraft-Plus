@@ -199,14 +199,20 @@ jobs:
           RELEASE: ${{ needs.plan.outputs.release }}
           PLUS: ${{ needs.plan.outputs.plus }}
         run: |
-          notes="FigCraft Plus ${PLUS} on the official FigCraft ${REF} (https://github.com/${UPSTREAM}/releases/tag/${REF}).
-
-          Download the .zip, unpack it anywhere (a USB drive is fine) and run figcraft.exe. .figcraft files stay compatible with the official app.
-
-          Add-ons: OKLCH the oklch.com way (L 0-1, file colour profile, OKLCH plane and hue strip), colour channels bound to number variables, a picker that opens beside its control and follows the selection, weight / paragraph spacing / indent variables, style dialogs and style groups, a richer variable picker, variable ordering and sorting, a portable fonts folder, derived colours and calculated variables (requested in https://github.com/storytold/figcraft/issues/1280), rem units with a root size per file (requested in https://github.com/storytold/figcraft/issues/1325), print units (mm, cm, in, pt) in every field, CMYK and Copy as in the colour picker, a WCAG / APCA contrast check against what is really under the layer, a Libraries tab in the colour picker (the colour variables whose scope fits what you edit), Typography settings (px / rem and root size per file) and Preferences ▸ FigCraft Plus (default typography unit and root size, the model the colour picker opens in). See the README for details and for what moved into FigCraft itself."
+          # What's new: this release's section of CHANGELOG.md (if it has one).
+          news=$(awk -v h="## Plus ${PLUS} " 'index($0,h)==1{on=1;next} on&&/^## /{exit} on' CHANGELOG.md)
+          {
+            echo "**FigCraft Plus ${PLUS}** on the official [FigCraft ${REF}](https://github.com/${UPSTREAM}/releases/tag/${REF})."
+            echo
+            if [ -n "$news" ]; then echo "### What's new"; echo "$news"; echo; fi
+            echo "### Install"
+            echo "Download the \`.zip\` below, unpack it anywhere (a USB drive is fine) and run \`figcraft.exe\`. To update, unpack over the previous version. \`.figcraft\` files stay compatible with the official app, both ways."
+            echo
+            echo "All add-ons: [README](https://github.com/${GITHUB_REPOSITORY}#feature-comparison) · history: [CHANGELOG](https://github.com/${GITHUB_REPOSITORY}/blob/main/CHANGELOG.md) · next: [roadmap](https://github.com/${GITHUB_REPOSITORY}/blob/main/ROADMAP.md)"
+          } > notes.md
           if gh release view "$RELEASE" >/dev/null 2>&1; then
             gh release upload "$RELEASE" dist/*.zip --clobber
-            gh release edit "$RELEASE" --title "FigCraft Plus ${PLUS} · FigCraft ${REF}" --notes "$notes"
+            gh release edit "$RELEASE" --title "FigCraft Plus ${PLUS} · FigCraft ${REF}" --notes-file notes.md
           else
-            gh release create "$RELEASE" dist/*.zip --title "FigCraft Plus ${PLUS} · FigCraft ${REF}" --notes "$notes" --latest
+            gh release create "$RELEASE" dist/*.zip --title "FigCraft Plus ${PLUS} · FigCraft ${REF}" --notes-file notes.md --latest
           fi

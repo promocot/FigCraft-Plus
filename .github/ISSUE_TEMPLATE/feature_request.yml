@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for the idea! Check the [roadmap](https://github.com/promocot/Figcraft-addon/blob/main/ROADMAP.md) first — if it's there already, a 👍 on its request helps more than a new one.
+        Thanks for the idea! Check the [roadmap](https://github.com/promocot/FigCraft-Plus/blob/main/ROADMAP.md) first — if it's there already, a 👍 on its request helps more than a new one.
   - type: textarea
     id: what
     attributes:

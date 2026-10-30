@@ -1,14 +1,115 @@
-# FigCraft Plus
+<p align="center">
+  <img src="docs/images/hero.png" width="100%" alt="FigCraft Plus — professional color and design-system tools for the FigCraft design editor">
+</p>
 
-**Add-ons for [FigCraft](https://github.com/storytold/figcraft), applied to each official release
-and built for Windows.** They only add what FigCraft doesn't have yet: when an official release
-ships a feature of its own, it is removed here.
+<p align="center">
+  <a href="../../releases/latest"><img alt="Download for Windows" src="https://img.shields.io/badge/Download_for_Windows-portable_zip-1fbf75?style=for-the-badge"></a>
+  &nbsp;
+  <a href="ROADMAP.md"><img alt="Roadmap" src="https://img.shields.io/badge/Roadmap-what's_next-7c5cff?style=for-the-badge"></a>
+  &nbsp;
+  <a href="../../issues/new?template=feature_request.yml"><img alt="Request a feature" src="https://img.shields.io/badge/Request_a_feature-%F0%9F%91%8D-3a3f4b?style=for-the-badge"></a>
+</p>
 
-| | |
-|---|---|
-| **FigCraft Plus** | **6** |
-| **Built on** | FigCraft **v0.12.1** (the latest official release) |
-| **Files** | `.figcraft` files stay fully compatible with the official app, both ways |
+<p align="center">
+  <b>FigCraft Plus 6</b> · built on FigCraft <b>v0.12.1</b>, the latest official release ·
+  <code>.figcraft</code> files stay compatible with the official app, both ways
+</p>
+
+**FigCraft Plus turns [FigCraft](https://github.com/storytold/figcraft) into a stronger tool for
+color and design systems.** It is applied to every official FigCraft release and built for
+Windows automatically: you get the editor you know, with professional tools on top — and nothing
+to migrate.
+
+It only adds what FigCraft doesn't have yet. When an official release ships a feature of its own,
+Plus steps aside and uses it ([what has moved into FigCraft](#now-in-figcraft-itself-removed-from-plus)):
+the goal is a better FigCraft, not a different one.
+
+## Why FigCraft Plus
+
+<table>
+<tr>
+<td width="33%" valign="top">
+
+### 🎨 Advanced color
+
+An **OKLCH picker** that shows the real gamut, **CMYK** fields, colors written as **CSS
+formulas**, *Copy as* any format, and a **WCAG + APCA contrast check** against what is really
+under the layer.
+
+</td>
+<td width="33%" valign="top">
+
+### 🧩 Stronger design systems
+
+**Calculated variables** and colors **derived** from others (`oklch(from …)`, `color-mix()`,
+`calc()`), channels driven by number variables, **rem** and print units, style dialogs and
+groups, scoped variable pickers, variable ordering.
+
+</td>
+<td width="33%" valign="top">
+
+### 🔁 Native file compatibility
+
+Plus never touches FigCraft's file format — the build stops if a change would. Formulas and
+settings are kept as text the official app ignores, so files open there with every color and size
+as you left it.
+
+</td>
+</tr>
+</table>
+
+## See it in action
+
+<table>
+<tr>
+<td width="50%" valign="top">
+
+**OKLCH picker** — lightness and hue move evenly; the plane shows the exact gamut edge.
+
+<img src="docs/images/demo-oklch.gif" width="100%" alt="Changing lightness, then hue, in the OKLCH picker: the plane and the swatch follow">
+
+</td>
+<td width="50%" valign="top">
+
+**Calculated variables** — change one number, the whole palette follows: hover, transparency,
+tint and complement are formulas of `primary`.
+
+<img src="docs/images/demo-calculated-variables.gif" width="100%" alt="brand/hue goes from 280 to 150 to 25: primary, hover, soft, tint and accent update together">
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+**Contrast that sees the background** — the same white button on three backgrounds: WCAG ratio,
+level and APCA Lc update as it moves.
+
+<img src="docs/images/demo-contrast.gif" width="100%" alt="A white button moved across sand, berry and navy rectangles: 1.21:1 Fail, 6.46:1 AA, AAA">
+
+</td>
+<td width="50%" valign="top">
+
+**Libraries in the picker** — search the colour variables and apply one; only those scoped to
+what you edit are offered.
+
+<img src="docs/images/demo-libraries.gif" width="60%" alt="The Libraries tab: typing prm, then clicking --prm-4 colors the button">
+
+</td>
+</tr>
+</table>
+
+**Before / after** — the same color in FigCraft's picker and in FigCraft Plus:
+
+<img src="docs/images/before-after-picker.png" width="720" alt="Left: FigCraft's HSB square and rainbow. Right: FigCraft Plus's OKLCH plane with the exact gamut edge and an OKLCH hue strip">
+
+> ### 🔁 Compatibility first
+>
+> FigCraft Plus extends the editor without a file format of its own. A `.figcraft` file saved by
+> Plus is written by FigCraft's own, unchanged code — the build checks that no add-on touches the
+> document model or file format, and stops if one would. What Plus adds (formulas, rem settings,
+> style groups) is stored as text inside the file, which the official app keeps and ignores: it
+> opens the file and shows the last computed colors and sizes. Nothing to convert, in either
+> direction.
 
 > ### 🗺 Roadmap — what's next
 >
@@ -22,15 +123,11 @@ ships a feature of its own, it is removed here.
 > **[See the full roadmap →](ROADMAP.md)** · **[Ask for a feature →](../../issues/new?template=feature_request.yml)**
 > — the most 👍-ed requests move up.
 
-This repository holds only the additions. A GitHub Actions workflow takes every new FigCraft
-release, applies them, runs the tests and publishes a ready-to-run Windows build under
-**[Releases](../../releases)** — usually within a day of the FigCraft release.
-
 ## Contents
 
-- [Roadmap](ROADMAP.md)
-- [Why FigCraft Plus](#why-figcraft-plus)
-- [Download](#download)
+- [Why FigCraft Plus](#why-figcraft-plus) · [See it in action](#see-it-in-action) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
+- [Download and update](#download-and-update)
+- [Feature comparison](#feature-comparison)
 - [Requested in FigCraft's issues, made here](#requested-in-figcrafts-issues-made-here)
 - [Now in FigCraft itself (removed from Plus)](#now-in-figcraft-itself-removed-from-plus)
 - [Add-ons](#add-ons)
@@ -52,6 +149,8 @@ release, applies them, runs the tests and publishes a ready-to-run Windows build
   - [Variable details & scope, one click away](#variable-details--scope-one-click-away)
   - [A richer variable picker](#a-richer-variable-picker)
   - [Reorder variables: drag & drop and sorting](#reorder-variables-drag--drop-and-sorting)
+- [Community](#community)
+- [FAQ](#faq)
 - [How it works](#how-it-works)
   - [Run a build by hand](#run-a-build-by-hand)
   - [Build locally](#build-locally)
@@ -59,48 +158,49 @@ release, applies them, runs the tests and publishes a ready-to-run Windows build
   - [Add a feature](#add-a-feature)
 - [License](#license)
 
-## Why FigCraft Plus
+## Feature comparison
 
-FigCraft Plus is a community effort to make FigCraft more comfortable to work in — above all for
-people building design systems, working with CSS and with colour in OKLCH. It adds, on top of each
-official release, what users ask for and what we found missing in daily work, and it steps aside
-as soon as FigCraft ships its own version: the goal is a better FigCraft, not a different one.
-
-**★ Only in FigCraft Plus (for now)** — FigCraft has nothing like it yet.
-**▲ Better in FigCraft Plus** — FigCraft has a basic version; Plus goes further.
+**🟣 Exclusive** — FigCraft has nothing like it yet. **🔵 Enhanced** — FigCraft has a basic
+version; Plus goes further. Features FigCraft has since added itself are
+[listed separately](#now-in-figcraft-itself-removed-from-plus) — they are no longer part of Plus.
 
 | Feature | In FigCraft v0.12.1 | In FigCraft Plus | |
 |---|---|---|---|
-| [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way) | FigCraft 0.12 has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB. | The whole picker works in OKLCH (an OKLCH plane with the exact gamut edge, an OKLCH hue strip), values match oklch.com and CSS, and Display P3 files are read in P3. | ▲ better |
-| [Derived colours and calculated variables](#derived-colours-and-calculated-variables) | A variable can be an *alias* of another — an exact copy, nothing more. | A colour can be *made from* another (transparency, lighter / darker, its complement, a mix of two), and a number from other numbers, all kept in step in every mode. | ★ only in Plus |
-| [rem units](#rem-units) | Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16. | A px / rem switch and a root size per file (the gear in Typography), defaults in Preferences, `rem` in every field. | ★ only in Plus |
-| [Print units: mm, cm, in and pt in every field](#print-units-mm-cm-in-and-pt-in-every-field) | Number fields read px; mm, cm and in exist only in the PDF export's print settings. | Every number field takes `mm`, `cm`, `in` and `pt` — and mixes them (`10mm + 2`). | ★ only in Plus |
-| [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker) | The picker offers Hex, RGB, HSL, HSB, LCH, OKLCH and CSS; CMYK exists only as a PDF export option. | **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click. | ★ only in Plus |
-| [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca) | No contrast check in the interface. | Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what is really under the layer — any shape behind it, not only its frame. | ★ only in Plus |
-| [Colour variables in the picker: the Libraries tab](#colour-variables-in-the-picker-the-libraries-tab) | Colour variables are applied from the style menu next to Fill or Stroke; the picker itself only edits a colour. | A **Libraries** tab beside **Custom** in the colour picker: this file's and the enabled libraries' colour variables, with search — only those whose scope fits what you edit (a stroke offers stroke colours). | ▲ better |
-| [FigCraft Plus preferences](#figcraft-plus-preferences) | The colour picker always opens in Hex; there is no typography unit to choose. | Preferences ▸ FigCraft Plus: the typography unit and root size for new files, and the model the colour picker opens in. | ★ only in Plus |
-| [A better picker](#a-better-picker) | Fields without captions, one fixed width. | A caption over every field, a width that fits the model, and a draggable edge. | ▲ better |
-| [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing) | The picker opens at a fixed place on the right and closes when the selection changes. | It opens beside the swatch you clicked, stays on top, and moves to the same slot of the newly selected layer, so you keep editing without reopening it. | ▲ better |
-| [Colours driven by number variables](#colours-driven-by-number-variables) | A colour can be bound to a colour variable as a whole. | Each channel (L, C, H, R, G, B, H, S, alpha…) can follow its own number variable: one `brand/hue` restyles every colour built on it. | ★ only in Plus |
-| [Variables in text: weight, paragraph spacing and indent](#variables-in-text-weight-paragraph-spacing-and-indent) | Font family and font style take string variables. | The weight takes a number variable too (400, 700), and paragraph spacing and indent take number variables. | ▲ better |
-| [Your own fonts, travelling with the app](#your-own-fonts-travelling-with-the-app) | Fonts come from the system (and Adobe Fonts / font managers on macOS). | A `fonts` folder next to `figcraft.exe` — your fonts travel on the USB drive — with *Add fonts…*, an *In this file* section and *Added* tags. | ★ only in Plus |
-| [Styles: create and edit them in a dialog](#styles-create-and-edit-them-in-a-dialog) | Styles are created from the selection and edited in FigCraft's style popover. | A **+** on Local styles creates any kind of style from scratch in a dialog with a live preview, with variables in effect, grid and colour fields too. | ▲ better |
-| [Style groups in Local styles](#style-groups-in-local-styles) | Local styles are grouped by the folders in their names. | Real nested groups: Ctrl+G, New group, drag styles and groups, collapse, rename, ungroup. | ▲ better |
-| [Variable details & scope, one click away](#variable-details--scope-one-click-away) | Right-click a variable ▸ Edit variable. | An *Edit variable* button on every row, opening beside the editor and following it. | ▲ better |
-| [A richer variable picker](#a-richer-variable-picker) | A plain list of the variables that fit. | One card everywhere: search, library filter, collections and groups, swatches and values, arrow keys and Enter. | ▲ better |
-| [Reorder variables: drag & drop and sorting](#reorder-variables-drag--drop-and-sorting) | Modes can be reordered; variables keep the order they were made in. | Drag variables, groups and collections, multi-select, Alt+↑/↓, and natural or by-value sorting — also as commands for scripts and MCP. | ★ only in Plus |
+| [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way) | FigCraft 0.12 has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB. | The whole picker works in OKLCH (an OKLCH plane with the exact gamut edge, an OKLCH hue strip), values match oklch.com and CSS, and Display P3 files are read in P3. | 🔵 Enhanced |
+| [Derived colours and calculated variables](#derived-colours-and-calculated-variables) | A variable can be an *alias* of another — an exact copy, nothing more. | A colour can be *made from* another (transparency, lighter / darker, its complement, a mix of two), and a number from other numbers, all kept in step in every mode. | 🟣 Exclusive |
+| [rem units](#rem-units) | Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16. | A px / rem switch and a root size per file (the gear in Typography), defaults in Preferences, `rem` in every field. | 🟣 Exclusive |
+| [Print units: mm, cm, in and pt in every field](#print-units-mm-cm-in-and-pt-in-every-field) | Number fields read px; mm, cm and in exist only in the PDF export's print settings. | Every number field takes `mm`, `cm`, `in` and `pt` — and mixes them (`10mm + 2`). | 🟣 Exclusive |
+| [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker) | The picker offers Hex, RGB, HSL, HSB, LCH, OKLCH and CSS; CMYK exists only as a PDF export option. | **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click. | 🟣 Exclusive |
+| [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca) | No contrast check in the interface. | Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what is really under the layer — any shape behind it, not only its frame. | 🟣 Exclusive |
+| [Colour variables in the picker: the Libraries tab](#colour-variables-in-the-picker-the-libraries-tab) | Colour variables are applied from the style menu next to Fill or Stroke; the picker itself only edits a colour. | A **Libraries** tab beside **Custom** in the colour picker: this file's and the enabled libraries' colour variables, with search — only those whose scope fits what you edit (a stroke offers stroke colours). | 🔵 Enhanced |
+| [FigCraft Plus preferences](#figcraft-plus-preferences) | The colour picker always opens in Hex; there is no typography unit to choose. | Preferences ▸ FigCraft Plus: the typography unit and root size for new files, and the model the colour picker opens in. | 🟣 Exclusive |
+| [A better picker](#a-better-picker) | Fields without captions, one fixed width. | A caption over every field, a width that fits the model, and a draggable edge. | 🔵 Enhanced |
+| [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing) | The picker opens at a fixed place on the right and closes when the selection changes. | It opens beside the swatch you clicked, stays on top, and moves to the same slot of the newly selected layer, so you keep editing without reopening it. | 🔵 Enhanced |
+| [Colours driven by number variables](#colours-driven-by-number-variables) | A colour can be bound to a colour variable as a whole. | Each channel (L, C, H, R, G, B, H, S, alpha…) can follow its own number variable: one `brand/hue` restyles every colour built on it. | 🟣 Exclusive |
+| [Variables in text: weight, paragraph spacing and indent](#variables-in-text-weight-paragraph-spacing-and-indent) | Font family and font style take string variables. | The weight takes a number variable too (400, 700), and paragraph spacing and indent take number variables. | 🔵 Enhanced |
+| [Your own fonts, travelling with the app](#your-own-fonts-travelling-with-the-app) | Fonts come from the system (and Adobe Fonts / font managers on macOS). | A `fonts` folder next to `figcraft.exe` — your fonts travel on the USB drive — with *Add fonts…*, an *In this file* section and *Added* tags. | 🟣 Exclusive |
+| [Styles: create and edit them in a dialog](#styles-create-and-edit-them-in-a-dialog) | Styles are created from the selection and edited in FigCraft's style popover. | A **+** on Local styles creates any kind of style from scratch in a dialog with a live preview, with variables in effect, grid and colour fields too. | 🔵 Enhanced |
+| [Style groups in Local styles](#style-groups-in-local-styles) | Local styles are grouped by the folders in their names. | Real nested groups: Ctrl+G, New group, drag styles and groups, collapse, rename, ungroup. | 🔵 Enhanced |
+| [Variable details & scope, one click away](#variable-details--scope-one-click-away) | Right-click a variable ▸ Edit variable. | An *Edit variable* button on every row, opening beside the editor and following it. | 🔵 Enhanced |
+| [A richer variable picker](#a-richer-variable-picker) | A plain list of the variables that fit. | One card everywhere: search, library filter, collections and groups, swatches and values, arrow keys and Enter. | 🔵 Enhanced |
+| [Reorder variables: drag & drop and sorting](#reorder-variables-drag--drop-and-sorting) | Modes can be reordered; variables keep the order they were made in. | Drag variables, groups and collections, multi-select, Alt+↑/↓, and natural or by-value sorting — also as commands for scripts and MCP. | 🟣 Exclusive |
 
 Everything stays a normal `.figcraft` file: the official app opens it and sees the last computed
 colours and sizes; formulas and settings are kept as text it ignores.
 
-## Download
+## Download and update
 
-1. Open **[Releases](../../releases)** and take the latest
+1. Open **[Releases](../../releases/latest)** and take
    `figcraft-plus-<n>-figcraft-<version>-windows-x64-portable.zip`.
-2. Unzip it anywhere (a USB drive works) and run `figcraft.exe`.
+2. Unzip it anywhere (a USB drive works) and run `figcraft.exe`. Nothing is installed.
 3. The build isn't code-signed: if Windows SmartScreen warns, choose **More info → Run anyway**.
 
-To hear about new builds, use **Watch → Custom → Releases** on this page.
+**Updating** to a newer Plus: unzip the new release over the old folder (or into a new one and
+copy your `fonts` folder and `figcraft-plus.json` across). Your `.figcraft` files live wherever
+you saved them and need nothing — every Plus version, and the official app, opens them.
+
+To hear about new builds, use **Watch → Custom → Releases** on this page; what changed is in the
+[changelog](CHANGELOG.md).
 
 The build is FigCraft from the same release tag, built the same way (release profile, static C
 runtime, embedded fonts, `figcraft-cli.exe` included), plus the add-ons below.
@@ -128,7 +228,7 @@ Features FigCraft users asked for in the official tracker that FigCraft itself h
 
 ### OKLCH, done the oklch.com way
 
-**▲ Better in FigCraft Plus**
+**🔵 Enhanced** — better in FigCraft Plus
 
 > **FigCraft:** FigCraft 0.12 has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB.
 >
@@ -157,7 +257,7 @@ Features FigCraft users asked for in the official tracker that FigCraft itself h
 
 ### Derived colours and calculated variables
 
-**★ Only in FigCraft Plus (for now)**
+**🟣 Exclusive** — only in FigCraft Plus (for now)
 
 > **FigCraft:** A variable can be an *alias* of another — an exact copy, nothing more.
 >
@@ -195,7 +295,7 @@ the files and keeps the last computed values.
 
 ### rem units
 
-**★ Only in FigCraft Plus (for now)**
+**🟣 Exclusive** — only in FigCraft Plus (for now)
 
 > **FigCraft:** Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16.
 >
@@ -223,7 +323,7 @@ the files and keeps the last computed values.
 
 ### Print units: mm, cm, in and pt in every field
 
-**★ Only in FigCraft Plus (for now)**
+**🟣 Exclusive** — only in FigCraft Plus (for now)
 
 > **FigCraft:** Number fields read px; mm, cm and in exist only in the PDF export's print settings.
 >
@@ -240,7 +340,7 @@ the files and keeps the last computed values.
 
 ### CMYK and Copy as in the colour picker
 
-**★ Only in FigCraft Plus (for now)**
+**🟣 Exclusive** — only in FigCraft Plus (for now)
 
 > **FigCraft:** The picker offers Hex, RGB, HSL, HSB, LCH, OKLCH and CSS; CMYK exists only as a PDF export option.
 >
@@ -258,7 +358,7 @@ the files and keeps the last computed values.
 
 ### Contrast check: WCAG and APCA
 
-**★ Only in FigCraft Plus (for now)**
+**🟣 Exclusive** — only in FigCraft Plus (for now)
 
 > **FigCraft:** No contrast check in the interface.
 >
@@ -276,7 +376,7 @@ the files and keeps the last computed values.
 
 ### Colour variables in the picker: the Libraries tab
 
-**▲ Better in FigCraft Plus**
+**🔵 Enhanced** — better in FigCraft Plus
 
 > **FigCraft:** Colour variables are applied from the style menu next to Fill or Stroke; the picker itself only edits a colour.
 >
@@ -297,7 +397,7 @@ the files and keeps the last computed values.
 
 ### FigCraft Plus preferences
 
-**★ Only in FigCraft Plus (for now)**
+**🟣 Exclusive** — only in FigCraft Plus (for now)
 
 > **FigCraft:** The colour picker always opens in Hex; there is no typography unit to choose.
 >
@@ -315,7 +415,7 @@ They are saved in `figcraft-plus.json` next to `figcraft.exe`, so a copy on a US
 
 ### A better picker
 
-**▲ Better in FigCraft Plus**
+**🔵 Enhanced** — better in FigCraft Plus
 
 > **FigCraft:** Fields without captions, one fixed width.
 >
@@ -327,7 +427,7 @@ They are saved in `figcraft-plus.json` next to `figcraft.exe`, so a copy on a US
 
 ### A picker that stays with what you're editing
 
-**▲ Better in FigCraft Plus**
+**🔵 Enhanced** — better in FigCraft Plus
 
 > **FigCraft:** The picker opens at a fixed place on the right and closes when the selection changes.
 >
@@ -352,7 +452,7 @@ They are saved in `figcraft-plus.json` next to `figcraft.exe`, so a copy on a US
 
 ### Colours driven by number variables
 
-**★ Only in FigCraft Plus (for now)**
+**🟣 Exclusive** — only in FigCraft Plus (for now)
 
 > **FigCraft:** A colour can be bound to a colour variable as a whole.
 >
@@ -416,7 +516,7 @@ model replaces those links.
 
 ### Variables in text: weight, paragraph spacing and indent
 
-**▲ Better in FigCraft Plus**
+**🔵 Enhanced** — better in FigCraft Plus
 
 > **FigCraft:** Font family and font style take string variables.
 >
@@ -445,7 +545,7 @@ the Typography section:
 
 ### Your own fonts, travelling with the app
 
-**★ Only in FigCraft Plus (for now)**
+**🟣 Exclusive** — only in FigCraft Plus (for now)
 
 > **FigCraft:** Fonts come from the system (and Adobe Fonts / font managers on macOS).
 >
@@ -460,7 +560,7 @@ the Typography section:
 
 ### Styles: create and edit them in a dialog
 
-**▲ Better in FigCraft Plus**
+**🔵 Enhanced** — better in FigCraft Plus
 
 > **FigCraft:** Styles are created from the selection and edited in FigCraft's style popover.
 >
@@ -509,7 +609,7 @@ Mobile size).
 
 ### Style groups in Local styles
 
-**▲ Better in FigCraft Plus**
+**🔵 Enhanced** — better in FigCraft Plus
 
 > **FigCraft:** Local styles are grouped by the folders in their names.
 >
@@ -523,7 +623,7 @@ its name to rename it, ungroup it from its context menu.
 
 ### Variable details & scope, one click away
 
-**▲ Better in FigCraft Plus**
+**🔵 Enhanced** — better in FigCraft Plus
 
 > **FigCraft:** Right-click a variable ▸ Edit variable.
 >
@@ -539,7 +639,7 @@ it, and follows the editor when it moves. Click the button again to close. (Righ
 
 ### A richer variable picker
 
-**▲ Better in FigCraft Plus**
+**🔵 Enhanced** — better in FigCraft Plus
 
 > **FigCraft:** A plain list of the variables that fit.
 >
@@ -552,7 +652,7 @@ turned off is offered nowhere but the Variables editor, so lists stay short.
 
 ### Reorder variables: drag & drop and sorting
 
-**★ Only in FigCraft Plus (for now)**
+**🟣 Exclusive** — only in FigCraft Plus (for now)
 
 > **FigCraft:** Modes can be reordered; variables keep the order they were made in.
 >
@@ -586,6 +686,68 @@ in exports. That fixes imports that arrive in the wrong order (`n-xs, n-6xl, n-s
 - Each drag, Alt+arrow or sort is one undo step. Read-only libraries can't be reordered.
 - The same operations are commands for scripts, the CLI and MCP: `variable.move`,
   `variable.moveGroup`, `variable.moveCollection`, `variable.sort`.
+
+## Community
+
+FigCraft Plus grows from what its users need. Every way to take part:
+
+| | |
+|---|---|
+| 💡 **[Request a feature](../../issues/new?template=feature_request.yml)** | Describe what you want to do and why it helps |
+| 👍 **[Vote for features](../../issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement+sort%3Areactions-%2B1-desc)** | A 👍 on a request moves it up the [roadmap](ROADMAP.md) |
+| 🐞 **[Report a bug](../../issues/new?template=bug_report.yml)** | Bugs in the add-ons; FigCraft's own bugs go to [its tracker](https://github.com/storytold/figcraft/issues) |
+| 🛠 **[Contribute](#add-a-feature)** | Add-ons are small, self-contained files and hooks — see *Add a feature* |
+| ⭐ **Star the repository** | It helps others find FigCraft Plus |
+
+## FAQ
+
+<details>
+<summary><b>Will my files still open in the official FigCraft?</b></summary>
+
+Yes. Plus doesn't change FigCraft's file format code at all (the build stops if an add-on would),
+so a file saved in Plus is written exactly as FigCraft writes it. Formulas, rem settings and style
+groups are kept as text the official app keeps and ignores; it shows the last computed colors
+and sizes. Files from the official app open in Plus unchanged too.
+</details>
+
+<details>
+<summary><b>Windows SmartScreen says the app is unrecognised. Is it safe?</b></summary>
+
+The build isn't code-signed, so SmartScreen warns about any new download. It is built in the open
+by [GitHub Actions](../../actions) from FigCraft's own release tag plus the files in this
+repository — you can read every step in `.github/workflows/build.yml`. Choose **More info → Run
+anyway**.
+</details>
+
+<details>
+<summary><b>How do I update?</b></summary>
+
+Unzip the new release over the old folder. Settings (`figcraft-plus.json`) and your `fonts`
+folder sit next to `figcraft.exe`; keep them if you unzip somewhere else.
+</details>
+
+<details>
+<summary><b>What happens when a new FigCraft version comes out?</b></summary>
+
+The workflow checks for new FigCraft releases every day, applies the add-ons, runs FigCraft's
+tests and ours, and publishes a new Plus build — usually within a day. If an add-on no longer
+fits the new version, nothing is published and the previous release stays available until it is
+fixed. Features FigCraft now has itself are removed from Plus.
+</details>
+
+<details>
+<summary><b>Is there a macOS or Linux build?</b></summary>
+
+Not yet: builds are Windows-only for now. You can [build it yourself](#build-locally) on any
+platform FigCraft supports.
+</details>
+
+<details>
+<summary><b>Is FigCraft Plus affiliated with FigCraft?</b></summary>
+
+No. It is an independent, community project built on the open-source FigCraft, applied to its
+official releases.
+</details>
 
 ## How it works
 

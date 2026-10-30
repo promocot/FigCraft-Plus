@@ -10,6 +10,10 @@
 Usage: python3 scripts/apply.py [--check] <path-to-figcraft-checkout>
   --check  report every hook that no longer fits (instead of stopping at the first one)
 Exits non-zero, naming the hook, when an anchor is no longer found in the new FigCraft version.
+
+File compatibility: FigCraft's document model and file format (crates/doc, crates/format) are
+never changed. An overlay file or hook that would touch them stops the build, so a .figcraft file
+saved by FigCraft Plus is written by FigCraft's own, unchanged code.
 """
 
 import json
@@ -20,6 +24,9 @@ from pathlib import Path
 
 here = Path(__file__).resolve().parent.parent
 
+
+# FigCraft's document model and file format: FigCraft Plus never changes them.
+PROTECTED = ("crates/doc/", "crates/format/")
 
 KEEP_GOING = False
 FAILED: list[str] = []
@@ -49,6 +56,13 @@ def main() -> None:
     target = Path(args[0]).resolve()
     if not (target / "Cargo.toml").is_file() or not (target / "crates").is_dir():
         fail(f"{target} is not a FigCraft checkout")
+
+    touched = [str(p.relative_to(here / "overlay")) for p in (here / "overlay").rglob("*") if p.is_file()]
+    touched += [h.get("file", "") for f in sorted((here / "hooks").glob("*.json")) for h in json.loads(f.read_text(encoding="utf-8"))]
+    bad = sorted({t for t in touched if t.replace("\\", "/").startswith(PROTECTED)})
+    if bad:
+        fail("FigCraft's file format must stay unchanged, but these would change it: " + ", ".join(bad))
+    print("==> File format untouched (crates/doc, crates/format)")
 
     print("==> Copying overlay files")
     for src in sorted((here / "overlay").rglob("*")):

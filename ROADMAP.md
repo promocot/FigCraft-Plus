@@ -41,12 +41,19 @@ continue down this list. There are no dates: a step starts when the previous one
 Not planned yet — a 👍 on a [feature request](../../issues?q=is%3Aissue+label%3Aenhancement) helps
 decide.
 
+- **Design System Inspector** — one panel that finds what breaks a design system, each with a
+  click to jump to it: broken references, circular formulas, unused variables, variables without a
+  scope, invalid values, duplicate tokens
 - OKLCH tonal scale generator: 50 … 950 from one colour, as variables that follow it
+- OKLCH gamut views in the picker: lightness, chroma and hue slices of the gamut, to see how far a
+  colour can go
 - Design tokens (DTCG) import and export
 - A key to hide the selection outline while editing
 - Remappable keyboard shortcuts
 
 ## ✅ Done
+
+Full details in the [changelog](CHANGELOG.md).
 
 | Release | Highlights |
 |---|---|

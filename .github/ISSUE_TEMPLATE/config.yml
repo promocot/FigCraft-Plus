@@ -1,7 +1,7 @@
 blank_issues_enabled: true
 contact_links:
   - name: Roadmap
-    url: https://github.com/promocot/Figcraft-addon/blob/main/ROADMAP.md
+    url: https://github.com/promocot/FigCraft-Plus/blob/main/ROADMAP.md
     about: What's being worked on and what comes next.
   - name: A bug in FigCraft itself
     url: https://github.com/storytold/figcraft/issues
