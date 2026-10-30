@@ -293,8 +293,8 @@ mod tests {
         let p: Prefs = serde_json::from_str(r#"{"rem": true, "colorModel": "OKLCH"}"#).unwrap();
         assert_eq!((p.rem, p.root, p.color_model.as_str()), (true, 16.0, "OKLCH"), "missing keys take defaults");
         assert_eq!((p.text_unit().as_str(), p.layout_unit.as_str()), ("rem", "px"), "an earlier rem switch is the text unit");
+        assert_eq!(MODELS.iter().position(|m| m.eq_ignore_ascii_case(&p.color_model)), Some(5));
         let p: Prefs = serde_json::from_str(r#"{"textUnit": "pt", "layoutUnit": "mm"}"#).unwrap();
         assert_eq!((p.text_unit().as_str(), p.layout_unit.as_str()), ("pt", "mm"));
-        assert_eq!(MODELS.iter().position(|m| m.eq_ignore_ascii_case(&p.color_model)), Some(5));
     }
 }
