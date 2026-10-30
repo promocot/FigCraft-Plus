@@ -22,6 +22,14 @@ ships a feature of its own, it is removed here.
 > **[See the full roadmap →](ROADMAP.md)** · **[Ask for a feature →](../../issues/new?template=feature_request.yml)**
 > — the most 👍-ed requests move up.
 
+> ### ☕ Support FigCraft Plus
+>
+> FigCraft Plus is made in our spare time and is free. If it saves you time, you can
+> **[sponsor us on GitHub](https://github.com/sponsors/promocot)** or
+> **[buy us a coffee](https://ko-fi.com/KOFI_NAME)** — it gives us more time to build features
+> FigCraft doesn't have yet, and some that even popular design apps still lack.
+> A ⭐ on this repository helps too.
+
 This repository holds only the additions. A GitHub Actions workflow takes every new FigCraft
 release, applies them, runs the tests and publishes a ready-to-run Windows build under
 **[Releases](../../releases)** — usually within a day of the FigCraft release.
@@ -56,6 +64,7 @@ release, applies them, runs the tests and publishes a ready-to-run Windows build
   - [Build locally](#build-locally)
   - [When FigCraft adds a feature of its own](#when-figcraft-adds-a-feature-of-its-own)
   - [Add a feature](#add-a-feature)
+- [Support FigCraft Plus](#support-figcraft-plus)
 - [License](#license)
 
 ## Why FigCraft Plus
@@ -601,6 +610,15 @@ move it to *Now in FigCraft itself* above and bump `CUSTOM_VERSION`.
 1. Put its code in new files under `overlay/` (same paths as in FigCraft).
 2. Connect them with a new `hooks/<next number>-….json` (see `0001` for the format).
 3. Bump `CUSTOM_VERSION`. Pushing starts a build.
+
+## Support FigCraft Plus
+
+Everything here is free and stays free. If FigCraft Plus helps your work:
+
+- **[Sponsor on GitHub](https://github.com/sponsors/promocot)** — monthly or one-time; GitHub takes no fee.
+- **[Buy us a coffee on Ko-fi](https://ko-fi.com/KOFI_NAME)** — a one-time thank-you, by card or PayPal.
+- **Star ⭐ the repository** and tell others — it helps people find it.
+- **[Ask for a feature](../../issues/new?template=feature_request.yml)** or 👍 the ones you need: support decides what we build first.
 
 ## License
 
