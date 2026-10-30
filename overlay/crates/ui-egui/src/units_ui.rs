@@ -215,10 +215,10 @@ fn pending_id() -> Id {
     Id::unique("figcraftplus_unit_pending")
 }
 
-/// A length field's unit at its right end (in px only while the pointer is over the field): a
-/// click lists the units and switches the document's. `bindable`: the field's variable button
-/// sits at its right end, so the unit goes before it.
-pub(crate) fn chip(ui: &mut Ui, id: Id, kind: Kind, bindable: bool) {
+/// A length field's unit, right after the value it shows (`shown`, which starts `lead_w` into the
+/// field), shown in px only while the pointer is over the field: a click lists the units and
+/// switches the document's.
+pub(crate) fn chip(ui: &mut Ui, id: Id, kind: Kind, lead_w: f32, shown: &str) {
     let rect = RECT.with(Cell::get);
     if !rect.is_positive() || ui.data(|d| d.get_temp::<String>(id.with("editing"))).is_some() {
         return;
@@ -228,17 +228,21 @@ pub(crate) fn chip(ui: &mut Ui, id: Id, kind: Kind, bindable: bool) {
         Kind::Layout => (layout(), &LAYOUT_UNITS),
         Kind::Text => (text(), &TEXT_UNITS),
     };
-    let galley = ui.painter().layout_no_wrap(unit.to_string(), regular(10.5), t.text_secondary);
-    let right = rect.max.x - if bindable { 22.0 } else { 4.0 };
-    let r = Rect::from_min_max(pos2(right - galley.size().x - 8.0, rect.min.y + 3.0), pos2(right, rect.max.y - 3.0));
+    let value_w = ui.painter().layout_no_wrap(shown.to_string(), regular(11.0), t.text).size().x;
+    let unit_w = ui.painter().layout_no_wrap(unit.to_string(), regular(11.0), t.text_secondary).size().x;
+    let x = rect.min.x + lead_w + value_w + 1.0;
+    let r = Rect::from_min_max(pos2(x - 1.0, rect.min.y + 4.0), pos2((x + unit_w + 3.0).min(rect.max.x - 2.0), rect.max.y - 4.0));
+    if r.width() < unit_w {
+        return;
+    }
     let resp = ui.interact(r, id.with("unit_chip"), Sense::click());
     let over = ui.rect_contains_pointer(rect);
     if unit != "px" || over || resp.hovered() {
         if resp.hovered() {
-            ui.painter().rect_filled(r, CornerRadius::same(4), t.hover);
+            ui.painter().rect_filled(r, CornerRadius::same(3), t.hover);
         }
         let col = if resp.hovered() { t.text } else { t.text_secondary };
-        ui.painter().text(r.center(), Align2::CENTER_CENTER, unit, regular(10.5), col);
+        ui.painter().text(pos2(x, rect.center().y), Align2::LEFT_CENTER, unit, regular(11.0), col);
     }
     let resp = resp.on_hover_text(tr("Units of this document"));
     crate::right::menu_popup(&resp).show(|ui| {

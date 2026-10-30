@@ -316,10 +316,12 @@ the files and keeps the last computed values.
   Lay out a print page in **mm**, a web page in **rem**.
 - **Text unit** — font size, line height, letter spacing, paragraph spacing and indent, list
   spacing: **pt** for print, **rem** for the web.
-- **The unit is part of every field:** each length field names its unit at its end (in px, only
-  while the pointer is over it). Click it to switch the **document's** unit — layout or text —
-  from the field itself; *Units settings…* opens the rest. One unit per document, never one per
-  property: the file stays plain px.
+- **The unit is part of every field:** each length field names its unit right after its value
+  (in px, only while the pointer is over it). Click it to switch the **document's** unit — layout
+  or text — from the field itself; *Units settings…* opens the rest. One unit per document, never
+  one per property: the file stays plain px.
+
+  <img src="docs/images/38-unit-menu.png" width="230" alt="The W field's unit, mm, clicked: px, rem, mm (checked), cm, in, pt and Units settings…">
 - **Any field takes any unit** typed with the number, whatever it shows: `210mm`, `5.5cm`, `1in`,
   `12pt`, `1.5rem`, `24px`, and arithmetic across them (`10mm + 2`, `2rem + 4`).
 - A px is a point (1/72 in), as FigCraft's own print export reads it: a frame of `210mm` × `297mm`
