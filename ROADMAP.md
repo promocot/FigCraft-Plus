@@ -11,7 +11,7 @@ continue down this list. There are no dates: a step starts when the previous one
 
 ---
 
-## 🔜 Next — FigCraft Plus 4: design system ↔ code
+## 🔜 Next — FigCraft Plus 5: design system ↔ code
 
 *Starts after FigCraft 0.13, once the add-ons are checked on it.*
 
@@ -22,7 +22,7 @@ continue down this list. There are no dates: a step starts when the previous one
 | ⬜ | **Remember missing-font replacements** — "always use Inter for Helvetica" | Open files from others without choosing the same replacements again |
 | ⬜ | **Edit several text styles at once** — select styles in Local styles, change font, size or line height for all | Restyle a whole type scale in one go |
 
-## 🧭 Then — FigCraft Plus 5: layout
+## 🧭 Then — FigCraft Plus 6: layout
 
 | | Feature | What it gives you |
 |---|---|---|
@@ -50,6 +50,7 @@ decide.
 
 | Release | Highlights |
 |---|---|
+| **Plus 4** | Typography settings (the gear): px / rem and root size per file ([FigCraft #1325](https://github.com/storytold/figcraft/issues/1325)) · Preferences ▸ FigCraft Plus: default typography unit and root size, the model the colour picker opens in |
 | **Plus 3** | Print units (mm, cm, in, pt) in every field · CMYK and *Copy as* in the colour picker · WCAG / APCA contrast check |
 | **Plus 2** | Derived colours and calculated variables ([requested in FigCraft #1280](https://github.com/storytold/figcraft/issues/1280)) · rem units with a root size per file ([requested in FigCraft #1325](https://github.com/storytold/figcraft/issues/1325)) |
 | **Plus 1** | OKLCH the oklch.com way · colour channels from number variables · a picker that stays with what you edit · text, style and variable improvements · portable fonts folder |

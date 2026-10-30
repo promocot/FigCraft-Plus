@@ -6,17 +6,17 @@ ships a feature of its own, it is removed here.
 
 | | |
 |---|---|
-| **FigCraft Plus** | **3** |
+| **FigCraft Plus** | **4** |
 | **Built on** | FigCraft **v0.12.1** (the latest official release) |
 | **Files** | `.figcraft` files stay fully compatible with the official app, both ways |
 
 > ### 🗺 Roadmap — what's next
 >
-> **Next, after FigCraft 0.13 — Plus 4, design system ↔ code:** export variables as CSS
+> **Next, after FigCraft 0.13 — Plus 5, design system ↔ code:** export variables as CSS
 > (`oklch()`, `rem`, relative colours) · import CSS custom properties as variables · remember
 > missing-font replacements · edit several text styles at once.
 >
-> **Then — Plus 5, layout:** sizes in % of the parent · auto layout direction from a variable ·
+> **Then — Plus 6, layout:** sizes in % of the parent · auto layout direction from a variable ·
 > align to a key object.
 >
 > **[See the full roadmap →](ROADMAP.md)** · **[Ask for a feature →](../../issues/new?template=feature_request.yml)**
@@ -40,6 +40,7 @@ release, applies them, runs the tests and publishes a ready-to-run Windows build
   - [Print units: mm, cm, in and pt in every field](#print-units-mm-cm-in-and-pt-in-every-field)
   - [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker)
   - [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca)
+  - [FigCraft Plus preferences](#figcraft-plus-preferences)
   - [A better picker](#a-better-picker)
   - [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing)
   - [Colours driven by number variables](#colours-driven-by-number-variables)
@@ -71,10 +72,11 @@ as soon as FigCraft ships its own version: the goal is a better FigCraft, not a 
 |---|---|---|---|
 | [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way) | FigCraft 0.12 has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB. | The whole picker works in OKLCH (an OKLCH plane with the exact gamut edge, an OKLCH hue strip), values match oklch.com and CSS, and Display P3 files are read in P3. | ▲ better |
 | [Derived colours and calculated variables](#derived-colours-and-calculated-variables) | A variable can be an *alias* of another — an exact copy, nothing more. | A colour can be *made from* another (transparency, lighter / darker, its complement, a mix of two), and a number from other numbers, all kept in step in every mode. | ★ only in Plus |
-| [rem units](#rem-units) | Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16. | `rem` in every field, a root size per file, an optional rem display in Typography, and Dev Mode uses the file's root size. | ★ only in Plus |
+| [rem units](#rem-units) | Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16. | A px / rem switch and a root size per file (the gear in Typography), defaults in Preferences, `rem` in every field. | ★ only in Plus |
 | [Print units: mm, cm, in and pt in every field](#print-units-mm-cm-in-and-pt-in-every-field) | Number fields read px; mm, cm and in exist only in the PDF export's print settings. | Every number field takes `mm`, `cm`, `in` and `pt` — and mixes them (`10mm + 2`). | ★ only in Plus |
 | [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker) | The picker offers Hex, RGB, HSL, HSB, LCH, OKLCH and CSS; CMYK exists only as a PDF export option. | **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click. | ★ only in Plus |
 | [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca) | No contrast check in the interface. | Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what the colour sits on. | ★ only in Plus |
+| [FigCraft Plus preferences](#figcraft-plus-preferences) | The colour picker always opens in Hex; there is no typography unit to choose. | Preferences ▸ FigCraft Plus: the typography unit and root size for new files, and the model the colour picker opens in. | ★ only in Plus |
 | [A better picker](#a-better-picker) | Fields without captions, one fixed width. | A caption over every field, a width that fits the model, and a draggable edge. | ▲ better |
 | [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing) | The picker opens at a fixed place on the right and closes when the selection changes. | It opens beside the swatch you clicked, stays on top, and moves to the same slot of the newly selected layer, so you keep editing without reopening it. | ▲ better |
 | [Colours driven by number variables](#colours-driven-by-number-variables) | A colour can be bound to a colour variable as a whole. | Each channel (L, C, H, R, G, B, H, S, alpha…) can follow its own number variable: one `brand/hue` restyles every colour built on it. | ★ only in Plus |
@@ -199,7 +201,6 @@ the files and keeps the last computed values.
 
 *Requested in [storytold/figcraft#1325](https://github.com/storytold/figcraft/issues/1325).*
 
-<img src="docs/images/30-typography-settings.png" width="620" alt="The gear in the Typography header opens Typography settings: Unit px or rem, and Root size; the font size shows in rem">
 
 **Where to set it**
 
@@ -224,7 +225,6 @@ the files and keeps the last computed values.
 >
 > **FigCraft Plus:** Every number field takes `mm`, `cm`, `in` and `pt` — and mixes them (`10mm + 2`).
 
-<img src="docs/images/31-print-units.png" width="420" alt="210mm typed into a frame's width field">
 
 - **Just type the unit** in the field — `210mm`, `5.5cm`, `1in`, `12pt` — and press Enter; it is
   converted to px. Nothing to switch on.
@@ -241,7 +241,6 @@ the files and keeps the last computed values.
 >
 > **FigCraft Plus:** **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click.
 
-<img src="docs/images/32-cmyk-contrast.png" width="330" alt="The colour picker in CMYK, with Copy as and the contrast line under the fields">
 
 - **CMYK** in the model menu: C, M, Y and K in percent. They are converted exactly the way
   FigCraft's CMYK PDF export converts (`K = 1 − max(R, G, B)`), so what you see is what the PDF
@@ -272,7 +271,6 @@ the files and keeps the last computed values.
 >
 > **FigCraft Plus:** **Preferences ▸ FigCraft Plus**: the typography unit and root size for new files, and the model the colour picker opens in.
 
-<img src="docs/images/33-preferences.png" width="460" alt="Preferences with the FigCraft Plus section: Typography unit, Default root size, Colour picker opens in">
 
 | Setting | What it does |
 |---|---|

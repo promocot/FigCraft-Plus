@@ -141,8 +141,12 @@ pub(crate) fn typography_settings(app: &mut FigApp, ui: &mut Ui, clicked: bool) 
             None => ctx.input(|i| i.pointer.interact_pos()).map(|p| p + vec2(-280.0, 12.0)),
         };
         ctx.data_mut(|d| match at {
-            Some(p) => d.insert_temp(popover_id(), p),
-            None => d.remove_temp::<egui::Pos2>(popover_id()),
+            Some(p) => {
+                d.insert_temp(popover_id(), p);
+            }
+            None => {
+                d.remove_temp::<egui::Pos2>(popover_id());
+            }
         });
         return;
     }
