@@ -113,12 +113,14 @@ what you edit are offered.
 
 > ### 🗺 Roadmap — what's next
 >
-> **Next, after FigCraft 0.13 — design system ↔ code:** export variables as CSS
-> (`oklch()`, `rem`, relative colours) · import CSS custom properties as variables · remember
-> missing-font replacements · edit several text styles at once.
+> **Now (on FigCraft 0.12):** rulers and Dev Mode in the document's unit (CSS code in px or rem) ·
+> number variables shown with their unit · `em` for letter spacing and line height.
 >
-> **Then — layout:** sizes in %, vw and vh of the parent frame · auto layout direction from a variable ·
-> align to a key object.
+> **After FigCraft 0.13:** richer CSS export (`oklch()`, `rem`, relative colours, `calc()`) and CSS
+> import · edit and bind many text styles at once · **Design System Inspector**.
+>
+> **After FigCraft 0.14:** sizes in %, vw and vh · auto layout from variables · line height and
+> gradients as tokens.
 >
 > **[See the full roadmap →](ROADMAP.md)** · **[Ask for a feature →](../../issues/new?template=feature_request.yml)**
 > — the most 👍-ed requests move up.
@@ -769,7 +771,7 @@ anchor text — usually one line — and the next build goes through.
 
 ### Run a build by hand
 
-**Actions → Build FigCraft + custom → Run workflow**. Optionally give a FigCraft tag (e.g.
+**Actions → Build FigCraft Plus → Run workflow**. Optionally give a FigCraft tag (e.g.
 `v0.6.0`) or tick **force** to rebuild a version that is already released.
 
 ### Build locally

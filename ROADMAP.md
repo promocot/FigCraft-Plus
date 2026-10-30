@@ -4,52 +4,104 @@ What we are working on, what comes next, and how to get a feature onto the list.
 
 FigCraft Plus follows the official FigCraft releases. Each time a new FigCraft version comes out,
 we first make sure every add-on still works on it, remove what FigCraft now does itself, and then
-continue down this list. There are no dates: a step starts when the previous one is out.
+continue down this list. The work is planned in **stages**, each tied to a FigCraft version: a
+stage starts once the add-ons are checked on that version. There are no dates — FigCraft's own
+release pace sets them — and the plan is a forecast: requests and what FigCraft ships can move
+things.
+
+**Our three specialities:** 🎨 **Advanced color** · 🧩 **Design systems** · 🔁 **Design to code**.
+Everything below serves one of them.
 
 **Want something?** [Ask for a feature](../../issues/new?template=feature_request.yml) — and give a
 👍 to the requests you'd like too. The most wanted ones move up.
 
+| Stage | When | Theme |
+|---|---|---|
+| **1** | now, on FigCraft 0.12 | Measurement, part 2 |
+| **2** | after FigCraft 0.13 | Design system ↔ code |
+| **3** | after FigCraft 0.13 | Design System Inspector |
+| **4** | after FigCraft 0.14 | Responsive layout |
+| **5** | after FigCraft 0.14 | Web typography and colour tokens |
+| — | later | Print and export |
+
 ---
 
-## 🔜 Next: design system ↔ code
+## ▶ Stage 1 — now, on FigCraft 0.12: measurement, part 2
 
-*Starts after FigCraft 0.13, once the add-ons are checked on it.*
+*In progress. Finishes the units work of Plus 7 and 8.*
 
 | | Feature | What it gives you |
 |---|---|---|
-| ⬜ | **Export variables as CSS** — `oklch()` colours, `rem` sizes, derived colours as relative colours (`oklch(from var(--primary) l c h / 50%)`), calculated numbers as `calc()` | Hand developers exactly what the design uses, with no rounding to hex or px |
+| ⬜ | **Rulers in the document's unit** | Measure a print page in mm on the canvas, not only in the fields |
+| ⬜ | **Dev Mode in two units:** what it *shows* follows the document's unit; the **code** it generates has its own choice (px or rem) | 84.67 mm on screen, `width: 320px` (or `20rem`) in the CSS — never a CSS file in millimetres by accident |
+| ⬜ | **Number variables with a unit:** a variable used for sizes, spacing or radius shows in the layout unit, one used for font size in the text unit; opacity, weight and plain numbers stay bare. The stored value never changes | `space/m = 16` no longer reads 16 in the Variables editor and 5.64 mm in the field |
+| ⬜ | **em for letter spacing and line height** — relative to the font size, as in CSS | Type settings that scale with the size, written the way the web writes them |
+
+## 🔜 Stage 2 — after FigCraft 0.13: design system ↔ code
+
+*FigCraft already exports variables as JSON, CSS (in px), Tailwind and Dart, and imports JSON. Plus
+adds what it leaves out.*
+
+| | Feature | What it gives you |
+|---|---|---|
+| ⬜ | **Richer CSS export** — colours as `oklch()`, sizes in `rem` where the document uses rem, derived colours as relative colours (`oklch(from var(--primary) l c h / 50%)`), calculated numbers as `calc()` | Hand developers exactly what the design means, not a flattened copy |
 | ⬜ | **Import CSS custom properties as variables** — `--space-m: 1rem`, `oklch()`, `var()` (as an alias), `calc()` (as a calculated variable), `:root` and theme blocks as modes | Bring a site's design system into FigCraft in one step |
-| ⬜ | **Remember missing-font replacements** — "always use Inter for Helvetica" | Open files from others without choosing the same replacements again |
 | ⬜ | **Edit several text styles at once** — select styles in Local styles, change font, size or line height for all | Restyle a whole type scale in one go |
+| ⬜ | **Bind variables to many styles at once** — pick text styles, map their size, line height, weight… to variables by name, preview, apply as one undo step | Hundreds of clicks to move a type scale onto variables become one |
+| ⬜ | **Remember missing-font replacements** — "always use Inter for Helvetica" | Open files from others without choosing the same replacements again |
 
-## 🧭 Then: layout
+## 🔍 Stage 3 — after FigCraft 0.13: Design System Inspector
 
 | | Feature | What it gives you |
 |---|---|---|
-| ⬜ | **Sizes in %, vw and vh** — width 50%, height 100vh: relative to the parent frame, kept in step when it changes; `%`, `vw`, `vh` as units in every field | Responsive layouts without recalculating by hand; files stay plain px for the official app |
-| ⬜ | **Auto layout direction from a variable** — a column in Mobile, a row in Desktop | One responsive component instead of two |
+| ⬜ | **Design System Inspector** — one panel that checks the whole document: colours and sizes not on a variable (with the variable that matches, one click to bind), broken references, circular formulas, unused variables, variables without a scope, duplicate tokens, invalid values. Every finding jumps to its layer or variable; fixes are one undo step | Keep a design system healthy without hunting by hand |
+
+## 📐 Stage 4 — after FigCraft 0.14: responsive layout
+
+*The deepest changes: sizes that follow the parent frame, computed by the layout engine. They come
+last because layout is the code most likely to change between FigCraft releases, so they need the
+most porting.*
+
+| | Feature | What it gives you |
+|---|---|---|
+| ⬜ | **Sizes in %, vw and vh** — width 50%, height 100vh: relative to the parent frame (which one is always shown), kept in step when it changes; `%`, `vw`, `vh` in every size field | Responsive layouts without recalculating by hand; files stay plain px for the official app |
+| ⬜ | **Auto layout from variables** — direction (row / column), Hug / Fill / Fixed and alignment taken from variables, so modes switch them | A card that is a row on Desktop and a column on Mobile — one component, not two |
 | ⬜ | **Align to a key object** — select several layers, click one: the others align to it and it stays put | Precise layout without moving the reference |
+
+## 🔤 Stage 5 — after FigCraft 0.14: web typography and colour tokens
+
+| | Feature | What it gives you |
+|---|---|---|
+| ⬜ | **Line height in % from a variable** — `leading/normal = 140%` follows each text's size | Tight / Normal / Relaxed as tokens, as CSS writes them |
+| ⬜ | **Gradient tokens** — a gradient style built from colour variables, with stops interpolated in OKLCH; change the palette and every gradient follows | Gradients become part of the design system (no new file format: a style with bound stops) |
 
 ## 📦 Later
 
 | | Feature | What it gives you |
 |---|---|---|
 | ⬜ | **Export presets** — a set of sizes, formats and a file-name pattern (`{frame}_{w}x{h}`), exported in one click | Product cards and banners in every size at once |
+| ⬜ | **PDF/X for print** — an output intent with an ICC profile on top of FigCraft's print PDF (bleed, marks and CMYK are already FigCraft's) | Files a print shop accepts as they are |
+| ⬜ | **Design tokens (DTCG) import and export** | Exchange tokens with other tools in the standard format |
 
 ## 💡 Ideas we are considering
 
 Not planned yet — a 👍 on a [feature request](../../issues?q=is%3Aissue+label%3Aenhancement) helps
 decide.
 
-- **Design System Inspector** — one panel that finds what breaks a design system, each with a
-  click to jump to it: broken references, circular formulas, unused variables, variables without a
-  scope, invalid values, duplicate tokens
+- Responsive component states (Desktop / Tablet / Mobile) switched by variable modes
 - OKLCH tonal scale generator: 50 … 950 from one colour, as variables that follow it
 - OKLCH gamut views in the picker: lightness, chroma and hue slices of the gamut, to see how far a
   colour can go
-- Design tokens (DTCG) import and export
 - A key to hide the selection outline while editing
 - Remappable keyboard shortcuts
+
+## Already in FigCraft — use it there
+
+Often asked for, and FigCraft has it already, so Plus doesn't add it: **Paste to replace**
+(Edit menu) · **stroke weight per side** · **variable font axes** (Typography) · **bleed, crop
+marks and CMYK in the print PDF** · **line height in %** (as a value) · **layout grid styles** ·
+**gradient stops bound to colour variables** · **outline view** · **variables export** (JSON, CSS,
+Tailwind, Dart) **and import** (JSON).
 
 ## ✅ Done
 
