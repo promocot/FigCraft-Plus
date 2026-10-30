@@ -114,7 +114,8 @@ what you edit are offered.
 > ### 🗺 Roadmap — what's next
 >
 > **Now (on FigCraft 0.12):** rulers and Dev Mode in the document's unit (CSS code in px or rem) ·
-> number variables shown with their unit · `em` for letter spacing and line height.
+> number variables shown with their unit · `em` for letter spacing and line height · contrast
+> checked both ways (the colour on its background and the background on it).
 >
 > **After FigCraft 0.13:** richer CSS export (`oklch()`, `rem`, relative colours, `calc()`) and CSS
 > import · edit and bind many text styles at once · **Design System Inspector**.

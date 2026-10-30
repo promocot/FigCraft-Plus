@@ -219,6 +219,9 @@ inside). Lessons learned:
   - number variables shown with their unit by role (FigCraft's `engine/assets/token_roles.rs`
     already infers roles);
   - `em` for letter spacing and line height.
+  - contrast both ways in the picker (`color_tools_ui::below_fields`): the colour on its backdrop
+    and the backdrop on the colour, as two `Aa` previews with WCAG and APCA each. WCAG is symmetric,
+    APCA is not (polarity) — mark the better pairing; keep it compact under the fields.
 - **After 0.13:**
   - richer CSS variable export (FigCraft already exports JSON, CSS in px, Tailwind and Dart, and
     imports JSON; Plus adds `oklch()`, `rem`, relative colours, `calc()`, and CSS import);

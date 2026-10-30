@@ -17,7 +17,7 @@ Everything below serves one of them.
 
 | Stage | When | Theme |
 |---|---|---|
-| **1** | now, on FigCraft 0.12 | Measurement, part 2 |
+| **1** | now, on FigCraft 0.12 | Measurement, part 2 · contrast both ways |
 | **2** | after FigCraft 0.13 | Design system ↔ code |
 | **3** | after FigCraft 0.13 | Design System Inspector |
 | **4** | after FigCraft 0.14 | Responsive layout |
@@ -26,7 +26,7 @@ Everything below serves one of them.
 
 ---
 
-## ▶ Stage 1 — now, on FigCraft 0.12: measurement, part 2
+## ▶ Stage 1 — now, on FigCraft 0.12: measurement, part 2 and contrast both ways
 
 *In progress. Finishes the units work of Plus 7 and 8.*
 
@@ -36,6 +36,7 @@ Everything below serves one of them.
 | ⬜ | **Dev Mode in two units:** what it *shows* follows the document's unit; the **code** it generates has its own choice (px or rem) | 84.67 mm on screen, `width: 320px` (or `20rem`) in the CSS — never a CSS file in millimetres by accident |
 | ⬜ | **Number variables with a unit:** a variable used for sizes, spacing or radius shows in the layout unit, one used for font size in the text unit; opacity, weight and plain numbers stay bare. The stored value never changes | `space/m = 16` no longer reads 16 in the Variables editor and 5.64 mm in the field |
 | ⬜ | **em for letter spacing and line height** — relative to the font size, as in CSS | Type settings that scale with the size, written the way the web writes them |
+| ⬜ | **Contrast both ways** — for the selected layer, two previews side by side: its colour on the background, and the background's colour on it (`Aa` samples), each with the WCAG ratio and level and the APCA Lc. WCAG gives the same ratio both ways; APCA doesn't (light text on dark reads differently from dark on light), so the better pairing is marked | See at a glance whether swapping foreground and background reads better, instead of guessing from one number |
 
 ## 🔜 Stage 2 — after FigCraft 0.13: design system ↔ code
 
