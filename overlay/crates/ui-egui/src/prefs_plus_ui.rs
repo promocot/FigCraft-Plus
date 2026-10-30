@@ -246,7 +246,8 @@ fn draw(app: &mut FigApp, ctx: &egui::Context) {
                 ui.add_space(4.0);
                 caption(ui, tr("Layout"));
                 let active = crate::units_ui::LAYOUT_UNITS.iter().position(|u| *u == layout).unwrap_or(0);
-                if let (Some(i), Some(page)) = (widgets::segmented_text(ui, &crate::units_ui::LAYOUT_UNITS, active), page) {
+                let picked = ui.push_id("figcraftplus_layout_unit", |ui| widgets::segmented_text(ui, &crate::units_ui::LAYOUT_UNITS, active)).inner;
+                if let (Some(i), Some(page)) = (picked, page) {
                     let u = crate::units_ui::LAYOUT_UNITS[i];
                     app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::units_ui::LAYOUT_KEY: u}}}));
                 }
@@ -254,7 +255,8 @@ fn draw(app: &mut FigApp, ctx: &egui::Context) {
                 ui.add_space(6.0);
                 caption(ui, tr("Text"));
                 let active = crate::units_ui::TEXT_UNITS.iter().position(|u| *u == text).unwrap_or(0);
-                if let (Some(i), Some(page)) = (widgets::segmented_text(ui, &crate::units_ui::TEXT_UNITS, active), page) {
+                let picked = ui.push_id("figcraftplus_text_unit", |ui| widgets::segmented_text(ui, &crate::units_ui::TEXT_UNITS, active)).inner;
+                if let (Some(i), Some(page)) = (picked, page) {
                     let u = crate::units_ui::TEXT_UNITS[i];
                     app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::UNIT_KEY: u}}}));
                 }

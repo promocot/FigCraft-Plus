@@ -301,7 +301,7 @@ the files and keeps the last computed values.
 
 *rem requested in [storytold/figcraft#1325](https://github.com/storytold/figcraft/issues/1325).*
 
-<img src="docs/images/36-units.png" width="720" alt="The Units popover: Layout mm, Text pt, root size 16px; the Design panel shows X, Y, W and H in mm and the canvas label 210mm × 297mm">
+<img src="docs/images/36-units.png" width="720" alt="The Units popover: Layout mm, Text pt, root size 16px; the Design panel shows X, Y, W, H and the corner radius in mm, and the canvas label 170mm × 80mm">
 
 **Where to set it**
 
