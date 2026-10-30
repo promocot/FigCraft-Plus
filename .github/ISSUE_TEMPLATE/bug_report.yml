@@ -1,0 +1,34 @@
+name: Bug in an add-on
+description: Something FigCraft Plus adds doesn't work as it should.
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Does the same happen in the official FigCraft too? Then it belongs in [FigCraft's tracker](https://github.com/storytold/figcraft/issues) — it will reach this build with their fix.
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps
+      placeholder: "1. …\n2. …"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: FigCraft Plus version
+      placeholder: "FigCraft Plus 3 · FigCraft v0.12.1"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+      placeholder: "Windows 11 24H2"

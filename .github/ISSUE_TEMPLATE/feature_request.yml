@@ -1,0 +1,34 @@
+name: Feature request
+description: Ask for something FigCraft Plus could add. Requests with the most 👍 move up the roadmap.
+title: "[Feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! Check the [roadmap](https://github.com/promocot/Figcraft-addon/blob/main/ROADMAP.md) first — if it's there already, a 👍 on its request helps more than a new one.
+  - type: textarea
+    id: what
+    attributes:
+      label: What would you like to do?
+      description: The task, in your own words — not necessarily the solution.
+      placeholder: "I'd like to set a frame's width as a percentage of its parent, so…"
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why does it help?
+      description: What you do now instead, and how often.
+    validations:
+      required: true
+  - type: textarea
+    id: how
+    attributes:
+      label: How could it work? (optional)
+      description: A sketch, a screenshot or a short description of the behaviour you imagine.
+  - type: input
+    id: version
+    attributes:
+      label: FigCraft Plus version
+      placeholder: "FigCraft Plus 3 · FigCraft v0.12.1"

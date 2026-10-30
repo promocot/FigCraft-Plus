@@ -10,12 +10,25 @@ ships a feature of its own, it is removed here.
 | **Built on** | FigCraft **v0.12.1** (the latest official release) |
 | **Files** | `.figcraft` files stay fully compatible with the official app, both ways |
 
+> ### 🗺 Roadmap — what's next
+>
+> **Next, after FigCraft 0.13 — Plus 4, design system ↔ code:** export variables as CSS
+> (`oklch()`, `rem`, relative colours) · import CSS custom properties as variables · remember
+> missing-font replacements · edit several text styles at once.
+>
+> **Then — Plus 5, layout:** sizes in % of the parent · auto layout direction from a variable ·
+> align to a key object.
+>
+> **[See the full roadmap →](ROADMAP.md)** · **[Ask for a feature →](../../issues/new?template=feature_request.yml)**
+> — the most 👍-ed requests move up.
+
 This repository holds only the additions. A GitHub Actions workflow takes every new FigCraft
 release, applies them, runs the tests and publishes a ready-to-run Windows build under
 **[Releases](../../releases)** — usually within a day of the FigCraft release.
 
 ## Contents
 
+- [Roadmap](ROADMAP.md)
 - [Why FigCraft Plus](#why-figcraft-plus)
 - [Download](#download)
 - [Requested in FigCraft's issues, made here](#requested-in-figcrafts-issues-made-here)
