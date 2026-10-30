@@ -26,7 +26,7 @@ continue down this list. There are no dates: a step starts when the previous one
 
 | | Feature | What it gives you |
 |---|---|---|
-| ⬜ | **Sizes in % of the parent** — width 50%, height 100%, kept in step when the parent changes | Responsive layouts without recalculating by hand; files stay plain px for the official app |
+| ⬜ | **Sizes in %, vw and vh** — width 50%, height 100vh: relative to the parent frame, kept in step when it changes; `%`, `vw`, `vh` as units in every field | Responsive layouts without recalculating by hand; files stay plain px for the official app |
 | ⬜ | **Auto layout direction from a variable** — a column in Mobile, a row in Desktop | One responsive component instead of two |
 | ⬜ | **Align to a key object** — select several layers, click one: the others align to it and it stays put | Precise layout without moving the reference |
 
@@ -57,6 +57,7 @@ Full details in the [changelog](CHANGELOG.md).
 
 | Release | Highlights |
 |---|---|
+| **Plus 7** | **Units everywhere:** a layout unit (px, rem, mm, cm, in, pt) and a text unit (px, rem, pt) per file, in every field and on the canvas · one popover style across the Design panel |
 | **Plus 6** | Contrast check against what is really under the layer (any shape behind it) · a **Libraries** tab in the colour picker with the colour variables whose scope fits |
 | **Plus 5** | The Typography settings popover opens reliably, beside the panel, inside the window · screenshots of every new setting in the README |
 | **Plus 4** | Typography settings (the gear): px / rem and root size per file ([FigCraft #1325](https://github.com/storytold/figcraft/issues/1325)) · Preferences ▸ FigCraft Plus: default typography unit and root size, the model the colour picker opens in |

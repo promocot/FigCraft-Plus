@@ -1,15 +1,17 @@
-//! FigCraft Plus: its preferences and the Typography settings popover (storytold/figcraft#1325's
-//! options A and C).
+//! FigCraft Plus: its preferences and the Units popover (storytold/figcraft#1325's options A and
+//! C, for every unit).
 //!
-//! - **Preferences ▸ FigCraft Plus**: the typography unit (px or rem) new and unset documents use,
-//!   the default root size, and the model the colour picker opens in (OKLCH, CMYK, …). Kept in
-//!   `figcraft-plus.json` next to the app, so a portable copy carries them.
-//! - **Typography ▸ gear**: this document's unit and root size (kept in the file).
+//! - **Preferences ▸ FigCraft Plus**: the layout unit (px, rem, mm, cm, in, pt) and text unit
+//!   (px, rem, pt) new and unset documents use, the default root size, and the model the colour
+//!   picker opens in (OKLCH, CMYK, …). Kept in `figcraft-plus.json` next to the app, so a
+//!   portable copy carries them.
+//! - **Units** — the gear in Typography and in Layout, or the Units row of the Page section: this
+//!   document's units and root size (kept in the file).
 
 use std::path::PathBuf;
 use std::sync::{Mutex, MutexGuard, OnceLock, PoisonError};
 
-use egui::{Align2, Id, Ui};
+use egui::{Id, Ui};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -22,8 +24,13 @@ use crate::widgets::{self, FieldEdit, Lead};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct Prefs {
-    /// Typography shows sizes in rem (else px) where a document doesn't say.
+    /// Earlier versions: text shows in rem (else px). Read when `text` is empty.
     pub rem: bool,
+    /// The text unit (px, rem or pt) where a document doesn't say.
+    #[serde(rename = "textUnit")]
+    pub text: String,
+    /// The layout unit (px, rem, mm, cm, in or pt) where a document doesn't say.
+    pub layout_unit: String,
     /// The root size (px) where a document doesn't set one.
     pub root: f64,
     /// The colour picker's model when it opens ("Hex", "OKLCH", "CMYK", …).
@@ -32,7 +39,20 @@ pub(crate) struct Prefs {
 
 impl Default for Prefs {
     fn default() -> Self {
-        Prefs { rem: false, root: 16.0, color_model: "Hex".into() }
+        Prefs { rem: false, text: String::new(), layout_unit: "px".into(), root: 16.0, color_model: "Hex".into() }
+    }
+}
+
+impl Prefs {
+    /// The text unit (an earlier version's rem switch when none is set).
+    pub(crate) fn text_unit(&self) -> String {
+        if !self.text.trim().is_empty() {
+            self.text.clone()
+        } else if self.rem {
+            "rem".into()
+        } else {
+            "px".into()
+        }
     }
 }
 
@@ -71,13 +91,15 @@ pub(crate) fn default_model(models: &[&str]) -> usize {
 
 // ---- Preferences ▸ FigCraft Plus --------------------------------------------------------------------
 
-/// Two-way switch (px | rem); true when the second is picked now.
-fn unit_switch(ui: &mut Ui, rem: bool) -> Option<bool> {
+/// A dropdown of `units` showing `now`; the unit picked.
+fn unit_menu(ui: &mut Ui, now: &str, units: &[&'static str]) -> Option<&'static str> {
     let mut out = None;
-    ui.horizontal(|ui| {
-        for (on, label) in [(false, "px"), (true, "rem")] {
-            if ui.selectable_label(rem == on, label).clicked() && rem != on {
-                out = Some(on);
+    let resp = widgets::dropdown(ui, now, 80.0, None);
+    crate::right::menu_popup(&resp).show(|ui| {
+        for u in units {
+            if crate::right::menu_check(ui, now.eq_ignore_ascii_case(u), u, "") {
+                out = Some(*u);
+                ui.close();
             }
         }
     });
@@ -95,9 +117,15 @@ pub(crate) fn preferences(ui: &mut Ui) {
     ui.label(egui::RichText::new("FigCraft Plus").font(semibold(11.5)).color(t.text));
     ui.add_space(4.0);
     ui.horizontal(|ui| {
-        ui.label(tr("Typography unit"));
-        if let Some(rem) = unit_switch(ui, p.rem) {
-            set(|p| p.rem = rem);
+        ui.label(tr("Layout unit"));
+        if let Some(u) = unit_menu(ui, &p.layout_unit, &crate::units_ui::LAYOUT_UNITS) {
+            set(|p| p.layout_unit = u.to_string());
+        }
+    });
+    ui.horizontal(|ui| {
+        ui.label(tr("Text unit"));
+        if let Some(u) = unit_menu(ui, &p.text_unit(), &crate::units_ui::TEXT_UNITS) {
+            set(|p| p.text = u.to_string());
         }
     });
     ui.horizontal(|ui| {
@@ -108,7 +136,7 @@ pub(crate) fn preferences(ui: &mut Ui) {
             set(|p| p.root = v.clamp(1.0, 1000.0));
         }
     });
-    widgets::label(ui, tr("Applies to new documents. Each file stores its own root size."), t.text_secondary);
+    widgets::label(ui, tr("Applies to new documents. Each file stores its own units and root size."), t.text_secondary);
     ui.add_space(4.0);
     ui.horizontal(|ui| {
         ui.label(tr("Colour picker opens in"));
@@ -124,83 +152,134 @@ pub(crate) fn preferences(ui: &mut Ui) {
     });
 }
 
-// ---- Typography ▸ settings ----------------------------------------------------------------------------
+// ---- Units ---------------------------------------------------------------------------------------
 
 fn popover_id() -> Id {
-    Id::unique("figcraftplus_typography_settings")
+    Id::unique("figcraftplus_units")
 }
 
-/// The Typography header's settings button was clicked (`clicked`): open or close the popover;
-/// draw it while open.
-pub(crate) fn typography_settings(app: &mut FigApp, ui: &mut Ui, clicked: bool) {
-    let ctx = ui.ctx().clone();
-    let mut at: Option<egui::Pos2> = ctx.data(|d| d.get_temp(popover_id()));
-    if clicked {
-        // A frame may lay the panel out twice: toggle once per frame.
-        let frame = ctx.cumulative_frame_nr();
-        if ctx.data(|d| d.get_temp::<u64>(popover_id().with("toggled"))) == Some(frame) {
-            return;
-        }
-        ctx.data_mut(|d| d.insert_temp(popover_id().with("toggled"), frame));
-        at = match at {
-            Some(_) => None,
-            // Left of the properties panel, level with the Typography header.
-            None => Some(egui::pos2(ui.max_rect().left() - 292.0, (ui.cursor().top() - 40.0).max(48.0))),
-        };
-        ctx.data_mut(|d| match at {
-            Some(p) => {
-                d.insert_temp(popover_id(), p);
-            }
-            None => {
-                d.remove_temp::<egui::Pos2>(popover_id());
-            }
-        });
+/// Width of the Units popover.
+const W: f32 = 280.0;
+
+/// Open or close the Units popover, at `at` (its top left corner) or beside the properties panel
+/// level with the control that opened it (once per frame: a panel may be laid out twice).
+fn toggle(ui: &Ui, at: Option<egui::Pos2>) {
+    let ctx = ui.ctx();
+    let frame = ctx.cumulative_frame_nr();
+    if ctx.data(|d| d.get_temp::<u64>(popover_id().with("toggled"))) == Some(frame) {
         return;
     }
-    let Some(at) = at else { return };
+    ctx.data_mut(|d| d.insert_temp(popover_id().with("toggled"), frame));
+    let open: Option<egui::Pos2> = ctx.data(|d| d.get_temp(popover_id()));
+    ctx.data_mut(|d| match open {
+        Some(_) => {
+            d.remove_temp::<egui::Pos2>(popover_id());
+        }
+        None => {
+            let p = at.unwrap_or_else(|| egui::pos2(ui.max_rect().left() - W - 12.0, (ui.cursor().top() - 40.0).max(48.0)));
+            d.insert_temp(popover_id(), p);
+        }
+    });
+}
+
+/// A section header's Units button was clicked (`clicked`): open or close the popover; draw it
+/// while open. Called by the Typography and Layout sections.
+pub(crate) fn units_popover(app: &mut FigApp, ui: &mut Ui, clicked: bool) {
+    if clicked {
+        toggle(ui, None);
+        return;
+    }
+    draw(app, ui.ctx());
+}
+
+/// The Page section's Units row: this document's units as a button that opens the popover.
+pub(crate) fn units_row(app: &mut FigApp, ui: &mut Ui) {
+    let Ok(doc) = app.session.doc() else { return };
+    let summary = format!(
+        "{} · {} · 1rem = {}px",
+        crate::units_ui::doc_layout(doc),
+        crate::units_ui::doc_text(doc),
+        widgets::fmt_num(crate::rem_ui::doc_root(doc))
+    );
+    ui.horizontal(|ui| {
+        ui.add_space(16.0);
+        let resp = widgets::dropdown(ui, &summary, 200.0, None);
+        if resp.clicked() {
+            toggle(ui, Some(egui::pos2(resp.rect.left() - W - 28.0, resp.rect.top() - 60.0)));
+        }
+    });
+    draw(app, ui.ctx());
+}
+
+/// The popover, while open.
+fn draw(app: &mut FigApp, ctx: &egui::Context) {
+    let Some(at) = ctx.data(|d| d.get_temp::<egui::Pos2>(popover_id())) else { return };
+    // Draw it once a frame however many sections ask.
+    let frame = ctx.cumulative_frame_nr();
+    if ctx.data(|d| d.get_temp::<u64>(popover_id().with("drawn"))) == Some(frame) {
+        return;
+    }
+    ctx.data_mut(|d| d.insert_temp(popover_id().with("drawn"), frame));
     let Ok(doc) = app.session.doc() else { return };
     let page = doc.pages.first().copied();
     let root = crate::rem_ui::doc_root(doc);
-    let rem = crate::rem_ui::doc_rem(doc);
-    let t = Tokens::get(&ctx);
+    let layout = crate::units_ui::doc_layout(doc);
+    let text = crate::units_ui::doc_text(doc);
+    let t = Tokens::get(ctx);
     let mut close = false;
-    // Inside the window: it is about 240 points tall.
     let screen = ctx.content_rect();
-    let at = egui::pos2(at.x.max(screen.left() + 8.0), at.y.min(screen.bottom() - 250.0).max(screen.top() + 8.0));
-    let area = egui::Area::new(popover_id().with("area")).order(egui::Order::Foreground).fixed_pos(at).show(&ctx, |ui| {
-        egui::Frame::popup(&ctx.global_style()).fill(t.panel).corner_radius(egui::CornerRadius::same(10)).inner_margin(egui::Margin::same(14)).show(ui, |ui| {
-            ui.set_width(268.0);
-            ui.label(egui::RichText::new(tr("Typography settings")).font(semibold(12.0)).color(t.text));
-            ui.label(egui::RichText::new(tr("Applies to this document")).font(regular(10.5)).color(t.text_secondary));
-            ui.add_space(8.0);
-            ui.label(egui::RichText::new(tr("Unit")).font(regular(11.0)).color(t.text));
-            if let (Some(on), Some(page)) = (unit_switch(ui, rem), page) {
-                app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::UNIT_KEY: if on { "rem" } else { "px" }}}}));
-            }
-            ui.add_space(6.0);
-            ui.label(egui::RichText::new(tr("Root size (1rem =)")).font(regular(11.0)).color(t.text));
-            if let (Some(FieldEdit::Set(v) | FieldEdit::Scrub(v, true)), Some(page)) =
-                (widgets::number_field(ui, Id::unique("figcraftplus_rem_root"), Lead::None, Some(root), "px", 240.0, 1.0), page)
-            {
-                let v = v.clamp(1.0, 1000.0);
-                app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::PAGE_KEY: widgets::fmt_num(v)}}}));
-            }
-            ui.add_space(6.0);
-            let note = format!("1rem = {}px, {}", widgets::fmt_num(root), tr("stored in the file"));
-            ui.label(egui::RichText::new(note).font(regular(10.5)).color(t.text_secondary));
-            ui.label(egui::RichText::new(tr("Default for new documents: Preferences")).font(regular(10.5)).color(t.text_secondary));
+    let at = egui::pos2(at.x.max(screen.left() + 8.0), at.y.min(screen.bottom() - 330.0).max(screen.top() + 8.0));
+    let area = egui::Area::new(popover_id().with("area")).order(egui::Order::Foreground).fixed_pos(at).show(ctx, |ui| {
+        crate::popover_ui::frame(&t).show(ui, |ui| {
+            ui.set_width(W);
+            ui.spacing_mut().item_spacing = egui::vec2(0.0, 0.0);
+            close |= crate::popover_ui::header(ui, popover_id(), tr("Units"), W);
+            crate::popover_ui::body(ui, |ui| {
+                ui.spacing_mut().item_spacing = egui::vec2(0.0, 6.0);
+                let caption = |ui: &mut Ui, s: &str| {
+                    ui.label(egui::RichText::new(s).font(regular(11.0)).color(t.text));
+                };
+                let hint = |ui: &mut Ui, s: &str| {
+                    ui.label(egui::RichText::new(s).font(regular(10.5)).color(t.text_secondary));
+                };
+                hint(ui, tr("Applies to this document"));
+                ui.add_space(4.0);
+                caption(ui, tr("Layout"));
+                let active = crate::units_ui::LAYOUT_UNITS.iter().position(|u| *u == layout).unwrap_or(0);
+                if let (Some(i), Some(page)) = (widgets::segmented_text(ui, &crate::units_ui::LAYOUT_UNITS, active), page) {
+                    let u = crate::units_ui::LAYOUT_UNITS[i];
+                    app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::units_ui::LAYOUT_KEY: u}}}));
+                }
+                hint(ui, tr("Position, size, radius, spacing, strokes, effects"));
+                ui.add_space(6.0);
+                caption(ui, tr("Text"));
+                let active = crate::units_ui::TEXT_UNITS.iter().position(|u| *u == text).unwrap_or(0);
+                if let (Some(i), Some(page)) = (widgets::segmented_text(ui, &crate::units_ui::TEXT_UNITS, active), page) {
+                    let u = crate::units_ui::TEXT_UNITS[i];
+                    app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::UNIT_KEY: u}}}));
+                }
+                hint(ui, tr("Font size, line height, letter and paragraph spacing"));
+                ui.add_space(6.0);
+                caption(ui, tr("Root size (1rem =)"));
+                if let (Some(FieldEdit::Set(v) | FieldEdit::Scrub(v, true)), Some(page)) =
+                    (widgets::number_field(ui, Id::unique("figcraftplus_rem_root"), Lead::None, Some(root), "px", W - 32.0, 1.0), page)
+                {
+                    let v = v.clamp(1.0, 1000.0);
+                    app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::PAGE_KEY: widgets::fmt_num(v)}}}));
+                }
+                hint(ui, &format!("1rem = {}px, {}", widgets::fmt_num(root), tr("stored in the file")));
+                hint(ui, tr("Default for new documents: Preferences"));
+            });
         });
     });
-    // A click outside closes it; Esc too.
-    let outside = ctx.input(|i| i.pointer.primary_clicked())
+    // A click outside closes it (not the click on a Units button that just toggled it); Esc too.
+    let toggled_now = ctx.data(|d| d.get_temp::<u64>(popover_id().with("toggled"))) == Some(frame);
+    let outside = !toggled_now
+        && ctx.input(|i| i.pointer.primary_clicked())
         && ctx.input(|i| i.pointer.interact_pos()).is_some_and(|p| !area.response.rect.contains(p));
-    if outside || ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
-        close = true;
-    }
-    if close {
+    if close || outside || ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
         ctx.data_mut(|d| d.remove_temp::<egui::Pos2>(popover_id()));
     }
-    let _ = Align2::LEFT_TOP;
 }
 
 #[cfg(test)]
@@ -211,6 +290,9 @@ mod tests {
     fn preferences_read_and_pick_the_picker_model() {
         let p: Prefs = serde_json::from_str(r#"{"rem": true, "colorModel": "OKLCH"}"#).unwrap();
         assert_eq!((p.rem, p.root, p.color_model.as_str()), (true, 16.0, "OKLCH"), "missing keys take defaults");
+        assert_eq!((p.text_unit().as_str(), p.layout_unit.as_str()), ("rem", "px"), "an earlier rem switch is the text unit");
+        let p: Prefs = serde_json::from_str(r#"{"textUnit": "pt", "layoutUnit": "mm"}"#).unwrap();
+        assert_eq!((p.text_unit().as_str(), p.layout_unit.as_str()), ("pt", "mm"));
         assert_eq!(MODELS.iter().position(|m| m.eq_ignore_ascii_case(&p.color_model)), Some(5));
     }
 }

@@ -50,6 +50,7 @@ pub(crate) fn header(ui: &mut Ui, hr: Rect, target: &PickerTarget) -> bool {
     let t = Tokens::get(ui.ctx());
     if target_of(target).is_none() {
         ui.painter().text(pos2(hr.min.x + 16.0, hr.center().y), Align2::LEFT_CENTER, tr("Custom"), semibold(11.0), t.text);
+        crate::popover_ui::divider(ui, hr);
         return false;
     }
     let mut libraries = ui.data(|d| d.get_temp::<bool>(tab_id())).unwrap_or(false);
@@ -70,6 +71,7 @@ pub(crate) fn header(ui: &mut Ui, hr: Rect, target: &PickerTarget) -> bool {
         }
         x = r.max.x + 2.0;
     }
+    crate::popover_ui::divider(ui, hr);
     libraries
 }
 

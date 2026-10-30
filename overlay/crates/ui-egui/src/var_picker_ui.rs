@@ -201,29 +201,14 @@ pub(crate) fn card(ctx: &egui::Context, id: Id, at: Pos2, title: &str, items: &[
     }
     let query_before = st.query.clone();
     let area = egui::Area::new(id.with("area")).order(egui::Order::Foreground).fixed_pos(pos2(x, y)).show(ctx, |ui| {
-        let frame = egui::Frame::NONE.fill(t.panel).stroke(Stroke::new(1.0, t.border)).corner_radius(CornerRadius::same(12)).shadow(egui::Shadow {
-            offset: [0, 6],
-            blur: 20,
-            spread: 0,
-            color: t.shadow,
-        });
+        let frame = crate::popover_ui::frame(&t);
         frame.show(ui, |ui| {
             ui.set_width(W);
             ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
             // Title and close.
-            let (hr, _) = ui.allocate_exact_size(vec2(W, 40.0), Sense::hover());
-            ui.painter().text(pos2(hr.min.x + 14.0, hr.center().y), Align2::LEFT_CENTER, title, semibold(12.0), t.text);
-            let xr = Rect::from_center_size(pos2(hr.max.x - 20.0, hr.center().y), vec2(24.0, 24.0));
-            let xresp = ui.interact(xr, id.with("close"), Sense::click());
-            xresp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::Button, true, tr("Close")));
-            if xresp.hovered() {
-                ui.painter().rect_filled(xr, CornerRadius::same(5), t.hover);
-            }
-            icons::paint(ui.painter(), xr.shrink(6.0), Icon::Close, t.icon);
-            if xresp.clicked() {
+            if crate::popover_ui::header(ui, id, title, W) {
                 out = Outcome::Close;
             }
-            ui.painter().hline(hr.x_range(), hr.max.y - 0.5, Stroke::new(1.0, t.border));
             if let Some(i) = body(ui, &t, id, &mut st, items, current, empty, W, 0.0) {
                 out = Outcome::Pick(i);
             }

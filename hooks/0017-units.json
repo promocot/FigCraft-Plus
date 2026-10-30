@@ -1,0 +1,44 @@
+[
+  {
+    "note": "ui: units and the shared popover style",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod windows;$",
+    "insert": "mod units_ui;\nmod popover_ui;"
+  },
+  {
+    "note": "number fields: lengths in the file's layout or text unit (values stay px)",
+    "file": "crates/ui-egui/src/widgets.rs",
+    "find": ") -> (Option<Edit>, Option<BindEvent>) {\n    cancel_retargeted_field_save(ui, id);\n",
+    "replace": ") -> (Option<Edit>, Option<BindEvent>) {\n    // FigCraft Plus: a length shows in the file's unit (Units); what is typed or scrubbed comes back in px.\n    if let Some((k, unit)) = crate::units_ui::field(id, suffix) {\n        let (e, b) = number_field_px(ui, id, lead, value.map(|v| v / k), unit, width, crate::units_ui::step(unit, step), binding, empty);\n        return (e.map(|e| crate::units_ui::back(e, k)), b);\n    }\n    number_field_px(ui, id, lead, value, suffix, width, step, binding, empty)\n}\n\n#[allow(clippy::too_many_arguments)]\nfn number_field_px(\n    ui: &mut Ui,\n    id: Id,\n    lead: Lead,\n    value: Option<f64>,\n    suffix: &str,\n    width: f32,\n    step: f64,\n    binding: Option<Option<&str>>,\n    empty: Empty<'_>,\n) -> (Option<Edit>, Option<BindEvent>) {\n    cancel_retargeted_field_save(ui, id);\n"
+  },
+  {
+    "note": "variable-bindable number fields: say which property they show (for its unit)",
+    "file": "crates/ui-egui/src/panels/variable_ui.rs",
+    "find": "    let (edit, ev) = widgets::number_field_bindable(ui, id, lead, value, suffix, width, 1.0, Some(name.as_deref()), empty);\n",
+    "replace": "    crate::units_ui::field_key(field);\n    let (edit, ev) = widgets::number_field_bindable(ui, id, lead, value, suffix, width, 1.0, Some(name.as_deref()), empty);\n"
+  },
+  {
+    "note": "canvas: the selection's size in the layout unit",
+    "file": "crates/ui-egui/src/canvas/overlays.rs",
+    "find": "let mut label = if is_line { fmt(w) } else { format!(\"{} × {}\", fmt(w), fmt(h)) };",
+    "replace": "let mut label = crate::units_ui::size_label(w, h, is_line, fmt);"
+  },
+  {
+    "note": "canvas: measurements in the layout unit",
+    "file": "crates/ui-egui/src/canvas/measure_overlay.rs",
+    "find": "            labels.push((a, b, l.clone()));",
+    "replace": "            labels.push((a, b, crate::units_ui::measure(l.clone())));"
+  },
+  {
+    "note": "Layout header: a Units button",
+    "file": "crates/ui-egui/src/panels/layout_panel.rs",
+    "find": "    if widgets::section_header(ui, title, &btns, false).is_some() {\n        app.run(if has_al { \"layout.remove\" } else { \"layout.add\" }, json!({\"ids\": ids}));\n    }\n",
+    "replace": "    // FigCraft Plus: Units (layout and text units, root size) after FigCraft's own button.\n    let units_btn = btns.len();\n    let mut btns = btns;\n    btns.push((Icon::Adjust, tr(\"Units\")));\n    let hdr = widgets::section_header(ui, title, &btns, false);\n    if hdr.is_some_and(|i| i < units_btn) {\n        app.run(if has_al { \"layout.remove\" } else { \"layout.add\" }, json!({\"ids\": ids}));\n    }\n    crate::prefs_plus_ui::units_popover(app, ui, hdr == Some(units_btn));\n"
+  },
+  {
+    "note": "Page section: the document's units",
+    "file": "crates/ui-egui/src/panels/right.rs",
+    "find": "    widgets::separator(ui);\n    // Local variables & styles.\n",
+    "replace": "    widgets::separator(ui);\n    // FigCraft Plus: this document's units.\n    widgets::section_header(ui, tr(\"Units\"), &[], false);\n    crate::prefs_plus_ui::units_row(app, ui);\n    widgets::separator(ui);\n    // Local variables & styles.\n"
+  }
+]

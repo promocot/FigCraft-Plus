@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <b>FigCraft Plus 6</b> · built on FigCraft <b>v0.12.1</b>, the latest official release ·
+  <b>FigCraft Plus 7</b> · built on FigCraft <b>v0.12.1</b>, the latest official release ·
   <code>.figcraft</code> files stay compatible with the official app, both ways
 </p>
 
@@ -42,7 +42,7 @@ under the layer.
 ### 🧩 Stronger design systems
 
 **Calculated variables** and colors **derived** from others (`oklch(from …)`, `color-mix()`,
-`calc()`), channels driven by number variables, **rem** and print units, style dialogs and
+`calc()`), channels driven by number variables, **units** (px, rem, mm, cm, in, pt) in every field, style dialogs and
 groups, scoped variable pickers, variable ordering.
 
 </td>
@@ -117,7 +117,7 @@ what you edit are offered.
 > (`oklch()`, `rem`, relative colours) · import CSS custom properties as variables · remember
 > missing-font replacements · edit several text styles at once.
 >
-> **Then — layout:** sizes in % of the parent · auto layout direction from a variable ·
+> **Then — layout:** sizes in %, vw and vh of the parent frame · auto layout direction from a variable ·
 > align to a key object.
 >
 > **[See the full roadmap →](ROADMAP.md)** · **[Ask for a feature →](../../issues/new?template=feature_request.yml)**
@@ -133,8 +133,7 @@ what you edit are offered.
 - [Add-ons](#add-ons)
   - [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way)
   - [Derived colours and calculated variables](#derived-colours-and-calculated-variables)
-  - [rem units](#rem-units)
-  - [Print units: mm, cm, in and pt in every field](#print-units-mm-cm-in-and-pt-in-every-field)
+  - [Units everywhere: px, rem, mm, cm, in, pt](#units-everywhere-px-rem-mm-cm-in-pt)
   - [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker)
   - [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca)
   - [Colour variables in the picker: the Libraries tab](#colour-variables-in-the-picker-the-libraries-tab)
@@ -168,12 +167,11 @@ version; Plus goes further. Features FigCraft has since added itself are
 |---|---|---|---|
 | [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way) | FigCraft 0.12 has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB. | The whole picker works in OKLCH (an OKLCH plane with the exact gamut edge, an OKLCH hue strip), values match oklch.com and CSS, and Display P3 files are read in P3. | 🔵 Enhanced |
 | [Derived colours and calculated variables](#derived-colours-and-calculated-variables) | A variable can be an *alias* of another — an exact copy, nothing more. | A colour can be *made from* another (transparency, lighter / darker, its complement, a mix of two), and a number from other numbers, all kept in step in every mode. | 🟣 Exclusive |
-| [rem units](#rem-units) | Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16. | A px / rem switch and a root size per file (the gear in Typography), defaults in Preferences, `rem` in every field. | 🟣 Exclusive |
-| [Print units: mm, cm, in and pt in every field](#print-units-mm-cm-in-and-pt-in-every-field) | Number fields read px; mm, cm and in exist only in the PDF export's print settings. | Every number field takes `mm`, `cm`, `in` and `pt` — and mixes them (`10mm + 2`). | 🟣 Exclusive |
+| [Units everywhere: px, rem, mm, cm, in, pt](#units-everywhere-px-rem-mm-cm-in-pt) | Everything is shown and typed in px; mm, cm and in only in the PDF export's settings; Dev Mode rem uses a fixed 16. | Each file picks a **layout** unit (px, rem, mm, cm, in, pt) and a **text** unit (px, rem, pt) with its own root size; every field shows it, and any field takes any unit (`210mm`, `1.5rem`, `10mm + 2`). | 🟣 Exclusive |
 | [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker) | The picker offers Hex, RGB, HSL, HSB, LCH, OKLCH and CSS; CMYK exists only as a PDF export option. | **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click. | 🟣 Exclusive |
 | [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca) | No contrast check in the interface. | Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what is really under the layer — any shape behind it, not only its frame. | 🟣 Exclusive |
 | [Colour variables in the picker: the Libraries tab](#colour-variables-in-the-picker-the-libraries-tab) | Colour variables are applied from the style menu next to Fill or Stroke; the picker itself only edits a colour. | A **Libraries** tab beside **Custom** in the colour picker: this file's and the enabled libraries' colour variables, with search — only those whose scope fits what you edit (a stroke offers stroke colours). | 🔵 Enhanced |
-| [FigCraft Plus preferences](#figcraft-plus-preferences) | The colour picker always opens in Hex; there is no typography unit to choose. | Preferences ▸ FigCraft Plus: the typography unit and root size for new files, and the model the colour picker opens in. | 🟣 Exclusive |
+| [FigCraft Plus preferences](#figcraft-plus-preferences) | The colour picker always opens in Hex; there are no units to choose. | Preferences ▸ FigCraft Plus: the layout and text units and root size for new files, and the model the colour picker opens in. | 🟣 Exclusive |
 | [A better picker](#a-better-picker) | Fields without captions, one fixed width. | A caption over every field, a width that fits the model, and a draggable edge. | 🔵 Enhanced |
 | [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing) | The picker opens at a fixed place on the right and closes when the selection changes. | It opens beside the swatch you clicked, stays on top, and moves to the same slot of the newly selected layer, so you keep editing without reopening it. | 🔵 Enhanced |
 | [Colours driven by number variables](#colours-driven-by-number-variables) | A colour can be bound to a colour variable as a whole. | Each channel (L, C, H, R, G, B, H, S, alpha…) can follow its own number variable: one `brand/hue` restyles every colour built on it. | 🟣 Exclusive |
@@ -212,7 +210,7 @@ Features FigCraft users asked for in the official tracker that FigCraft itself h
 | Request | In FigCraft Plus |
 |---|---|
 | [storytold/figcraft#1280 — Variable Referencing](https://github.com/storytold/figcraft/issues/1280) | 2 — [derived colours and calculated variables](#derived-colours-and-calculated-variables) |
-| [storytold/figcraft#1325 — REM as a typography input unit, with a configurable root size](https://github.com/storytold/figcraft/issues/1325) | 2 — [rem units](#rem-units) |
+| [storytold/figcraft#1325 — REM as a typography input unit, with a configurable root size](https://github.com/storytold/figcraft/issues/1325) | 2 — [rem units](#units-everywhere-px-rem-mm-cm-in-pt); 7 — every unit, everywhere |
 
 ## Now in FigCraft itself (removed from Plus)
 
@@ -293,50 +291,42 @@ hand detaches it; variables that read each other in a loop are left as they are.
 The formulas live in the descriptions (and layer data) as text, so the official FigCraft opens
 the files and keeps the last computed values.
 
-### rem units
+### Units everywhere: px, rem, mm, cm, in, pt
 
 **🟣 Exclusive** — only in FigCraft Plus (for now)
 
-> **FigCraft:** Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16.
+> **FigCraft:** Everything is shown and typed in px; mm, cm and in exist only in the PDF export's print settings, and Dev Mode converts px → rem with a fixed 16.
 >
-> **FigCraft Plus:** A **px / rem** switch and a root size per file (the gear in Typography), defaults in Preferences, `rem` in every field, and Dev Mode uses the file's root size.
+> **FigCraft Plus:** Each file chooses the unit its fields show — one for **layout** (px, rem, mm, cm, in, pt) and one for **text** (px, rem, pt) — with its own root size. Every number field shows and takes it, and any field takes any unit typed by hand.
 
-*Requested in [storytold/figcraft#1325](https://github.com/storytold/figcraft/issues/1325).*
+*rem requested in [storytold/figcraft#1325](https://github.com/storytold/figcraft/issues/1325).*
 
+<img src="docs/images/36-units.png" width="720" alt="The Units popover: Layout mm, Text pt, root size 16px; the Design panel shows X, Y, W and H in mm and the canvas label 210mm × 297mm">
 
 **Where to set it**
 
-<img src="docs/images/30-typography-settings.png" width="580" alt="Typography ▸ gear: this file's unit (px or rem) and root size; the font size shows 1.38rem">
-
 | What | Where |
 |---|---|
-| This file's unit (px or rem) and root size | Select a text layer ▸ **Typography** ▸ the **gear** at the right of the header |
-| The unit and root size for new files | **Preferences ▸ FigCraft Plus** ▸ *Typography unit*, *Default root size* |
+| This file's units and root size | **Units** — the gear in the **Layout** or **Typography** header, or the **Units** row of the Page section (nothing selected) |
+| The units and root size for new files | **Preferences ▸ FigCraft Plus** ▸ *Layout unit*, *Text unit*, *Default root size* |
 
-- With **rem**, font size, line height, letter spacing and paragraph spacing show in rem
-  (`1.38rem`); a bare number typed there is rem too, and `22px` still means px.
-- **Every number field takes `rem`** whatever the unit: `1.5rem` is 1.5 × the root size, and
-  arithmetic works (`2rem + 4`).
-- Values are stored in px, as FigCraft stores them; the unit and root size are kept in the file as
-  text the official FigCraft ignores, so it opens the file as before.
+- **Layout unit** — position, width and height, min / max, corner radius, gap and padding, stroke
+  weights and dashes, shadow offsets, blur and spread, layout grid sizes, vector points, the
+  spacing between selected layers; also the selection's size on the canvas and the measurements.
+  Lay out a print page in **mm**, a web page in **rem**.
+- **Text unit** — font size, line height, letter spacing, paragraph spacing and indent, list
+  spacing: **pt** for print, **rem** for the web.
+- **Any field takes any unit** typed with the number, whatever it shows: `210mm`, `5.5cm`, `1in`,
+  `12pt`, `1.5rem`, `24px`, and arithmetic across them (`10mm + 2`, `2rem + 4`).
+- A px is a point (1/72 in), as FigCraft's own print export reads it: a frame of `210mm` × `297mm`
+  exports as an exact A4 page, `85mm` × `55mm` as a business card. rem is the file's root size.
+- Values are stored in px, as FigCraft stores them; the units and root size are kept in the file as
+  text the official FigCraft ignores, so it opens the file as before (and shows px).
 - Dev Mode's px → rem code uses the file's root size instead of a fixed 16.
-
-### Print units: mm, cm, in and pt in every field
-
-**🟣 Exclusive** — only in FigCraft Plus (for now)
-
-> **FigCraft:** Number fields read px; mm, cm and in exist only in the PDF export's print settings.
->
-> **FigCraft Plus:** Every number field takes `mm`, `cm`, `in` and `pt` — and mixes them (`10mm + 2`).
+- **Coming later:** `%`, `vw` and `vh` — sizes relative to the parent frame
+  ([roadmap](ROADMAP.md)).
 
 <img src="docs/images/31-print-units.png" width="556" alt="Typing 210mm in W; after Enter the frame is 595.28 × 841.89 — an A4 page">
-
-- **Just type the unit** in the field — `210mm`, `5.5cm`, `1in`, `12pt` — and press Enter; it is
-  converted to px. Nothing to switch on.
-- A px is a point (1/72 in), as FigCraft's own print export reads it: a frame of `210mm` × `297mm`
-  exports as an exact A4 page, `85mm` × `55mm` as a business card.
-- Works in any field that takes a number: size, position, radius, stroke, spacing, guides…
-- Values are stored in px, as always.
 
 ### CMYK and Copy as in the colour picker
 
@@ -401,13 +391,14 @@ the files and keeps the last computed values.
 
 > **FigCraft:** The colour picker always opens in Hex; there is no typography unit to choose.
 >
-> **FigCraft Plus:** **Preferences ▸ FigCraft Plus**: the typography unit and root size for new files, and the model the colour picker opens in.
+> **FigCraft Plus:** **Preferences ▸ FigCraft Plus**: the layout and text units and the root size for new files, and the model the colour picker opens in.
 
-<img src="docs/images/33-preferences.png" width="488" alt="Preferences with the FigCraft Plus section: typography unit, default root size, colour picker opens in">
+<img src="docs/images/37-preferences.png" width="488" alt="Preferences with the FigCraft Plus section: layout unit, text unit, default root size, colour picker opens in">
 
 | Setting | What it does |
 |---|---|
-| **Typography unit** — px or rem | The unit files use until they set their own (Typography ▸ gear) |
+| **Layout unit** — px, rem, mm, cm, in or pt | The unit layout fields show in files that don't set their own (Units) |
+| **Text unit** — px, rem or pt | The unit text fields show in files that don't set their own |
 | **Default root size** | 1rem in files that don't set their own |
 | **Colour picker opens in** — Hex, RGB, HSL, HSB, LCH, OKLCH, CMYK or CSS | The model the picker shows when it opens |
 

@@ -7,6 +7,20 @@ Every FigCraft Plus release, newest first. Each one is built on an official FigC
 **🟣 Exclusive** — FigCraft has nothing like it yet. **🔵 Enhanced** — FigCraft has a basic
 version; Plus goes further.
 
+## Plus 7 · FigCraft v0.12.1 — 2026-10-30
+
+- 🟣 **Units everywhere.** Each file picks the unit its fields show: one for **layout** — px,
+  rem, mm, cm, in or pt — and one for **text** — px, rem or pt — with its own root size. Position,
+  size, min / max, radius, gap and padding, strokes, shadows and blurs, layout grids, vector
+  points, the spacing of selected layers, the selection's size on the canvas and the measurements
+  all show the layout unit; font size, line height, letter and paragraph spacing, indent and list
+  spacing the text unit. Any field still takes any unit typed by hand (`210mm`, `1.5rem`).
+  Set it in **Units**: the gear in the Layout or Typography header, or the Units row of the Page
+  section; defaults in Preferences ▸ FigCraft Plus.
+- 🔵 **One popover style** across the Design panel: the colour picker, the variable list, the
+  style menu (now light in the light theme), the Units settings and the style dialogs share one
+  card — border, radius, shadow, a header with the title and a close button, a divider under it.
+
 ## Plus 6 · FigCraft v0.12.1 — 2026-10-30
 
 - 🔵 **Libraries tab in the colour picker.** Beside *Custom*: this file's and the enabled

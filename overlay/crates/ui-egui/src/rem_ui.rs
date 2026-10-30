@@ -4,17 +4,17 @@
 //! - `mm`, `cm`, `in` and `pt` are what FigCraft's print export means by them: a px is a point
 //!   (1/72 in), so a 210mm × 297mm frame exports as an A4 page.
 //! - Every number field takes `rem`: `1.5rem` is 1.5 × the file's root size (`2rem + 4` works too).
-//! - The unit (px or rem) and the root size belong to the file: Typography ▸ gear (see
+//! - The text unit (px, rem or pt) and the root size belong to the file: Units (see `units_ui`,
 //!   `prefs_plus_ui`). They are kept in the first page's layer data (`figcraftplus.remUnit`,
 //!   `figcraftplus.remRoot`), so the official app opens the file as before; a file without them
 //!   uses the defaults from Preferences ▸ FigCraft Plus.
-//! - In rem, the font size, line height, letter spacing and paragraph spacing show in rem; a bare
-//!   number typed there is then rem too, and `px` still means px.
+//! - In rem (or pt), the font size, line height, letter spacing and paragraph spacing show in
+//!   that unit; a bare number typed there is then in it too, and `px` still means px.
 //!   Values are stored in px, as FigCraft stores them.
 //! - Dev Mode's px → rem code uses the same root size.
 
 use std::cell::Cell;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use figcraft_doc::Document;
 
@@ -23,13 +23,12 @@ use crate::widgets::{self, FieldEdit};
 
 /// The layer data key (on a page) holding the file's root size in px.
 pub(crate) const PAGE_KEY: &str = "figcraftplus.remRoot";
-/// The layer data key (on a page) holding the file's typography unit ("px" or "rem").
+/// The layer data key (on a page) holding the file's text unit ("px", "rem" or "pt").
 pub(crate) const UNIT_KEY: &str = "figcraftplus.remUnit";
 
 const DEFAULT_ROOT: f64 = 16.0;
 
 static ROOT: AtomicU64 = AtomicU64::new(0x4030_0000_0000_0000); // 16.0
-static SHOW: AtomicBool = AtomicBool::new(false);
 
 thread_local! {
     /// The last text a number field parsed named a length unit (`px`, `rem`).
@@ -42,9 +41,24 @@ pub(crate) fn root() -> f64 {
     if r.is_finite() && r > 0.0 { r } else { DEFAULT_ROOT }
 }
 
-/// Whether sizes show in rem.
+/// Whether text sizes show in a unit other than px.
 pub(crate) fn show() -> bool {
-    SHOW.load(Ordering::Relaxed)
+    crate::units_ui::text() != "px"
+}
+
+/// px in one text unit.
+fn k() -> f64 {
+    crate::units_ui::text_k()
+}
+
+/// Whether the last text a number field parsed named its unit (and forget it).
+pub(crate) fn take_explicit() -> bool {
+    EXPLICIT.with(|x| x.replace(false))
+}
+
+#[cfg(test)]
+pub(crate) fn set_root_for_test(r: f64) {
+    ROOT.store(r.to_bits(), Ordering::Relaxed);
 }
 
 /// The root size a document sets (its first page that has one), else the preference.
@@ -56,19 +70,12 @@ pub(crate) fn doc_root(doc: &Document) -> f64 {
         .unwrap_or_else(|| Some(crate::prefs_plus_ui::get().root).filter(|r| r.is_finite() && *r > 0.0).unwrap_or(DEFAULT_ROOT))
 }
 
-/// Whether a document's typography shows rem (its own choice, else the preference).
-pub(crate) fn doc_rem(doc: &Document) -> bool {
-    doc.pages
-        .iter()
-        .find_map(|p| doc.node(*p)?.plugin_data.get(UNIT_KEY).map(|u| u.trim().eq_ignore_ascii_case("rem")))
-        .unwrap_or_else(|| crate::prefs_plus_ui::get().rem)
-}
-
-/// Each frame: the open file's root size and unit.
+/// Each frame: the open file's root size and units.
 pub(crate) fn tick(app: &FigApp, _ctx: &egui::Context) {
-    let (r, rem) = app.session.doc().map(|d| (doc_root(d), doc_rem(d))).unwrap_or((DEFAULT_ROOT, false));
+    let doc = app.session.doc().ok();
+    let r = doc.map(doc_root).unwrap_or(DEFAULT_ROOT);
     ROOT.store(r.to_bits(), Ordering::Relaxed);
-    SHOW.store(rem, Ordering::Relaxed);
+    crate::units_ui::tick(doc);
 }
 
 // ---- reading what was typed -------------------------------------------------------------------
@@ -102,7 +109,7 @@ fn bare(text: &str) -> bool {
 /// A length typed into a text field that shows px or rem: px. `cur` is the value now (px).
 pub(crate) fn length(text: &str, cur: Option<f64>) -> Option<f64> {
     if show() && bare(text) {
-        let r = root();
+        let r = k();
         return widgets::eval(text, cur.map(|c| c / r)).map(|v| v * r);
     }
     widgets::eval(text, cur)
@@ -112,7 +119,8 @@ pub(crate) fn length(text: &str, cur: Option<f64>) -> Option<f64> {
 /// in rem): px. None leaves the text to FigCraft (auto, %, px). `px_now`: the value is in px.
 pub(crate) fn spacing(text: &str, px_now: bool) -> Option<f64> {
     let t = text.trim();
-    if t.to_ascii_lowercase().contains("rem") || (show() && px_now && bare(t)) {
+    let lower = t.to_ascii_lowercase();
+    if lower.contains("rem") || lower.ends_with("pt") || (show() && px_now && bare(t)) {
         return length(t, None).filter(|v| v.is_finite());
     }
     None
@@ -124,7 +132,7 @@ pub(crate) fn label(text: String) -> String {
         return text;
     }
     match text.trim().parse::<f64>() {
-        Ok(px) if px.is_finite() => format!("{}rem", num(px / root())),
+        Ok(px) if px.is_finite() => format!("{}{}", num(px / k()), crate::units_ui::text()),
         _ => text,
     }
 }
@@ -139,22 +147,22 @@ fn num(v: f64) -> String {
 
 /// The value the font size field shows (rem while sizes show in rem).
 pub(crate) fn shown(px: Option<f64>) -> Option<f64> {
-    if show() { px.map(|v| v / root()) } else { px }
+    if show() { px.map(|v| v / k()) } else { px }
 }
 
 /// The font size field's unit.
 pub(crate) fn suffix() -> &'static str {
-    if show() { "rem" } else { "" }
+    if show() { crate::units_ui::text() } else { "" }
 }
 
 /// The font size field's edit in px: a value shown in rem is scaled back, unless the text named
 /// its unit (it is px already).
 pub(crate) fn to_px(e: Option<FieldEdit>) -> Option<FieldEdit> {
-    let explicit = EXPLICIT.with(|x| x.replace(false));
+    let explicit = take_explicit();
     if !show() {
         return e;
     }
-    let r = root();
+    let r = k();
     match e? {
         FieldEdit::Set(v) if explicit => Some(FieldEdit::Set(v)),
         FieldEdit::Set(v) => Some(FieldEdit::Set(v * r)),
@@ -170,7 +178,7 @@ mod tests {
     fn rem_is_the_root_size() {
         // storytold/figcraft#1325
         ROOT.store(16.0f64.to_bits(), Ordering::Relaxed);
-        SHOW.store(false, Ordering::Relaxed);
+        crate::units_ui::set_for_test("px", "px");
         assert_eq!(widgets::eval("1.5rem", None), Some(24.0));
         assert_eq!(widgets::eval("2rem + 4", None), Some(36.0));
         assert_eq!(widgets::eval("1.5 rem", None), Some(24.0));
@@ -182,7 +190,7 @@ mod tests {
         assert_eq!(spacing("150%", true), None, "FigCraft's own");
         assert_eq!(label("24".into()), "24");
         ROOT.store(10.0f64.to_bits(), Ordering::Relaxed);
-        SHOW.store(true, Ordering::Relaxed);
+        crate::units_ui::set_for_test("px", "rem");
         assert_eq!(label("24".into()), "2.4rem");
         assert_eq!(label("Auto".into()), "Auto");
         assert_eq!(spacing("2", true), Some(20.0), "a bare number is rem while sizes show in rem");
@@ -193,7 +201,7 @@ mod tests {
         assert!(matches!(to_px(typed.map(FieldEdit::Set)), Some(FieldEdit::Set(v)) if v == 18.0), "px stays px");
         begin_parse();
         assert!(matches!(to_px(Some(FieldEdit::Set(1.5))), Some(FieldEdit::Set(v)) if v == 15.0));
-        SHOW.store(false, Ordering::Relaxed);
+        crate::units_ui::set_for_test("px", "px");
         ROOT.store(16.0f64.to_bits(), Ordering::Relaxed);
     }
 }

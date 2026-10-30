@@ -244,13 +244,13 @@ pub(crate) fn show(app: &mut FigApp, ctx: &egui::Context) {
     };
     let title = if d.creating { create_title } else { edit_title };
     let area = egui::Area::new(Id::unique("figcraftplus_style_dialog_area")).order(egui::Order::Foreground).fixed_pos(pos2(x, y)).show(ctx, |ui| {
-        egui::Frame::NONE.fill(t.panel).corner_radius(CornerRadius::same(12)).stroke(Stroke::new(1.0, t.border)).show(ui, |ui| {
+        crate::popover_ui::frame(&t).show(ui, |ui| {
             ui.set_width(W);
             ui.spacing_mut().item_spacing = vec2(8.0, 6.0);
             // Header.
-            let (hr, _) = ui.allocate_exact_size(vec2(W, 44.0), Sense::hover());
+            let (hr, _) = ui.allocate_exact_size(vec2(W, crate::popover_ui::HEADER_H), Sense::hover());
             ui.painter().text(pos2(hr.min.x + 16.0, hr.center().y), Align2::LEFT_CENTER, title, semibold(12.0), t.text);
-            let cr = Rect::from_center_size(pos2(hr.max.x - 22.0, hr.center().y), vec2(24.0, 24.0));
+            let cr = Rect::from_center_size(pos2(hr.max.x - 20.0, hr.center().y), vec2(24.0, 24.0));
             let cresp = ui.interact(cr, Id::unique("sd_close"), Sense::click()).tip(tr("Close"));
             if cresp.hovered() {
                 ui.painter().rect_filled(cr, CornerRadius::same(5), t.hover);
@@ -337,7 +337,7 @@ pub(crate) fn show(app: &mut FigApp, ctx: &egui::Context) {
             let py = (dialog_rect.min.y + 180.0 + i as f32 * 32.0).min(screen.max.y - 320.0).max(screen.min.y + 48.0);
             let mut shut = false;
             egui::Area::new(Id::unique("figcraftplus_style_popover")).order(egui::Order::Foreground).fixed_pos(pos2(px, py)).show(ctx, |ui| {
-                egui::Frame::NONE.fill(t.panel).corner_radius(CornerRadius::same(12)).stroke(Stroke::new(1.0, t.border)).show(ui, |ui| {
+                crate::popover_ui::frame(&t).show(ui, |ui| {
                     ui.set_width(POP_W);
                     ui.spacing_mut().item_spacing = vec2(8.0, 6.0);
                     match &st.kind {
