@@ -6,17 +6,17 @@ ships a feature of its own, it is removed here.
 
 | | |
 |---|---|
-| **FigCraft Plus** | **4** |
+| **FigCraft Plus** | **5** |
 | **Built on** | FigCraft **v0.12.1** (the latest official release) |
 | **Files** | `.figcraft` files stay fully compatible with the official app, both ways |
 
 > ### 🗺 Roadmap — what's next
 >
-> **Next, after FigCraft 0.13 — Plus 5, design system ↔ code:** export variables as CSS
+> **Next, after FigCraft 0.13 — Plus 6, design system ↔ code:** export variables as CSS
 > (`oklch()`, `rem`, relative colours) · import CSS custom properties as variables · remember
 > missing-font replacements · edit several text styles at once.
 >
-> **Then — Plus 6, layout:** sizes in % of the parent · auto layout direction from a variable ·
+> **Then — Plus 7, layout:** sizes in % of the parent · auto layout direction from a variable ·
 > align to a key object.
 >
 > **[See the full roadmap →](ROADMAP.md)** · **[Ask for a feature →](../../issues/new?template=feature_request.yml)**
@@ -204,13 +204,15 @@ the files and keeps the last computed values.
 
 **Where to set it**
 
+<img src="docs/images/30-typography-settings.png" width="580" alt="Typography ▸ gear: this file's unit (px or rem) and root size; the font size shows 1.38rem">
+
 | What | Where |
 |---|---|
 | This file's unit (px or rem) and root size | Select a text layer ▸ **Typography** ▸ the **gear** at the right of the header |
 | The unit and root size for new files | **Preferences ▸ FigCraft Plus** ▸ *Typography unit*, *Default root size* |
 
 - With **rem**, font size, line height, letter spacing and paragraph spacing show in rem
-  (`1.375rem`); a bare number typed there is rem too, and `22px` still means px.
+  (`1.38rem`); a bare number typed there is rem too, and `22px` still means px.
 - **Every number field takes `rem`** whatever the unit: `1.5rem` is 1.5 × the root size, and
   arithmetic works (`2rem + 4`).
 - Values are stored in px, as FigCraft stores them; the unit and root size are kept in the file as
@@ -225,6 +227,7 @@ the files and keeps the last computed values.
 >
 > **FigCraft Plus:** Every number field takes `mm`, `cm`, `in` and `pt` — and mixes them (`10mm + 2`).
 
+<img src="docs/images/31-print-units.png" width="556" alt="Typing 210mm in W; after Enter the frame is 595.28 × 841.89 — an A4 page">
 
 - **Just type the unit** in the field — `210mm`, `5.5cm`, `1in`, `12pt` — and press Enter; it is
   converted to px. Nothing to switch on.
@@ -241,6 +244,7 @@ the files and keeps the last computed values.
 >
 > **FigCraft Plus:** **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click.
 
+<img src="docs/images/32-cmyk-contrast.png" width="358" alt="The picker in CMYK: C, M, Y, K fields, Copy as and the contrast line 4.78:1 AA · Lc -36">
 
 - **CMYK** in the model menu: C, M, Y and K in percent. They are converted exactly the way
   FigCraft's CMYK PDF export converts (`K = 1 − max(R, G, B)`), so what you see is what the PDF
@@ -271,6 +275,7 @@ the files and keeps the last computed values.
 >
 > **FigCraft Plus:** **Preferences ▸ FigCraft Plus**: the typography unit and root size for new files, and the model the colour picker opens in.
 
+<img src="docs/images/33-preferences.png" width="488" alt="Preferences with the FigCraft Plus section: typography unit, default root size, colour picker opens in">
 
 | Setting | What it does |
 |---|---|

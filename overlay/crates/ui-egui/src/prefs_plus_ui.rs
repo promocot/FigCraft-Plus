@@ -9,7 +9,7 @@
 use std::path::PathBuf;
 use std::sync::{Mutex, MutexGuard, OnceLock, PoisonError};
 
-use egui::{Align2, Id, Ui, vec2};
+use egui::{Align2, Id, Ui};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 
@@ -136,9 +136,16 @@ pub(crate) fn typography_settings(app: &mut FigApp, ui: &mut Ui, clicked: bool) 
     let ctx = ui.ctx().clone();
     let mut at: Option<egui::Pos2> = ctx.data(|d| d.get_temp(popover_id()));
     if clicked {
+        // A frame may lay the panel out twice: toggle once per frame.
+        let frame = ctx.cumulative_frame_nr();
+        if ctx.data(|d| d.get_temp::<u64>(popover_id().with("toggled"))) == Some(frame) {
+            return;
+        }
+        ctx.data_mut(|d| d.insert_temp(popover_id().with("toggled"), frame));
         at = match at {
             Some(_) => None,
-            None => ctx.input(|i| i.pointer.interact_pos()).map(|p| p + vec2(-280.0, 12.0)),
+            // Left of the properties panel, level with the Typography header.
+            None => Some(egui::pos2(ui.max_rect().left() - 292.0, (ui.cursor().top() - 40.0).max(48.0))),
         };
         ctx.data_mut(|d| match at {
             Some(p) => {
@@ -157,18 +164,21 @@ pub(crate) fn typography_settings(app: &mut FigApp, ui: &mut Ui, clicked: bool) 
     let rem = crate::rem_ui::doc_rem(doc);
     let t = Tokens::get(&ctx);
     let mut close = false;
+    // Inside the window: it is about 240 points tall.
+    let screen = ctx.content_rect();
+    let at = egui::pos2(at.x.max(screen.left() + 8.0), at.y.min(screen.bottom() - 250.0).max(screen.top() + 8.0));
     let area = egui::Area::new(popover_id().with("area")).order(egui::Order::Foreground).fixed_pos(at).show(&ctx, |ui| {
-        egui::Frame::NONE.fill(t.menu).corner_radius(egui::CornerRadius::same(10)).inner_margin(egui::Margin::same(14)).show(ui, |ui| {
+        egui::Frame::popup(&ctx.global_style()).fill(t.panel).corner_radius(egui::CornerRadius::same(10)).inner_margin(egui::Margin::same(14)).show(ui, |ui| {
             ui.set_width(268.0);
-            ui.label(egui::RichText::new(tr("Typography settings")).font(semibold(12.0)).color(t.menu_text));
+            ui.label(egui::RichText::new(tr("Typography settings")).font(semibold(12.0)).color(t.text));
             ui.label(egui::RichText::new(tr("Applies to this document")).font(regular(10.5)).color(t.text_secondary));
             ui.add_space(8.0);
-            ui.label(egui::RichText::new(tr("Unit")).font(regular(11.0)).color(t.menu_text));
+            ui.label(egui::RichText::new(tr("Unit")).font(regular(11.0)).color(t.text));
             if let (Some(on), Some(page)) = (unit_switch(ui, rem), page) {
                 app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::UNIT_KEY: if on { "rem" } else { "px" }}}}));
             }
             ui.add_space(6.0);
-            ui.label(egui::RichText::new(tr("Root size (1rem =)")).font(regular(11.0)).color(t.menu_text));
+            ui.label(egui::RichText::new(tr("Root size (1rem =)")).font(regular(11.0)).color(t.text));
             if let (Some(FieldEdit::Set(v) | FieldEdit::Scrub(v, true)), Some(page)) =
                 (widgets::number_field(ui, Id::unique("figcraftplus_rem_root"), Lead::None, Some(root), "px", 240.0, 1.0), page)
             {
