@@ -70,8 +70,9 @@ pub(crate) fn doc_root(doc: &Document) -> f64 {
         .unwrap_or_else(|| Some(crate::prefs_plus_ui::get().root).filter(|r| r.is_finite() && *r > 0.0).unwrap_or(DEFAULT_ROOT))
 }
 
-/// Each frame: the open file's root size and units.
-pub(crate) fn tick(app: &FigApp, _ctx: &egui::Context) {
+/// Each frame: the open file's root size and units (and a unit picked from a field's chip).
+pub(crate) fn tick(app: &mut FigApp, ctx: &egui::Context) {
+    crate::units_ui::apply_pending(app, ctx);
     let doc = app.session.doc().ok();
     let r = doc.map(doc_root).unwrap_or(DEFAULT_ROOT);
     ROOT.store(r.to_bits(), Ordering::Relaxed);
@@ -138,36 +139,25 @@ pub(crate) fn label(text: String) -> String {
 }
 
 fn num(v: f64) -> String {
-    let s = format!("{v:.4}");
-    let s = s.trim_end_matches('0').trim_end_matches('.');
-    if s == "-0" { "0".into() } else { s.to_string() }
+    crate::units_ui::num(v)
 }
 
 // ---- the font size field --------------------------------------------------------------------------
 
-/// The value the font size field shows (rem while sizes show in rem).
+/// The value the font size field shows: as it is. The field is a text length (`units_ui`): it
+/// shows and takes the text unit like every other length field.
 pub(crate) fn shown(px: Option<f64>) -> Option<f64> {
-    if show() { px.map(|v| v / k()) } else { px }
+    px
 }
 
-/// The font size field's unit.
+/// The font size field's suffix: none (the field's unit chip shows the unit).
 pub(crate) fn suffix() -> &'static str {
-    if show() { crate::units_ui::text() } else { "" }
+    ""
 }
 
-/// The font size field's edit in px: a value shown in rem is scaled back, unless the text named
-/// its unit (it is px already).
+/// The font size field's edit: already px (`units_ui::back`).
 pub(crate) fn to_px(e: Option<FieldEdit>) -> Option<FieldEdit> {
-    let explicit = take_explicit();
-    if !show() {
-        return e;
-    }
-    let r = k();
-    match e? {
-        FieldEdit::Set(v) if explicit => Some(FieldEdit::Set(v)),
-        FieldEdit::Set(v) => Some(FieldEdit::Set(v * r)),
-        FieldEdit::Scrub(v, done) => Some(FieldEdit::Scrub(v * r, done)),
-    }
+    e
 }
 
 #[cfg(test)]
@@ -198,9 +188,8 @@ mod tests {
         assert_eq!(length("+1", Some(20.0)), Some(30.0), "relative edits in rem");
         begin_parse();
         let typed = widgets::eval("18px", None);
-        assert!(matches!(to_px(typed.map(FieldEdit::Set)), Some(FieldEdit::Set(v)) if v == 18.0), "px stays px");
-        begin_parse();
-        assert!(matches!(to_px(Some(FieldEdit::Set(1.5))), Some(FieldEdit::Set(v)) if v == 15.0));
+        assert_eq!(typed, Some(18.0));
+        assert!(take_explicit(), "a typed unit is noted, so the field keeps px as px");
         crate::units_ui::set_for_test("px", "px");
         ROOT.store(16.0f64.to_bits(), Ordering::Relaxed);
     }

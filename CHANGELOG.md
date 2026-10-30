@@ -7,6 +7,18 @@ Every FigCraft Plus release, newest first. Each one is built on an official FigC
 **🟣 Exclusive** — FigCraft has nothing like it yet. **🔵 Enhanced** — FigCraft has a basic
 version; Plus goes further.
 
+## Plus 8 · FigCraft v0.12.1 — 2026-10-30
+
+- 🟣 **The unit is in every length field.** Each field names its unit at its end (in px only
+  while the pointer is over it); a click lists the units and switches the **document's** unit —
+  layout or text — never a single property's. *Units settings…* at the end of the list.
+  Font size now works like every other text length.
+- 🔵 **Popovers close the same way:** their close button, Escape, a click outside and a change of
+  selection — the variable list, the style menu, Units, and the colour picker (which still moves to
+  the same slot of a newly selected layer). Compact menus stay compact.
+- 🟣 **Decimals shown** (0–4) in Preferences ▸ FigCraft Plus. Only what fields show is rounded;
+  values keep every digit.
+
 ## Plus 7 · FigCraft v0.12.1 — 2026-10-30
 
 - 🟣 **Units everywhere.** Each file picks the unit its fields show: one for **layout** — px,

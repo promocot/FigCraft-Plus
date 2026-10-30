@@ -6,10 +6,22 @@
     "insert": "mod units_ui;\nmod popover_ui;"
   },
   {
-    "note": "number fields: lengths in the file's layout or text unit (values stay px)",
+    "note": "number fields: lengths in the document's layout or text unit, with a unit chip (values stay px)",
     "file": "crates/ui-egui/src/widgets.rs",
     "find": ") -> (Option<Edit>, Option<BindEvent>) {\n    cancel_retargeted_field_save(ui, id);\n",
-    "replace": ") -> (Option<Edit>, Option<BindEvent>) {\n    // FigCraft Plus: a length shows in the file's unit (Units); what is typed or scrubbed comes back in px.\n    if let Some((k, unit)) = crate::units_ui::field(id, suffix) {\n        let (e, b) = number_field_px(ui, id, lead, value.map(|v| v / k), unit, width, crate::units_ui::step(unit, step), binding, empty);\n        return (e.map(|e| crate::units_ui::back(e, k)), b);\n    }\n    number_field_px(ui, id, lead, value, suffix, width, step, binding, empty)\n}\n\n#[allow(clippy::too_many_arguments)]\nfn number_field_px(\n    ui: &mut Ui,\n    id: Id,\n    lead: Lead,\n    value: Option<f64>,\n    suffix: &str,\n    width: f32,\n    step: f64,\n    binding: Option<Option<&str>>,\n    empty: Empty<'_>,\n) -> (Option<Edit>, Option<BindEvent>) {\n    cancel_retargeted_field_save(ui, id);\n"
+    "replace": ") -> (Option<Edit>, Option<BindEvent>) {\n    // FigCraft Plus: a length shows in the document's unit, named at the field's end (a click\n    // switches the document's unit); what is typed or scrubbed comes back in px.\n    if let Some((k, unit, kind)) = crate::units_ui::field(id, suffix) {\n        let (e, b) = number_field_px(ui, id, lead, value.map(|v| v / k), \"\", width, crate::units_ui::step(unit, step), binding, empty);\n        if !matches!(binding, Some(Some(_))) {\n            crate::units_ui::chip(ui, id, kind, binding.is_some());\n        }\n        return (e.map(|e| crate::units_ui::back(e, k)), b);\n    }\n    number_field_px(ui, id, lead, value, suffix, width, step, binding, empty)\n}\n\n#[allow(clippy::too_many_arguments)]\nfn number_field_px(\n    ui: &mut Ui,\n    id: Id,\n    lead: Lead,\n    value: Option<f64>,\n    suffix: &str,\n    width: f32,\n    step: f64,\n    binding: Option<Option<&str>>,\n    empty: Empty<'_>,\n) -> (Option<Edit>, Option<BindEvent>) {\n    cancel_retargeted_field_save(ui, id);\n"
+  },
+  {
+    "note": "number fields: where the field sits (for its unit chip)",
+    "file": "crates/ui-egui/src/widgets.rs",
+    "find": "    let (rect, _) = ui.allocate_exact_size(vec2(width, FIELD_H), Sense::hover());\n    if let Some(Some(name)) = binding {\n",
+    "replace": "    let (rect, _) = ui.allocate_exact_size(vec2(width, FIELD_H), Sense::hover());\n    crate::units_ui::note_rect(rect);\n    if let Some(Some(name)) = binding {\n"
+  },
+  {
+    "note": "number fields: show the decimals chosen in Preferences (values keep every digit)",
+    "file": "crates/ui-egui/src/widgets.rs",
+    "find": "    let r = (v * 100.0).round() / 100.0;\n",
+    "replace": "    // FigCraft Plus: the decimals chosen in Preferences (display only).\n    let p = 10f64.powi(crate::prefs_plus_ui::precision() as i32);\n    let r = (v * p).round() / p;\n"
   },
   {
     "note": "variable-bindable number fields: say which property they show (for its unit)",

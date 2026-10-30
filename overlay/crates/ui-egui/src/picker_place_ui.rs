@@ -7,9 +7,11 @@
 //! - It sits above every panel and window (the Variables editor included).
 //! - Selecting other layers keeps it open on the same slot of the new selection (Fill 1 stays
 //!   Fill 1); when they have no such slot, or nothing is selected, it closes.
-//! - A click on the canvas that doesn't select other layers (empty space, the same layer) closes
-//!   it, and the click does what it always does (an empty spot deselects). Drags (gradient
-//!   handles, moving layers) leave it open.
+//! - A click outside it that doesn't select other layers or open another swatch closes it — on
+//!   the canvas (empty space, the same layer) or anywhere in the panels — and the click does what
+//!   it always does (an empty spot deselects). Drags (gradient handles, moving layers, scrolling)
+//!   leave it open, and so do clicks in its own menus and in popovers it opened. Escape closes it
+//!   too (as every popover: see `popover_ui`).
 
 use egui::{Id, Pos2, Rect, pos2, vec2};
 use figcraft_doc::NodeId;
@@ -93,7 +95,7 @@ pub(crate) fn follow(app: &mut FigApp, ctx: &egui::Context, exists: impl Fn(&Fig
     } else if let Some(r) = a.widget.and_then(|w| ctx.read_response(w)) {
         a.rect = Some(r.rect);
     }
-    // A press on the canvas, outside the picker and anything it opened, may close it.
+    // A press outside the picker and anything it opened (canvas or panels) may close it.
     let (pressed, released, pos) = ctx.input(|i| (i.pointer.primary_pressed(), i.pointer.primary_released(), i.pointer.interact_pos()));
     if pressed && let Some(p) = pos {
         // The picker, its menus and the variable list sit in the foreground, above panels, the
@@ -105,7 +107,7 @@ pub(crate) fn follow(app: &mut FigApp, ctx: &egui::Context, exists: impl Fn(&Fig
         // The eyedropper's click on the canvas samples a colour for the picker: it keeps it open.
         // (The canvas may already have taken the sample this frame and gone back to Move.)
         let sampling = app.session.tool.tool == figcraft_engine::ToolId::Eyedropper || app.session.tool.picked.is_some();
-        if app.canvas.rect.contains(p) && !sampling && !on_overlay && !on_picker && !on_list && !on_anchor && !egui::Popup::is_any_open(ctx) {
+        if !sampling && !on_overlay && !on_picker && !on_list && !on_anchor && !egui::Popup::is_any_open(ctx) {
             a.press = Some((p, a.selection.clone()));
         }
     }

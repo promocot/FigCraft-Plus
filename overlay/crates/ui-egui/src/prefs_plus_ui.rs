@@ -9,6 +9,7 @@
 //!   document's units and root size (kept in the file).
 
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::{Mutex, MutexGuard, OnceLock, PoisonError};
 
 use egui::{Id, Ui};
@@ -35,11 +36,13 @@ pub(crate) struct Prefs {
     pub root: f64,
     /// The colour picker's model when it opens ("Hex", "OKLCH", "CMYK", …).
     pub color_model: String,
+    /// Decimals number fields show (0–4); values themselves keep every digit.
+    pub precision: u8,
 }
 
 impl Default for Prefs {
     fn default() -> Self {
-        Prefs { rem: false, text: String::new(), layout_unit: "px".into(), root: 16.0, color_model: "Hex".into() }
+        Prefs { rem: false, text: String::new(), layout_unit: "px".into(), root: 16.0, color_model: "Hex".into(), precision: 2 }
     }
 }
 
@@ -75,9 +78,23 @@ pub(crate) fn get() -> Prefs {
     store().clone()
 }
 
+/// Decimals fields show now (read often: kept apart from the preferences' lock).
+static PRECISION: AtomicU8 = AtomicU8::new(u8::MAX);
+
+/// How many decimals number fields show (0–4).
+pub(crate) fn precision() -> usize {
+    let mut p = PRECISION.load(Ordering::Relaxed);
+    if p == u8::MAX {
+        p = get().precision.min(4);
+        PRECISION.store(p, Ordering::Relaxed);
+    }
+    usize::from(p.min(4))
+}
+
 fn set(f: impl FnOnce(&mut Prefs)) {
     let mut p = store();
     f(&mut p);
+    PRECISION.store(p.precision.min(4), Ordering::Relaxed);
     if let (Some(path), Ok(text)) = (path(), serde_json::to_string_pretty(&*p)) {
         let _ = std::fs::write(path, text);
     }
@@ -139,6 +156,16 @@ pub(crate) fn preferences(ui: &mut Ui) {
     widgets::label(ui, tr("Applies to new documents. Each file stores its own units and root size."), t.text_secondary);
     ui.add_space(4.0);
     ui.horizontal(|ui| {
+        ui.label(tr("Decimals shown"));
+        const DIGITS: [&str; 5] = ["0", "1", "2", "3", "4"];
+        let now = DIGITS[usize::from(p.precision.min(4))];
+        if let Some(d) = unit_menu(ui, now, &DIGITS) {
+            set(|p| p.precision = d.parse().unwrap_or(2));
+        }
+    });
+    widgets::label(ui, tr("Fields round what they show; values keep every digit."), t.text_secondary);
+    ui.add_space(4.0);
+    ui.horizontal(|ui| {
         ui.label(tr("Colour picker opens in"));
         let resp = widgets::dropdown(ui, &p.color_model, 100.0, None);
         crate::right::menu_popup(&resp).show(|ui| {
@@ -179,6 +206,14 @@ fn toggle(ui: &Ui, at: Option<egui::Pos2>) {
             let p = at.unwrap_or_else(|| egui::pos2(ui.max_rect().left() - W - 12.0, (ui.cursor().top() - 40.0).max(48.0)));
             d.insert_temp(popover_id(), p);
         }
+    });
+}
+
+/// Open the Units popover at `at` (from a field's unit menu).
+pub(crate) fn open_units(ctx: &egui::Context, at: egui::Pos2) {
+    ctx.data_mut(|d| {
+        d.insert_temp(popover_id(), at);
+        d.insert_temp(popover_id().with("toggled"), ctx.cumulative_frame_nr());
     });
 }
 
@@ -267,7 +302,7 @@ fn draw(app: &mut FigApp, ctx: &egui::Context) {
                     (widgets::number_field(ui, Id::unique("figcraftplus_rem_root"), Lead::None, Some(root), "px", W - 32.0, 1.0), page)
                 {
                     let v = v.clamp(1.0, 1000.0);
-                    app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::PAGE_KEY: widgets::fmt_num(v)}}}));
+                    app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::PAGE_KEY: format!("{v}")}}}));
                 }
                 hint(ui, &format!("1rem = {}px, {}", widgets::fmt_num(root), tr("stored in the file")));
                 hint(ui, tr("Default for new documents: Preferences"));
@@ -279,8 +314,10 @@ fn draw(app: &mut FigApp, ctx: &egui::Context) {
     let outside = !toggled_now
         && ctx.input(|i| i.pointer.primary_clicked())
         && ctx.input(|i| i.pointer.interact_pos()).is_some_and(|p| !area.response.rect.contains(p));
-    if close || outside || ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
+    let reselected = crate::popover_ui::selection_changed(ctx, popover_id(), &app.session.selection());
+    if close || outside || reselected || ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
         ctx.data_mut(|d| d.remove_temp::<egui::Pos2>(popover_id()));
+        crate::popover_ui::forget_selection(ctx, popover_id());
     }
 }
 

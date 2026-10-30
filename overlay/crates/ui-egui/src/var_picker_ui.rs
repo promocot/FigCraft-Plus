@@ -570,7 +570,16 @@ pub(crate) fn picker(app: &mut FigApp, ctx: &egui::Context) {
         None => tr("No variables fit here."),
     };
     let id = Id::unique("figcraftplus_variable_picker");
-    let close = |ctx: &egui::Context| ctx.data_mut(|d| d.remove::<Picker>(variable_ui::picker_id()));
+    let close = |ctx: &egui::Context| {
+        ctx.data_mut(|d| d.remove::<Picker>(variable_ui::picker_id()));
+        crate::popover_ui::forget_selection(ctx, id);
+    };
+    // A change of selection closes it, like every popover.
+    if crate::popover_ui::selection_changed(ctx, id, &app.session.selection()) {
+        reset(ctx, id);
+        close(ctx);
+        return;
+    }
     match card(ctx, id, p.at, tr("Variables"), &items, current.as_ref(), empty) {
         Outcome::Open => {}
         Outcome::Close => close(ctx),

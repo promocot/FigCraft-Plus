@@ -69,6 +69,32 @@ pub(crate) fn body<R>(ui: &mut Ui, add: impl FnOnce(&mut Ui) -> R) -> R {
     egui::Frame::NONE.inner_margin(egui::Margin { left: INSET, right: INSET, top: 12, bottom: 14 }).show(ui, add).inner
 }
 
+// ---- closing -----------------------------------------------------------------------------------
+//
+// Every popover closes the same ways: its close button, Escape, a click outside it (not one in a
+// menu or popover it opened), and a change of selection. (The colour picker moves to the same slot
+// of the new selection instead, when it has one: see `picker_place_ui`.)
+
+/// Whether the selection changed since popover `id` opened (call it every frame the popover is
+/// open; a popover not seen the frame before counts as just opened).
+pub(crate) fn selection_changed(ctx: &egui::Context, id: Id, selection: &[figcraft_doc::NodeId]) -> bool {
+    let key = id.with("selection");
+    let now = ctx.cumulative_frame_nr();
+    let seen: Option<(Vec<figcraft_doc::NodeId>, u64)> = ctx.data(|d| d.get_temp(key));
+    let changed = matches!(&seen, Some((s, at)) if at + 1 >= now && s != selection);
+    let keep = match seen {
+        Some((s, at)) if at + 1 >= now => s,
+        _ => selection.to_vec(),
+    };
+    ctx.data_mut(|d| d.insert_temp(key, (keep, now)));
+    changed
+}
+
+/// Popover `id` closed: forget the selection it opened on.
+pub(crate) fn forget_selection(ctx: &egui::Context, id: Id) {
+    ctx.data_mut(|d| d.remove::<(Vec<figcraft_doc::NodeId>, u64)>(id.with("selection")));
+}
+
 thread_local! {
     /// FigCraft's style menu is being drawn as a popover (see [`PanelMenus`]).
     static PANEL_MENUS: Cell<bool> = const { Cell::new(false) };

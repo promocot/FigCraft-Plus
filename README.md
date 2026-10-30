@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <b>FigCraft Plus 7</b> · built on FigCraft <b>v0.12.1</b>, the latest official release ·
+  <b>FigCraft Plus 8</b> · built on FigCraft <b>v0.12.1</b>, the latest official release ·
   <code>.figcraft</code> files stay compatible with the official app, both ways
 </p>
 
@@ -316,6 +316,10 @@ the files and keeps the last computed values.
   Lay out a print page in **mm**, a web page in **rem**.
 - **Text unit** — font size, line height, letter spacing, paragraph spacing and indent, list
   spacing: **pt** for print, **rem** for the web.
+- **The unit is part of every field:** each length field names its unit at its end (in px, only
+  while the pointer is over it). Click it to switch the **document's** unit — layout or text —
+  from the field itself; *Units settings…* opens the rest. One unit per document, never one per
+  property: the file stays plain px.
 - **Any field takes any unit** typed with the number, whatever it shows: `210mm`, `5.5cm`, `1in`,
   `12pt`, `1.5rem`, `24px`, and arithmetic across them (`10mm + 2`, `2rem + 4`).
 - A px is a point (1/72 in), as FigCraft's own print export reads it: a frame of `210mm` × `297mm`
@@ -400,6 +404,7 @@ the files and keeps the last computed values.
 | **Layout unit** — px, rem, mm, cm, in or pt | The unit layout fields show in files that don't set their own (Units) |
 | **Text unit** — px, rem or pt | The unit text fields show in files that don't set their own |
 | **Default root size** | 1rem in files that don't set their own |
+| **Decimals shown** — 0 to 4 | How many decimals fields show; values keep every digit |
 | **Colour picker opens in** — Hex, RGB, HSL, HSB, LCH, OKLCH, CMYK or CSS | The model the picker shows when it opens |
 
 They are saved in `figcraft-plus.json` next to `figcraft.exe`, so a copy on a USB drive keeps them.
@@ -437,9 +442,10 @@ They are saved in `figcraft-plus.json` next to `figcraft.exe`, so a copy on a US
   is moved.
 - **Select another layer** (on the canvas or in Layers) and it switches to the same slot of that
   layer — Fill 1 stays Fill 1. If the layer has no such slot, or nothing is selected, it closes.
-- **Click empty canvas** (or the same layer again) and it closes; the click still does its usual
-  job (an empty spot deselects). Dragging on the canvas (moving layers, gradient handles) leaves
-  it open.
+- **Click outside it** — empty canvas, the same layer again, anywhere in the panels — and it
+  closes; the click still does its usual job (an empty spot deselects). Clicking another swatch
+  moves it there; dragging (moving layers, gradient handles, scrolling) leaves it open. **Escape**
+  closes it too — the same rules as every popover in the Design panel.
 
 ### Colours driven by number variables
 

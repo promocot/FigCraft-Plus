@@ -16,5 +16,11 @@
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
     "find": "        .frame(egui::Frame::window(&ctx.global_style()).fill(t.panel).inner_margin(egui::Margin::same(0)))",
     "replace": "        .frame(crate::popover_ui::frame(&t))"
+  },
+  {
+    "note": "style menu: its outline is the popover's",
+    "file": "crates/ui-egui/src/widgets/style_picker.rs",
+    "find": "        CornerRadius::same(10),\n        Stroke::new(1.0, Color32::from_black_alpha(40)),\n",
+    "replace": "        CornerRadius::same(crate::popover_ui::RADIUS),\n        Stroke::new(1.0, Tokens::get(ctx).border),\n"
   }
 ]

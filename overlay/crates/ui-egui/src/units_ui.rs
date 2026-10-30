@@ -13,6 +13,10 @@
 //! `5mm`, `1.5rem`) means that unit whatever the display unit. A px is a point (1/72 in), as in
 //! FigCraft's print export; rem is the file's root size.
 //!
+//! Every length field shows its unit at its right end (in px only while the pointer is over it):
+//! a click opens the list of units and switches the **document's** unit — never one property's.
+//! How many decimals fields show is a preference (0–4); values themselves are never rounded.
+//!
 //! The choices are kept in the first page's layer data (`figcraftplus.layoutUnit`,
 //! `figcraftplus.remUnit`), so the official app opens the file as before; a file without them
 //! uses the defaults from Preferences ▸ FigCraft Plus.
@@ -21,9 +25,12 @@ use std::cell::Cell;
 use std::collections::HashMap;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
-use egui::Id;
+use egui::{Align2, CornerRadius, Id, Rect, Sense, Ui, pos2, vec2};
 use figcraft_doc::Document;
 
+use crate::FigApp;
+use crate::i18n::tr;
+use crate::theme::{Tokens, regular};
 use crate::widgets::{Edit, FieldEdit, Rel};
 
 /// The layer data key (on a page) holding the file's layout unit.
@@ -48,6 +55,8 @@ thread_local! {
     static NEXT: Cell<Option<Kind>> = const { Cell::new(None) };
     /// Number fields known by their id.
     static BY_ID: HashMap<Id, Kind> = by_id();
+    /// Where the number field being drawn sits.
+    static RECT: Cell<Rect> = const { Cell::new(Rect::NOTHING) };
 }
 
 /// px in one `unit` (`root`: the file's root size).
@@ -146,7 +155,7 @@ pub(crate) fn classify(field: &str) -> Option<Kind> {
     if LAYOUT_FIELDS.contains(&field) || matches!(field, "strokeBottomWeight" | "strokeLeftWeight") {
         return Some(Kind::Layout);
     }
-    if matches!(field, "paragraphIndent" | "paragraphSpacing" | "listSpacing") {
+    if matches!(field, "fontSize" | "paragraphIndent" | "paragraphSpacing" | "listSpacing") {
         return Some(Kind::Text);
     }
     // Effects: offsets, blur and spread; layout grids: size, gutter, offset (not the count).
@@ -177,12 +186,13 @@ fn by_id() -> HashMap<Id, Kind> {
         m.insert(Id::unique(("grid_field", "size", i)), l);
     }
     m.insert(Id::unique("ty_list_spacing"), Kind::Text);
+    m.insert(Id::unique("ty_size"), Kind::Text);
     m
 }
 
-/// When the number field `id` (with `suffix`) about to be drawn shows a length in a unit other
-/// than px: px per unit and the unit's name.
-pub(crate) fn field(id: Id, suffix: &str) -> Option<(f64, &'static str)> {
+/// When the number field `id` (with `suffix`) about to be drawn is a length: px per unit of the
+/// unit it shows (1 in px), the unit's name and what it measures.
+pub(crate) fn field(id: Id, suffix: &str) -> Option<(f64, &'static str, Kind)> {
     let kind = NEXT.with(Cell::take).or_else(|| BY_ID.with(|m| m.get(&id).copied()))?;
     // What this field's own text names is what counts (see `back`).
     crate::rem_ui::take_explicit();
@@ -193,7 +203,65 @@ pub(crate) fn field(id: Id, suffix: &str) -> Option<(f64, &'static str)> {
         Kind::Layout => (layout_k(), layout()),
         Kind::Text => (text_k(), text()),
     };
-    (unit != "px" && k.is_finite() && k > 0.0).then_some((k, unit))
+    (k.is_finite() && k > 0.0).then_some((k, unit, kind))
+}
+
+/// The number field being drawn sits in `rect` (FigCraft's field, before its unit chip).
+pub(crate) fn note_rect(rect: Rect) {
+    RECT.with(|r| r.set(rect));
+}
+
+fn pending_id() -> Id {
+    Id::unique("figcraftplus_unit_pending")
+}
+
+/// A length field's unit at its right end (in px only while the pointer is over the field): a
+/// click lists the units and switches the document's. `bindable`: the field's variable button
+/// sits at its right end, so the unit goes before it.
+pub(crate) fn chip(ui: &mut Ui, id: Id, kind: Kind, bindable: bool) {
+    let rect = RECT.with(Cell::get);
+    if !rect.is_positive() || ui.data(|d| d.get_temp::<String>(id.with("editing"))).is_some() {
+        return;
+    }
+    let t = Tokens::get(ui.ctx());
+    let (unit, list): (&str, &[&'static str]) = match kind {
+        Kind::Layout => (layout(), &LAYOUT_UNITS),
+        Kind::Text => (text(), &TEXT_UNITS),
+    };
+    let galley = ui.painter().layout_no_wrap(unit.to_string(), regular(10.5), t.text_secondary);
+    let right = rect.max.x - if bindable { 22.0 } else { 4.0 };
+    let r = Rect::from_min_max(pos2(right - galley.size().x - 8.0, rect.min.y + 3.0), pos2(right, rect.max.y - 3.0));
+    let resp = ui.interact(r, id.with("unit_chip"), Sense::click());
+    let over = ui.rect_contains_pointer(rect);
+    if unit != "px" || over || resp.hovered() {
+        if resp.hovered() {
+            ui.painter().rect_filled(r, CornerRadius::same(4), t.hover);
+        }
+        let col = if resp.hovered() { t.text } else { t.text_secondary };
+        ui.painter().text(r.center(), Align2::CENTER_CENTER, unit, regular(10.5), col);
+    }
+    let resp = resp.on_hover_text(tr("Units of this document"));
+    crate::right::menu_popup(&resp).show(|ui| {
+        for u in list {
+            if crate::right::menu_check(ui, *u == unit, u, "") {
+                ui.data_mut(|d| d.insert_temp(pending_id(), (kind == Kind::Text, (*u).to_string())));
+                ui.close();
+            }
+        }
+        ui.separator();
+        if crate::right::menu_item(ui, tr("Units settings…"), "") {
+            crate::prefs_plus_ui::open_units(ui.ctx(), pos2(resp.rect.min.x - 300.0, resp.rect.min.y - 60.0));
+            ui.close();
+        }
+    });
+}
+
+/// Each frame: a unit picked from a field's chip becomes the document's.
+pub(crate) fn apply_pending(app: &mut FigApp, ctx: &egui::Context) {
+    let Some((text, unit)) = ctx.data_mut(|d| d.remove_temp::<(bool, String)>(pending_id())) else { return };
+    let Some(page) = app.session.doc().ok().and_then(|d| d.pages.first().copied()) else { return };
+    let key = if text { crate::rem_ui::UNIT_KEY } else { LAYOUT_KEY };
+    app.run("node.set", serde_json::json!({"ids": [page], "props": {"pluginData": {key: unit}}}));
 }
 
 /// A field's scrub and arrow step in `unit` (`step`: FigCraft's, for px): a tenth for the large
@@ -216,8 +284,8 @@ pub(crate) fn back(e: Edit, k: f64) -> Edit {
 
 // ---- labels on the canvas -------------------------------------------------------------------------
 
-fn num(v: f64) -> String {
-    let s = format!("{v:.2}");
+pub(crate) fn num(v: f64) -> String {
+    let s = format!("{v:.*}", crate::prefs_plus_ui::precision());
     let s = s.trim_end_matches('0').trim_end_matches('.');
     if s == "-0" { "0".into() } else { s.to_string() }
 }
@@ -260,7 +328,8 @@ mod tests {
         assert_eq!(classify("opacity"), None);
         assert_eq!(classify("paragraphIndent"), Some(Kind::Text));
         field_key("width");
-        let (k, unit) = field(Id::unique("lay_w"), "").unwrap();
+        let (k, unit, kind) = field(Id::unique("lay_w"), "").unwrap();
+        assert_eq!(kind, Kind::Layout);
         assert_eq!(unit, "mm");
         assert!(((595.28 / k) - 210.0).abs() < 0.01, "A4 width shows as 210 mm");
         assert!(matches!(back(Edit::All(FieldEdit::Set(210.0)), k), Edit::All(FieldEdit::Set(v)) if (v - 595.28).abs() < 0.01));
@@ -276,6 +345,8 @@ mod tests {
         assert_eq!(size_label(24.0, 8.0, false, |v| v.to_string()), "1.5rem × 0.5rem");
         set_for_test("px", "px");
         assert_eq!(size_label(24.0, 8.0, false, |v| format!("{v}")), "24 × 8");
-        assert!(field(Id::unique("pos_x"), "").is_none(), "px: FigCraft's own field");
+        assert!(matches!(field(Id::unique("pos_x"), ""), Some((k, "px", Kind::Layout)) if k == 1.0), "px: shown as it is");
+        field_key("fontSize");
+        assert!(matches!(field(Id::unique("ty_size"), ""), Some((_, "px", Kind::Text))));
     }
 }
