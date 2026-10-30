@@ -34,9 +34,11 @@ Releases as `v<figcraft>-plus.<N>`, named "FigCraft Plus N · FigCraft vX".
 
 ## 2. Non-negotiables
 
-1. **Never mention Figma** — in the README, docs, changelog, commit messages, UI strings, release
-   notes, topics or images. The owner wants zero legal exposure. Compare only with FigCraft
-   ("In FigCraft v0.12.1 …"). Upstream FigCraft's own files may mention it. Ours never do.
+1. **Never name the commercial design tool FigCraft is modelled on** (the incumbent its own docs
+   compare against) — not in the README, docs, changelog, commit messages, UI strings, release
+   notes, topics or images, and not in this file. The owner wants zero legal exposure. Compare only
+   with FigCraft ("In FigCraft v0.12.1 …"). Upstream FigCraft's own files may name it; ours never
+   do. Before every push: `grep -rIni "<that name>" --exclude-dir=.git .` must find nothing.
 2. **Files stay compatible with the official FigCraft, both ways.**
    - Never change FigCraft's document model or file format. `scripts/apply.py` stops the build if
      any overlay file or hook targets `crates/doc/` or `crates/format/`.
