@@ -6,7 +6,7 @@ ships a feature of its own, it is removed here.
 
 | | |
 |---|---|
-| **FigCraft Plus** | **2** |
+| **FigCraft Plus** | **3** |
 | **Built on** | FigCraft **v0.12.1** (the latest official release) |
 | **Files** | `.figcraft` files stay fully compatible with the official app, both ways |
 
@@ -24,6 +24,9 @@ release, applies them, runs the tests and publishes a ready-to-run Windows build
   - [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way)
   - [Derived colours and calculated variables](#derived-colours-and-calculated-variables)
   - [rem units](#rem-units)
+  - [Print units: mm, cm, in and pt in every field](#print-units-mm-cm-in-and-pt-in-every-field)
+  - [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker)
+  - [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca)
   - [A better picker](#a-better-picker)
   - [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing)
   - [Colours driven by number variables](#colours-driven-by-number-variables)
@@ -56,6 +59,9 @@ as soon as FigCraft ships its own version: the goal is a better FigCraft, not a 
 | [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way) | FigCraft 0.12 has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB. | The whole picker works in OKLCH (an OKLCH plane with the exact gamut edge, an OKLCH hue strip), values match oklch.com and CSS, and Display P3 files are read in P3. | ▲ better |
 | [Derived colours and calculated variables](#derived-colours-and-calculated-variables) | A variable can be an *alias* of another — an exact copy, nothing more. | A colour can be *made from* another (transparency, lighter / darker, its complement, a mix of two), and a number from other numbers, all kept in step in every mode. | ★ only in Plus |
 | [rem units](#rem-units) | Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16. | `rem` in every field, a root size per file, an optional rem display in Typography, and Dev Mode uses the file's root size. | ★ only in Plus |
+| [Print units: mm, cm, in and pt in every field](#print-units-mm-cm-in-and-pt-in-every-field) | Number fields read px; mm, cm and in exist only in the PDF export's print settings. | Every number field takes `mm`, `cm`, `in` and `pt` — and mixes them (`10mm + 2`). | ★ only in Plus |
+| [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker) | The picker offers Hex, RGB, HSL, HSB, LCH, OKLCH and CSS; CMYK exists only as a PDF export option. | **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click. | ★ only in Plus |
+| [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca) | No contrast check in the interface. | Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what the colour sits on. | ★ only in Plus |
 | [A better picker](#a-better-picker) | Fields without captions, one fixed width. | A caption over every field, a width that fits the model, and a draggable edge. | ▲ better |
 | [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing) | The picker opens at a fixed place on the right and closes when the selection changes. | It opens beside the swatch you clicked, stays on top, and moves to the same slot of the newly selected layer, so you keep editing without reopening it. | ▲ better |
 | [Colours driven by number variables](#colours-driven-by-number-variables) | A colour can be bound to a colour variable as a whole. | Each channel (L, C, H, R, G, B, H, S, alpha…) can follow its own number variable: one `brand/hue` restyles every colour built on it. | ★ only in Plus |
@@ -188,6 +194,46 @@ the files and keeps the last computed values.
   paragraph spacing show in rem; a bare number typed there is then rem too, `px` still means px.
   Values are stored in px, as FigCraft stores them, so files stay compatible.
 - Dev Mode's px → rem code uses the file's root size instead of a fixed 16.
+
+### Print units: mm, cm, in and pt in every field
+
+**★ Only in FigCraft Plus (for now)**
+
+> **FigCraft:** Number fields read px; mm, cm and in exist only in the PDF export's print settings.
+>
+> **FigCraft Plus:** Every number field takes `mm`, `cm`, `in` and `pt` — and mixes them (`10mm + 2`).
+
+- A px is a point (1/72 in), as FigCraft's own print export reads it: a frame of `210mm` × `297mm`
+  exports as an exact A4 page, `85mm` × `55mm` as a business card.
+- Works in any field that takes a number: size, position, radius, stroke, spacing, guides…
+- Values are stored in px, as always.
+
+### CMYK and Copy as in the colour picker
+
+**★ Only in FigCraft Plus (for now)**
+
+> **FigCraft:** The picker offers Hex, RGB, HSL, HSB, LCH, OKLCH and CSS; CMYK exists only as a PDF export option.
+>
+> **FigCraft Plus:** **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click.
+
+- **CMYK** in the model menu: C, M, Y and K in percent. They are converted exactly the way
+  FigCraft's CMYK PDF export converts (`K = 1 − max(R, G, B)`), so what you see is what the PDF
+  holds. (It's the profile-free formula: proof against your print shop's profile for production.)
+- **Copy as** under the fields: Hex, `rgb()`, `hsl()`, HSB, `lch()`, `oklch()` (oklch.com
+  precision), `device-cmyk()` or CSS — a converter between colour spaces.
+
+### Contrast check: WCAG and APCA
+
+**★ Only in FigCraft Plus (for now)**
+
+> **FigCraft:** No contrast check in the interface.
+>
+> **FigCraft Plus:** Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what the colour sits on.
+
+- The backdrop is found for you: the nearest frame with a solid fill under the layer, else the
+  page (hover the line to see which colour). Transparent colours are blended over it first.
+- WCAG levels for normal text: **AAA** ≥ 7, **AA** ≥ 4.5, **AA Large** ≥ 3; below 4.5 the line is
+  highlighted. APCA Lc follows APCA-W3 (black on white ≈ 106, white on black ≈ −108).
 
 ### A better picker
 
