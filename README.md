@@ -195,17 +195,25 @@ the files and keeps the last computed values.
 
 > **FigCraft:** Sizes are typed in px only; Dev Mode converts px → rem with a fixed 16.
 >
-> **FigCraft Plus:** `rem` in every field, a root size per file, an optional rem display in Typography, and Dev Mode uses the file's root size.
+> **FigCraft Plus:** A **px / rem** switch and a root size per file (the gear in Typography), defaults in Preferences, `rem` in every field, and Dev Mode uses the file's root size.
 
 *Requested in [storytold/figcraft#1325](https://github.com/storytold/figcraft/issues/1325).*
 
-- **Every number field takes `rem`:** `1.5rem` is 1.5 × the file's root size; arithmetic works
-  (`2rem + 4`), and so do line height and letter spacing.
-- **The root size belongs to the file** (16 px unless set): Typography ▸ Type settings (⋯) ▸
-  **Root size (rem)**. The official FigCraft ignores it and opens the file as before.
-- **Show sizes in rem** (same place, a preference): font size, line height, letter spacing and
-  paragraph spacing show in rem; a bare number typed there is then rem too, `px` still means px.
-  Values are stored in px, as FigCraft stores them, so files stay compatible.
+<img src="docs/images/30-typography-settings.png" width="620" alt="The gear in the Typography header opens Typography settings: Unit px or rem, and Root size; the font size shows in rem">
+
+**Where to set it**
+
+| What | Where |
+|---|---|
+| This file's unit (px or rem) and root size | Select a text layer ▸ **Typography** ▸ the **gear** at the right of the header |
+| The unit and root size for new files | **Preferences ▸ FigCraft Plus** ▸ *Typography unit*, *Default root size* |
+
+- With **rem**, font size, line height, letter spacing and paragraph spacing show in rem
+  (`1.375rem`); a bare number typed there is rem too, and `22px` still means px.
+- **Every number field takes `rem`** whatever the unit: `1.5rem` is 1.5 × the root size, and
+  arithmetic works (`2rem + 4`).
+- Values are stored in px, as FigCraft stores them; the unit and root size are kept in the file as
+  text the official FigCraft ignores, so it opens the file as before.
 - Dev Mode's px → rem code uses the file's root size instead of a fixed 16.
 
 ### Print units: mm, cm, in and pt in every field
@@ -216,6 +224,10 @@ the files and keeps the last computed values.
 >
 > **FigCraft Plus:** Every number field takes `mm`, `cm`, `in` and `pt` — and mixes them (`10mm + 2`).
 
+<img src="docs/images/31-print-units.png" width="420" alt="210mm typed into a frame's width field">
+
+- **Just type the unit** in the field — `210mm`, `5.5cm`, `1in`, `12pt` — and press Enter; it is
+  converted to px. Nothing to switch on.
 - A px is a point (1/72 in), as FigCraft's own print export reads it: a frame of `210mm` × `297mm`
   exports as an exact A4 page, `85mm` × `55mm` as a business card.
 - Works in any field that takes a number: size, position, radius, stroke, spacing, guides…
@@ -229,9 +241,13 @@ the files and keeps the last computed values.
 >
 > **FigCraft Plus:** **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click.
 
+<img src="docs/images/32-cmyk-contrast.png" width="330" alt="The colour picker in CMYK, with Copy as and the contrast line under the fields">
+
 - **CMYK** in the model menu: C, M, Y and K in percent. They are converted exactly the way
   FigCraft's CMYK PDF export converts (`K = 1 − max(R, G, B)`), so what you see is what the PDF
   holds. (It's the profile-free formula: proof against your print shop's profile for production.)
+- Want the picker to always open in CMYK (or OKLCH)? **Preferences ▸ FigCraft Plus ▸ Colour picker
+  opens in**.
 - **Copy as** under the fields: Hex, `rgb()`, `hsl()`, HSB, `lch()`, `oklch()` (oklch.com
   precision), `device-cmyk()` or CSS — a converter between colour spaces.
 
@@ -247,6 +263,24 @@ the files and keeps the last computed values.
   page (hover the line to see which colour). Transparent colours are blended over it first.
 - WCAG levels for normal text: **AAA** ≥ 7, **AA** ≥ 4.5, **AA Large** ≥ 3; below 4.5 the line is
   highlighted. APCA Lc follows APCA-W3 (black on white ≈ 106, white on black ≈ −108).
+
+### FigCraft Plus preferences
+
+**★ Only in FigCraft Plus (for now)**
+
+> **FigCraft:** The colour picker always opens in Hex; there is no typography unit to choose.
+>
+> **FigCraft Plus:** **Preferences ▸ FigCraft Plus**: the typography unit and root size for new files, and the model the colour picker opens in.
+
+<img src="docs/images/33-preferences.png" width="460" alt="Preferences with the FigCraft Plus section: Typography unit, Default root size, Colour picker opens in">
+
+| Setting | What it does |
+|---|---|
+| **Typography unit** — px or rem | The unit files use until they set their own (Typography ▸ gear) |
+| **Default root size** | 1rem in files that don't set their own |
+| **Colour picker opens in** — Hex, RGB, HSL, HSB, LCH, OKLCH, CMYK or CSS | The model the picker shows when it opens |
+
+They are saved in `figcraft-plus.json` next to `figcraft.exe`, so a copy on a USB drive keeps them.
 
 ### A better picker
 
