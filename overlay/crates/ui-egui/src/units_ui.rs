@@ -215,49 +215,62 @@ fn pending_id() -> Id {
     Id::unique("figcraftplus_unit_pending")
 }
 
+/// The list of units (and *Units settings…*) under `resp`: picking one switches the document's.
+fn unit_menu(ui: &mut Ui, kind: Kind, unit: &str, at: egui::Pos2) {
+    let list: &[&'static str] = match kind {
+        Kind::Layout => &LAYOUT_UNITS,
+        Kind::Text => &TEXT_UNITS,
+    };
+    ui.set_width(150.0);
+    for u in list {
+        if crate::right::menu_check(ui, *u == unit, u, "") {
+            ui.data_mut(|d| d.insert_temp(pending_id(), (kind == Kind::Text, (*u).to_string())));
+            ui.close();
+        }
+    }
+    ui.separator();
+    if crate::right::menu_item(ui, tr("Units settings…"), "") {
+        crate::prefs_plus_ui::open_units(ui.ctx(), pos2(at.x - 300.0, at.y - 60.0));
+        ui.close();
+    }
+}
+
 /// A length field's unit, right after the value it shows (`shown`, which starts `lead_w` into the
-/// field), shown in px only while the pointer is over the field: a click lists the units and
-/// switches the document's.
+/// field): a click lists the units and switches the document's. A right-click anywhere on the
+/// field lists them too — the way in px, where fields look and behave exactly as FigCraft's.
 pub(crate) fn chip(ui: &mut Ui, id: Id, kind: Kind, lead_w: f32, shown: &str) {
     let rect = RECT.with(Cell::get);
     if !rect.is_positive() || ui.data(|d| d.get_temp::<String>(id.with("editing"))).is_some() {
         return;
     }
     let t = Tokens::get(ui.ctx());
-    let (unit, list): (&str, &[&'static str]) = match kind {
-        Kind::Layout => (layout(), &LAYOUT_UNITS),
-        Kind::Text => (text(), &TEXT_UNITS),
+    let unit = match kind {
+        Kind::Layout => layout(),
+        Kind::Text => text(),
     };
+    // Right-click on the field: the units.
+    if let Some(field) = ui.ctx().read_response(id.with("field")) {
+        field.context_menu(|ui| unit_menu(ui, kind, unit, rect.left_top()));
+    }
+    if unit == "px" {
+        return;
+    }
     let value_w = ui.painter().layout_no_wrap(shown.to_string(), regular(11.0), t.text).size().x;
     let unit_w = ui.painter().layout_no_wrap(unit.to_string(), regular(11.0), t.text_secondary).size().x;
     let x = rect.min.x + lead_w + value_w + 1.0;
-    let r = Rect::from_min_max(pos2(x - 1.0, rect.min.y + 4.0), pos2((x + unit_w + 3.0).min(rect.max.x - 2.0), rect.max.y - 4.0));
+    let r = Rect::from_min_max(pos2(x - 2.0, rect.min.y + 4.0), pos2((x + unit_w + 2.0).min(rect.max.x - 2.0), rect.max.y - 4.0));
     if r.width() < unit_w {
         return;
     }
-    let resp = ui.interact(r, id.with("unit_chip"), Sense::click());
-    let over = ui.rect_contains_pointer(rect);
-    if unit != "px" || over || resp.hovered() {
-        if resp.hovered() {
-            ui.painter().rect_filled(r, CornerRadius::same(3), t.hover);
-        }
-        let col = if resp.hovered() { t.text } else { t.text_secondary };
-        ui.painter().text(pos2(x, rect.center().y), Align2::LEFT_CENTER, unit, regular(11.0), col);
+    // Clickable, not a keyboard stop (Tab goes field to field, as the label scrubs only with the pointer).
+    let resp = ui.interact(r, id.with("unit_chip"), Sense::CLICK);
+    if resp.hovered() {
+        ui.painter().rect_filled(r, CornerRadius::same(3), t.hover);
     }
+    let col = if resp.hovered() { t.text } else { t.text_secondary };
+    ui.painter().text(pos2(x, rect.center().y), Align2::LEFT_CENTER, unit, regular(11.0), col);
     let resp = resp.on_hover_text(tr("Units of this document"));
-    crate::right::menu_popup(&resp).show(|ui| {
-        for u in list {
-            if crate::right::menu_check(ui, *u == unit, u, "") {
-                ui.data_mut(|d| d.insert_temp(pending_id(), (kind == Kind::Text, (*u).to_string())));
-                ui.close();
-            }
-        }
-        ui.separator();
-        if crate::right::menu_item(ui, tr("Units settings…"), "") {
-            crate::prefs_plus_ui::open_units(ui.ctx(), pos2(resp.rect.min.x - 300.0, resp.rect.min.y - 60.0));
-            ui.close();
-        }
-    });
+    crate::right::menu_popup(&resp).show(|ui| unit_menu(ui, kind, unit, r.left_top()));
 }
 
 /// Each frame: a unit picked from a field's chip becomes the document's.

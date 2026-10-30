@@ -57,7 +57,7 @@ Full details in the [changelog](CHANGELOG.md).
 
 | Release | Highlights |
 |---|---|
-| **Plus 8** | The unit in every length field (a click switches the document's unit) · one way to close every popover · decimals shown, 0–4 |
+| **Plus 8** | Switch the document's unit from any length field (click its unit, or right-click) · one way to close every popover · decimals shown, 0–4 |
 | **Plus 7** | **Units everywhere:** a layout unit (px, rem, mm, cm, in, pt) and a text unit (px, rem, pt) per file, in every field and on the canvas · one popover style across the Design panel |
 | **Plus 6** | Contrast check against what is really under the layer (any shape behind it) · a **Libraries** tab in the colour picker with the colour variables whose scope fits |
 | **Plus 5** | The Typography settings popover opens reliably, beside the panel, inside the window · screenshots of every new setting in the README |

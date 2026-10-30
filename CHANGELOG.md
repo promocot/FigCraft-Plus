@@ -9,10 +9,11 @@ version; Plus goes further.
 
 ## Plus 8 · FigCraft v0.12.1 — 2026-10-30
 
-- 🟣 **The unit is in every length field.** Each field names its unit at its end (in px only
-  while the pointer is over it); a click lists the units and switches the **document's** unit —
-  layout or text — never a single property's. *Units settings…* at the end of the list.
-  Font size now works like every other text length.
+- 🟣 **Switch units from any field.** A length field names its unit right after its value: click
+  it — or right-click any length field, also in px, where fields stay exactly as FigCraft draws
+  them — and pick a unit: it becomes the **document's** unit (layout or text), never a single
+  property's. *Units settings…* at the end of the list. Font size now works like every other text
+  length.
 - 🔵 **Popovers close the same way:** their close button, Escape, a click outside and a change of
   selection — the variable list, the style menu, Units, and the colour picker (which still moves to
   the same slot of a newly selected layer). Compact menus stay compact.
