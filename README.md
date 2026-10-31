@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <b>FigCraft Plus 9</b> · built on FigCraft <b>v0.13.1</b>, the latest official release ·
+  <b>FigCraft Plus 10</b> · built on FigCraft <b>v0.13.1</b>, the latest official release ·
   <code>.figcraft</code> files stay compatible with the official app, both ways
 </p>
 
@@ -171,7 +171,7 @@ version; Plus goes further. Features FigCraft has since added itself are
 | [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker) | The picker offers Hex, RGB, HSL, HSB, LCH, OKLCH and CSS; CMYK exists only as a PDF export option. | **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click. | 🟣 Exclusive |
 | [Contrast both ways: WCAG and APCA](#contrast-both-ways-wcag-and-apca) | No contrast check in the interface. | Under the picker's fields, two `Aa` samples — the colour on what is really under the layer, and that background on the colour — each with the WCAG ratio and level and the APCA Lc; the better pairing is marked. | 🟣 Exclusive |
 | [Colour variables in the picker: the Libraries tab](#colour-variables-in-the-picker-the-libraries-tab) | Colour variables are applied from the style menu next to Fill or Stroke; the picker itself only edits a colour. | A **Libraries** tab beside **Custom** in the colour picker: this file's and the enabled libraries' colour variables, with search — only those whose scope fits what you edit (a stroke offers stroke colours). | 🔵 Enhanced |
-| [FigCraft Plus preferences](#figcraft-plus-preferences) | The colour picker always opens in Hex; there are no units to choose. | Preferences ▸ FigCraft Plus: the layout and text units and root size for new files, and the model the colour picker opens in. | 🟣 Exclusive |
+| [FigCraft Plus preferences](#figcraft-plus-preferences) | The colour picker always opens in Hex; there are no units to choose. | Preferences ▸ FigCraft Plus: the layout and text units and root size for new files, decimals shown, the model the colour picker opens in, and whether the picker follows the selection. | 🟣 Exclusive |
 | [A better picker](#a-better-picker) | Fields without captions, one fixed width. | A caption over every field, a width that fits the model, and a draggable edge. | 🔵 Enhanced |
 | [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing) | The picker opens beside the Design panel and closes when the selection changes. | It moves to the same slot of the newly selected layer, so you keep editing without reopening it; opened from a style dialog, it opens beside the dialog. | 🔵 Enhanced |
 | [Colours driven by number variables](#colours-driven-by-number-variables) | A colour can be bound to a colour variable as a whole. | Each channel (L, C, H, R, G, B, H, S, alpha…) can follow its own number variable: one `brand/hue` restyles every colour built on it. | 🟣 Exclusive |
@@ -428,6 +428,7 @@ the files and keeps the last computed values.
 | **Default root size** | 1rem in files that don't set their own |
 | **Decimals shown** — 0 to 4 | How many decimals fields show; values keep every digit |
 | **Colour picker opens in** — Hex, RGB, HSL, HSB, LCH, OKLCH, CMYK or CSS | The model the picker shows when it opens |
+| **Picker follows the selection** — on by default | Clicking another layer keeps the colour picker open on the same fill, stroke or effect; off, it closes as FigCraft's |
 
 They are saved in `figcraft-plus.json` next to `figcraft.exe`, so a copy on a USB drive keeps them.
 
@@ -451,9 +452,13 @@ They are saved in `figcraft-plus.json` next to `figcraft.exe`, so a copy on a US
 >
 > **FigCraft Plus:** It moves to the same slot of the newly selected layer, so you keep editing without reopening it.
 
-- **Select another layer** (on the canvas or in Layers) and it switches to the same slot of that
-  layer — Fill 1 stays Fill 1, the second shadow stays the second shadow. If the layer has no such
-  slot, or nothing is selected, it closes as FigCraft's does.
+- **Select another layer** (click it on the canvas or in Layers) and it switches to the same slot
+  of that layer — Fill 1 stays Fill 1, the second shadow stays the second shadow. If the layer has
+  no such slot, or nothing is selected, it closes as FigCraft's does. A click that selects nothing
+  new closes it; dragging (moving layers, gradient handles) leaves it open.
+- **Not for you?** Turn off **Preferences ▸ FigCraft Plus ▸ Picker follows the selection**: the
+  picker then closes on any press outside it and on every change of selection, exactly as
+  FigCraft's.
 - **Opened from a style dialog**, it opens beside the dialog instead of over it.
 - Where it opens otherwise, Escape and a press outside closing it are FigCraft's own (since 0.13).
 

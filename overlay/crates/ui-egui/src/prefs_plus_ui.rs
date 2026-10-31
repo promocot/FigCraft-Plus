@@ -38,11 +38,13 @@ pub(crate) struct Prefs {
     pub color_model: String,
     /// Decimals number fields show (0–4); values themselves keep every digit.
     pub precision: u8,
+    /// The colour picker stays open, on the same slot, when other layers are selected.
+    pub picker_follows_selection: bool,
 }
 
 impl Default for Prefs {
     fn default() -> Self {
-        Prefs { rem: false, text: String::new(), layout_unit: "px".into(), root: 16.0, color_model: "Hex".into(), precision: 2 }
+        Prefs { rem: false, text: String::new(), layout_unit: "px".into(), root: 16.0, color_model: "Hex".into(), precision: 2, picker_follows_selection: true }
     }
 }
 
@@ -177,6 +179,11 @@ pub(crate) fn preferences(ui: &mut Ui) {
             }
         });
     });
+    ui.add_space(4.0);
+    if widgets::checkbox(ui, p.picker_follows_selection, tr("Picker follows the selection")) {
+        set(|p| p.picker_follows_selection = !p.picker_follows_selection);
+    }
+    widgets::label(ui, tr("The colour picker stays open on the same fill, stroke or effect of the layers you select next. Off: it closes, as in FigCraft."), t.text_secondary);
 }
 
 // ---- Units ---------------------------------------------------------------------------------------
@@ -323,6 +330,9 @@ mod tests {
     fn preferences_read_and_pick_the_picker_model() {
         let p: Prefs = serde_json::from_str(r#"{"rem": true, "colorModel": "OKLCH"}"#).unwrap();
         assert_eq!((p.rem, p.root, p.color_model.as_str()), (true, 16.0, "OKLCH"), "missing keys take defaults");
+        assert!(p.picker_follows_selection, "the picker follows the selection unless turned off");
+        let off: Prefs = serde_json::from_str(r#"{"pickerFollowsSelection": false}"#).unwrap();
+        assert!(!off.picker_follows_selection);
         assert_eq!((p.text_unit().as_str(), p.layout_unit.as_str()), ("rem", "px"), "an earlier rem switch is the text unit");
         assert_eq!(MODELS.iter().position(|m| m.eq_ignore_ascii_case(&p.color_model)), Some(5));
         let p: Prefs = serde_json::from_str(r#"{"textUnit": "pt", "layoutUnit": "mm"}"#).unwrap();

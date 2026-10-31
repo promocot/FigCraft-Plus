@@ -6,6 +6,12 @@
     "insert": "mod picker_place_ui;"
   },
   {
+    "note": "tests: the picker follows the selection, or not",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^mod \\w+_tests;$",
+    "insert": "#[cfg(test)]\nmod picker_follow_tests;"
+  },
+  {
     "note": "picker: follow the selection (the same slot of newly selected layers)",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
     "after": "^pub fn show\\(app: &mut FigApp, ctx: &egui::Context\\) \\{$",
@@ -18,9 +24,9 @@
     "replace": "    // FigCraft Plus: beside a style dialog that opened it.\n    let open = crate::picker_place_ui::open(app, ctx, open, w);\n    // The colour picker's own header — title 16 in, the X 8 in from the right — is the shared\n"
   },
   {
-    "note": "picker: a press in a Plus popover (a channel's variable list, the style dialog) is not outside it",
+    "note": "picker: a press in a Plus popover is not outside it; following the selection, Plus decides which clicks close it",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
     "find": "    held.extend(crate::variable_ui::picker_rect(ctx));\n",
-    "replace": "    held.extend(crate::variable_ui::picker_rect(ctx));\n    held.extend(crate::popover_ui::open_rects());\n"
+    "replace": "    held.extend(crate::variable_ui::picker_rect(ctx));\n    held.extend(crate::popover_ui::open_rects());\n    held.extend(crate::picker_place_ui::held(app, ctx));\n"
   }
 ]

@@ -210,7 +210,12 @@ inside). Lessons learned:
 
 ## 8. Where things stand (update this section when you finish work)
 
-- **Released:** Plus 9 on FigCraft v0.13.1 (2026-10-31). Ported to 0.13.1; removed what 0.13
+- **Released:** Plus 10 on FigCraft v0.13.1 (2026-10-31): the picker follows the selection again
+  (0.13's outside press had closed it on a canvas / Layers click); `pickerFollowsSelection` in
+  `figcraft-plus.json`, Preferences checkbox, default on; `picker_place_ui::held` holds the canvas
+  and left panels from FigCraft's outside-press rule, `follow` closes on a click that selects
+  nothing new. Tests: `picker_follow_tests.rs`.
+- **Plus 9** on FigCraft v0.13.1 (2026-10-31). Ported to 0.13.1; removed what 0.13
   does itself (picker frame, placement and outside-press closing; the style-menu restyle, hook
   0018 deleted; our popover frame — Plus popovers now use FigCraft's `Popover`). Stage 1 done:
   rulers and guides in the layout unit (`units_ui::ruler_step`), Dev Mode properties in the

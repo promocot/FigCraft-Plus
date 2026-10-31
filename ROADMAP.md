@@ -101,6 +101,7 @@ Full details in the [changelog](CHANGELOG.md).
 
 | Release | Highlights |
 |---|---|
+| **Plus 10** | The colour picker follows the selection again (clicks on the canvas and in Layers) · *Picker follows the selection* in Preferences, to turn it off |
 | **Plus 9** | On FigCraft 0.13.1 (FigCraft's own popovers now) · rulers and Dev Mode in the document's unit, the code in px or rem · number variables shown in the unit of what they size · em for line height and letter spacing · contrast both ways |
 | **Plus 8** | Switch the document's unit from any length field (click its unit, or right-click) · one way to close every popover · decimals shown, 0–4 |
 | **Plus 7** | **Units everywhere:** a layout unit (px, rem, mm, cm, in, pt) and a text unit (px, rem, pt) per file, in every field and on the canvas · one popover style across the Design panel |

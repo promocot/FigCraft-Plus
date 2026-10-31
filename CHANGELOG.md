@@ -7,6 +7,15 @@ Every FigCraft Plus release, newest first. Each one is built on an official FigC
 **🟣 Exclusive** — FigCraft has nothing like it yet. **🔵 Enhanced** — FigCraft has a basic
 version; Plus goes further.
 
+## Plus 10 · FigCraft v0.13.1 — 2026-10-31
+
+- 🔵 **The colour picker follows the selection again.** Since FigCraft 0.13 a press outside the
+  picker closed it, so clicking another layer on the canvas or in Layers closed it too. Now a
+  click there moves it to the same fill, stroke or effect of the newly selected layer, as before;
+  a click that selects nothing new still closes it, and the Design panel closes it as FigCraft's
+  does. **Preferences ▸ FigCraft Plus ▸ Picker follows the selection** — on by default; off, the
+  picker behaves exactly as FigCraft's.
+
 ## Plus 9 · FigCraft v0.13.1 — 2026-10-31
 
 Every add-on carried over to FigCraft 0.13.1, and what FigCraft 0.13 now does itself was removed:
