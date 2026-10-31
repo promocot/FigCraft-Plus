@@ -52,5 +52,53 @@
     "file": "crates/ui-egui/src/panels/right.rs",
     "find": "    widgets::separator(ui);\n    // Local variables & styles.\n",
     "replace": "    widgets::separator(ui);\n    // FigCraft Plus: this document's units.\n    widgets::section_header(ui, tr(\"Units\"), &[], false);\n    crate::prefs_plus_ui::units_row(app, ui);\n    widgets::separator(ui);\n    // Local variables & styles.\n"
+  },
+  {
+    "note": "rulers: ticks on round numbers of the layout unit",
+    "file": "crates/ui-egui/src/canvas/rulers.rs",
+    "find": "    let step = figcraft_engine::guides::ruler_step(zoom);\n",
+    "replace": "    // FigCraft Plus: in the document's layout unit.\n    let (step, unit_k) = crate::units_ui::ruler_step(figcraft_engine::guides::ruler_step(zoom));\n"
+  },
+  {
+    "note": "rulers: the top ruler's numbers in the layout unit",
+    "file": "crates/ui-egui/src/canvas/rulers.rs",
+    "find": "painter.text(pos2(s + 2.0, r.min.y + 3.0), Align2::LEFT_TOP, fmt(x),",
+    "replace": "painter.text(pos2(s + 2.0, r.min.y + 3.0), Align2::LEFT_TOP, crate::units_ui::ruler_label(x, unit_k, fmt),"
+  },
+  {
+    "note": "rulers: the left ruler's numbers in the layout unit",
+    "file": "crates/ui-egui/src/canvas/rulers.rs",
+    "find": "painter.text(pos2(r.min.x + 3.0, s + 2.0), Align2::LEFT_TOP, fmt(y),",
+    "replace": "painter.text(pos2(r.min.x + 3.0, s + 2.0), Align2::LEFT_TOP, crate::units_ui::ruler_label(y, unit_k, fmt),"
+  },
+  {
+    "note": "guides: the offset tag in the layout unit",
+    "file": "crates/ui-egui/src/canvas/guides.rs",
+    "find": "painter.layout_no_wrap(crate::canvas::fmt(g.offset), semibold(10.0), Color32::WHITE)",
+    "replace": "painter.layout_no_wrap(crate::units_ui::guide_label(g.offset, crate::canvas::fmt), semibold(10.0), Color32::WHITE)"
+  },
+  {
+    "note": "Dev Mode: properties in the document's units",
+    "file": "crates/ui-egui/src/panels/right/inspect.rs",
+    "after": "^pub\\(crate\\) fn prop_row\\(app: &mut FigApp, ui: &mut Ui, p: &figcraft_engine::devinspect::Prop\\) \\{$",
+    "insert": "    // FigCraft Plus: lengths in the document's units (copied as shown).\n    let converted = crate::units_ui::dev_value(&p.label, &p.value).map(|value| figcraft_engine::devinspect::Prop { value, ..p.clone() });\n    let p = converted.as_ref().unwrap_or(p);"
+  },
+  {
+    "note": "Dev Mode: the code's unit is the file's (px or rem)",
+    "file": "crates/ui-egui/src/panels/right/inspect.rs",
+    "find": "    let rem = web && ui.data(|d| d.get_temp::<bool>(rem_id)).unwrap_or(false);\n",
+    "replace": "    // FigCraft Plus: the code's own unit, kept in the file (not the unit the panels show).\n    let rem = web && ui.data(|d| d.get_temp::<bool>(rem_id)).unwrap_or_else(|| crate::units_ui::doc_code_rem(&doc));\n"
+  },
+  {
+    "note": "Dev Mode: keep the code unit picked",
+    "file": "crates/ui-egui/src/panels/right/inspect.rs",
+    "find": "                        ui.data_mut(|d| d.insert_temp(rem_id, on));\n",
+    "replace": "                        ui.data_mut(|d| d.insert_temp(rem_id, on));\n                        crate::units_ui::set_code_rem(app, on);\n"
+  },
+  {
+    "note": "Variables editor: a number variable shows the unit of what it is used for",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
+    "find": "        VariableValue::Number(x) => {\n            let mut child = ui.new_child(UiBuilder::new().max_rect(body));\n            match widgets::number_field(&mut child, id.with(\"num\"),",
+    "replace": "        VariableValue::Number(x) => {\n            let mut child = ui.new_child(UiBuilder::new().max_rect(body));\n            // FigCraft Plus: in the layout or text unit, by what the variable is used for.\n            crate::units_ui::variable_cell(app, v);\n            match widgets::number_field(&mut child, id.with(\"num\"),"
   }
 ]

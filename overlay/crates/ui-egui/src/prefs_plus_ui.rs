@@ -261,63 +261,57 @@ fn draw(app: &mut FigApp, ctx: &egui::Context) {
     let layout = crate::units_ui::doc_layout(doc);
     let text = crate::units_ui::doc_text(doc);
     let t = Tokens::get(ctx);
-    let mut close = false;
-    let screen = ctx.content_rect();
-    let at = egui::pos2(at.x.max(screen.left() + 8.0), at.y.min(screen.bottom() - 330.0).max(screen.top() + 8.0));
-    let area = egui::Area::new(popover_id().with("area")).order(egui::Order::Foreground).fixed_pos(at).show(ctx, |ui| {
-        crate::popover_ui::frame(&t).show(ui, |ui| {
-            ui.set_width(W);
-            ui.spacing_mut().item_spacing = egui::vec2(0.0, 0.0);
-            close |= crate::popover_ui::header(ui, popover_id(), tr("Units"), W);
-            crate::popover_ui::body(ui, |ui| {
-                ui.spacing_mut().item_spacing = egui::vec2(0.0, 6.0);
-                let caption = |ui: &mut Ui, s: &str| {
-                    ui.label(egui::RichText::new(s).font(regular(11.0)).color(t.text));
-                };
-                let hint = |ui: &mut Ui, s: &str| {
-                    ui.label(egui::RichText::new(s).font(regular(10.5)).color(t.text_secondary));
-                };
-                hint(ui, tr("Applies to this document"));
-                ui.add_space(4.0);
-                caption(ui, tr("Layout"));
-                let active = crate::units_ui::LAYOUT_UNITS.iter().position(|u| *u == layout).unwrap_or(0);
-                let picked = ui.push_id("figcraftplus_layout_unit", |ui| widgets::segmented_text(ui, &crate::units_ui::LAYOUT_UNITS, active)).inner;
-                if let (Some(i), Some(page)) = (picked, page) {
-                    let u = crate::units_ui::LAYOUT_UNITS[i];
-                    app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::units_ui::LAYOUT_KEY: u}}}));
-                }
-                hint(ui, tr("Position, size, radius, spacing, strokes, effects"));
-                ui.add_space(6.0);
-                caption(ui, tr("Text"));
-                let active = crate::units_ui::TEXT_UNITS.iter().position(|u| *u == text).unwrap_or(0);
-                let picked = ui.push_id("figcraftplus_text_unit", |ui| widgets::segmented_text(ui, &crate::units_ui::TEXT_UNITS, active)).inner;
-                if let (Some(i), Some(page)) = (picked, page) {
-                    let u = crate::units_ui::TEXT_UNITS[i];
-                    app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::UNIT_KEY: u}}}));
-                }
-                hint(ui, tr("Font size, line height, letter and paragraph spacing"));
-                ui.add_space(6.0);
-                caption(ui, tr("Root size (1rem =)"));
-                if let (Some(FieldEdit::Set(v) | FieldEdit::Scrub(v, true)), Some(page)) =
-                    (widgets::number_field(ui, Id::unique("figcraftplus_rem_root"), Lead::None, Some(root), "px", W - 32.0, 1.0), page)
-                {
-                    let v = v.clamp(1.0, 1000.0);
-                    app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::PAGE_KEY: format!("{v}")}}}));
-                }
-                hint(ui, &format!("1rem = {}px, {}", widgets::fmt_num(root), tr("stored in the file")));
-                hint(ui, tr("Default for new documents: Preferences"));
-            });
+    let area_id = popover_id().with("area");
+    let (close, rect) = crate::popover_ui::show(ctx, area_id, tr("Units"), W, crate::popover::Open::At(at), |ui| {
+        egui::Frame::NONE.inner_margin(egui::Margin { left: 16, right: 16, top: 12, bottom: 14 }).show(ui, |ui| {
+            ui.spacing_mut().item_spacing = egui::vec2(0.0, 6.0);
+            let caption = |ui: &mut Ui, s: &str| {
+                ui.label(egui::RichText::new(s).font(regular(11.0)).color(t.text));
+            };
+            let hint = |ui: &mut Ui, s: &str| {
+                ui.label(egui::RichText::new(s).font(regular(10.5)).color(t.text_secondary));
+            };
+            hint(ui, tr("Applies to this document"));
+            ui.add_space(4.0);
+            caption(ui, tr("Layout"));
+            let active = crate::units_ui::LAYOUT_UNITS.iter().position(|u| *u == layout).unwrap_or(0);
+            let picked = ui.push_id("figcraftplus_layout_unit", |ui| widgets::segmented_text(ui, &crate::units_ui::LAYOUT_UNITS, active)).inner;
+            if let (Some(i), Some(page)) = (picked, page) {
+                let u = crate::units_ui::LAYOUT_UNITS[i];
+                app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::units_ui::LAYOUT_KEY: u}}}));
+            }
+            hint(ui, tr("Position, size, radius, spacing, strokes, effects"));
+            ui.add_space(6.0);
+            caption(ui, tr("Text"));
+            let active = crate::units_ui::TEXT_UNITS.iter().position(|u| *u == text).unwrap_or(0);
+            let picked = ui.push_id("figcraftplus_text_unit", |ui| widgets::segmented_text(ui, &crate::units_ui::TEXT_UNITS, active)).inner;
+            if let (Some(i), Some(page)) = (picked, page) {
+                let u = crate::units_ui::TEXT_UNITS[i];
+                app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::UNIT_KEY: u}}}));
+            }
+            hint(ui, tr("Font size, line height, letter and paragraph spacing"));
+            ui.add_space(6.0);
+            caption(ui, tr("Root size (1rem =)"));
+            if let (Some(FieldEdit::Set(v) | FieldEdit::Scrub(v, true)), Some(page)) =
+                (widgets::number_field(ui, Id::unique("figcraftplus_rem_root"), Lead::None, Some(root), "px", W - 32.0, 1.0), page)
+            {
+                let v = v.clamp(1.0, 1000.0);
+                app.run("node.set", json!({"ids": [page], "props": {"pluginData": {crate::rem_ui::PAGE_KEY: format!("{v}")}}}));
+            }
+            hint(ui, &format!("1rem = {}px, {}", widgets::fmt_num(root), tr("stored in the file")));
+            hint(ui, tr("Default for new documents: Preferences"));
         });
     });
     // A click outside closes it (not the click on a Units button that just toggled it); Esc too.
     let toggled_now = ctx.data(|d| d.get_temp::<u64>(popover_id().with("toggled"))) == Some(frame);
     let outside = !toggled_now
         && ctx.input(|i| i.pointer.primary_clicked())
-        && ctx.input(|i| i.pointer.interact_pos()).is_some_and(|p| !area.response.rect.contains(p));
+        && ctx.input(|i| i.pointer.interact_pos()).is_some_and(|p| !rect.contains(p));
     let reselected = crate::popover_ui::selection_changed(ctx, popover_id(), &app.session.selection());
     if close || outside || reselected || ctx.input(|i| i.key_pressed(egui::Key::Escape)) {
         ctx.data_mut(|d| d.remove_temp::<egui::Pos2>(popover_id()));
         crate::popover_ui::forget_selection(ctx, popover_id());
+        crate::popover_ui::forget(area_id);
     }
 }
 

@@ -7,6 +7,32 @@ Every FigCraft Plus release, newest first. Each one is built on an official FigC
 **🟣 Exclusive** — FigCraft has nothing like it yet. **🔵 Enhanced** — FigCraft has a basic
 version; Plus goes further.
 
+## Plus 9 · FigCraft v0.13.1 — 2026-10-31
+
+Every add-on carried over to FigCraft 0.13.1, and what FigCraft 0.13 now does itself was removed:
+its new popover — one card with a header, close button and shadow, which closes on Escape and on
+a press outside — now draws the colour picker, the variable list, the Units settings and the style
+dialogs, in place of Plus's own; the picker's placement beside the Design panel and FigCraft's dark
+style menu are FigCraft's again. Plus keeps what FigCraft doesn't do: the picker follows the
+selection to the same slot of other layers, and opens beside a style dialog rather than over it.
+
+- 🟣 **Rulers in the document's unit.** In mm, cm, in, pt or rem the rulers tick on round numbers
+  of that unit (every 10 mm, every 0.5 in…), and guides show their position in it.
+- 🔵 **Dev Mode in two units.** The properties it lists — size, position, radius, gap, padding,
+  stroke, font size, line height, spacing — show the document's units, and copy as shown. The code
+  it generates keeps its own unit, px or rem (of the file's root size), stored in the file: a CSS
+  file in millimetres never happens by accident.
+- 🟣 **Number variables with a unit.** A number variable used for sizes, spacing, radius or
+  strokes shows (and takes) the layout unit in the Variables editor; one used for type, the text
+  unit; opacity, weight and numbers nothing tells about stay bare. What it measures comes from the
+  fields bound to it, else its scopes. The variable list names numbers in the unit of the field
+  they would bind to. The stored value never changes.
+- 🟣 **em for line height and letter spacing:** `1.5em` is 150%, `0.02em` is 2% — relative to the
+  font size, as in CSS, and stored as FigCraft's percentage.
+- 🟣 **Contrast both ways.** Under the picker's fields, two `Aa` samples: the colour on its
+  background, and the background's colour on it, each with the WCAG ratio and level and the APCA
+  Lc. WCAG gives the same ratio both ways, APCA doesn't, so the pairing that reads better is marked.
+
 ## Plus 8 · FigCraft v0.12.1 — 2026-10-30
 
 - 🟣 **Switch units from any field.** A length field names its unit right after its value: click

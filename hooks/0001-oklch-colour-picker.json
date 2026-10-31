@@ -51,7 +51,7 @@
     "note": "picker: width",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
     "find": "    let screen = ctx.content_rect();\n",
-    "replace": "    // FigCraft Plus: placed by what opened it (picker_place_ui), not at a fixed spot.\n    let w = crate::oklch_fields::picker_width(ctx, &MODELS);\n"
+    "replace": "    let screen = ctx.content_rect();\n    // FigCraft Plus: as wide as the colour model needs (and the user dragged it).\n    let w = crate::oklch_fields::picker_width(ctx, &MODELS);\n"
   },
   {
     "note": "picker: position beside plugin panels",
@@ -60,22 +60,10 @@
     "replace": "map(|r| pos2(r.min.x - w - 8.0, r.min.y))"
   },
   {
-    "note": "picker: position (FigCraft Plus places it by what opened it: picker_place_ui)",
+    "note": "picker: FigCraft's popover as wide as the model needs; the header shows Custom | Libraries",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": "    let pos = beside.unwrap_or(pos2(screen.max.x - app.ui.right_width - 260.0, 140.0));\n",
-    "replace": "    let pos = crate::picker_place_ui::position(app, ctx, w, beside);\n"
-  },
-  {
-    "note": "picker: window width",
-    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": ".fixed_size(vec2(240.0, 0.0))",
-    "replace": ".fixed_size(vec2(w, 0.0))"
-  },
-  {
-    "note": "picker: header width",
-    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": "let (hr, _) = ui.allocate_exact_size(vec2(240.0, 40.0), Sense::hover());",
-    "replace": "let (hr, _) = ui.allocate_exact_size(vec2(w, 40.0), Sense::hover());"
+    "find": "    pop = pop.close_on_outside(!picking);\n",
+    "replace": "    pop = pop.close_on_outside(!picking);\n    // FigCraft Plus: as wide as the colour model needs; Custom | Libraries take the header's title.\n    pop = pop.width(w);\n    pop.title = crate::picker_libraries_ui::title(&target);\n    let header = pop.header;\n"
   },
   {
     "note": "picker: the blend row knows the picker's width",
@@ -128,32 +116,32 @@
   {
     "note": "picker: pass the profile",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": "                // Colour model fields (Hex, RGB, HSL, HSB, LCH, OKLCH or CSS) + alpha.\n                if let Some((c, d)) = model_fields(ui, nc) {",
-    "replace": "                // Colour model fields (Hex, RGB, HSL, HSB, LCH, OKLCH or CSS) + alpha.\n                let profile = app.session.doc().map(|d| d.color_profile).unwrap_or_default();\n                crate::oklch_fields::prepare(app, ui.ctx(), &target);\n                if let Some((c, d)) = model_fields(ui, nc, profile) {"
+    "find": "            // Colour model fields (Hex, RGB, HSL, HSB, LCH, OKLCH or CSS) + alpha.\n            if let Some((c, d)) = model_fields(ui, nc) {",
+    "replace": "            // Colour model fields (Hex, RGB, HSL, HSB, LCH, OKLCH or CSS) + alpha.\n            let profile = app.session.doc().map(|d| d.color_profile).unwrap_or_default();\n            crate::oklch_fields::prepare(app, ui.ctx(), &target);\n            if let Some((c, d)) = model_fields(ui, nc, profile) {"
   },
   {
     "note": "picker: variable list and links notes",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": "                    gamut_warning(ui, &t);\n                }\n",
-    "replace": "                    gamut_warning(ui, &t);\n                }\n                crate::oklch_fields::bindings_ui(app, ui, nc, &MODELS);\n"
+    "find": "                gamut_warning(ui, &t);\n            }\n",
+    "replace": "                gamut_warning(ui, &t);\n            }\n            crate::oklch_fields::bindings_ui(app, ui, nc, &MODELS);\n"
   },
   {
     "note": "picker: drag handle",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": "            ui.add_space(12.0);\n        });\n    if !open || close_now",
-    "replace": "            ui.add_space(12.0);\n            crate::oklch_fields::resize_handle(ui, w);\n        });\n    if !open || close_now"
+    "find": "        ui.add_space(12.0);\n    });\n    if closed {",
+    "replace": "        ui.add_space(12.0);\n        crate::oklch_fields::resize_handle(ui, w);\n    });\n    if closed {"
   },
   {
     "note": "picker: OKLCH plane in place of the HSB square",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": "                let (c1, d1) = sv_square(ui, sq, &mut hsb);",
-    "replace": "                let oklch_profile = app.session.doc().map(|d| d.color_profile).unwrap_or_default();\n                let (c1, d1) = if crate::oklch_fields::active(ui.ctx(), &MODELS) {\n                    crate::oklch_fields::plane(ui, sq, &mut hsb, color, oklch_profile)\n                } else {\n                    sv_square(ui, sq, &mut hsb)\n                };"
+    "find": "            let (c1, d1) = sv_square(ui, sq, &mut hsb);",
+    "replace": "            let oklch_profile = app.session.doc().map(|d| d.color_profile).unwrap_or_default();\n            let (c1, d1) = if crate::oklch_fields::active(ui.ctx(), &MODELS) {\n                crate::oklch_fields::plane(ui, sq, &mut hsb, color, oklch_profile)\n            } else {\n                sv_square(ui, sq, &mut hsb)\n            };"
   },
   {
     "note": "picker: OKLCH hue strip in place of the rainbow",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": "                let (c2, d2) = hue_slider(ui, hr, &mut hsb);",
-    "replace": "                let (c2, d2) = if crate::oklch_fields::active(ui.ctx(), &MODELS) {\n                    crate::oklch_fields::hue_strip(ui, hr, &mut hsb, color, oklch_profile)\n                } else {\n                    hue_slider(ui, hr, &mut hsb)\n                };"
+    "find": "            let (c2, d2) = hue_slider(ui, hr, &mut hsb);",
+    "replace": "            let (c2, d2) = if crate::oklch_fields::active(ui.ctx(), &MODELS) {\n                crate::oklch_fields::hue_strip(ui, hr, &mut hsb, color, oklch_profile)\n            } else {\n                hue_slider(ui, hr, &mut hsb)\n            };"
   },
   {
     "note": "picker: our RGB, HSL, HSB and OKLCH rows (bindable channels, OKLCH as on oklch.com, in the file's profile)",

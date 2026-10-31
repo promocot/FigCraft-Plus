@@ -121,7 +121,7 @@ pub(crate) fn details_button(ui: &mut Ui, row: Rect, name_w: f32, open: bool) ->
     }
     let t = Tokens::get(ui.ctx());
     let b = Rect::from_center_size(pos2(row.min.x + name_w - 18.0, row.center().y), vec2(22.0, 22.0));
-    let resp = ui.interact(b, ui.id().with(("var_details_button", row.min.y as i32)), Sense::click()).tip(tr("Edit variable"));
+    let resp = ui.interact(b, ui.scope_id().with(("var_details_button", row.min.y as i32)), Sense::click()).tip(tr("Edit variable"));
     ui.painter().rect_filled(b, CornerRadius::same(4), if resp.hovered() || open { t.field } else { t.hover });
     icons::paint(ui.painter(), b.shrink(4.0), Icon::Adjust, if open { t.accent } else { t.icon_secondary });
     resp.clicked()

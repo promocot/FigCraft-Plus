@@ -62,11 +62,6 @@ pub(crate) fn style_fits(kind: Option<&StyleKind>, field: &str, v: &Variable) ->
     scopes.iter().any(|s| v.in_scope(s))
 }
 
-/// Whether the style picker's colour variables for a fill (`stroke`: a stroke) offer `v`.
-pub(crate) fn paint_fits(v: &Variable, stroke: bool) -> bool {
-    !hidden(v) && if stroke { v.in_scope("STROKE_COLOR") } else { ["FRAME_FILL", "SHAPE_FILL", "TEXT_FILL"].iter().any(|s| v.in_scope(s)) }
-}
-
 /// A variable the picker lists.
 #[derive(Clone, Debug)]
 pub(crate) struct Item {
@@ -178,6 +173,7 @@ fn lines(items: &[Item], q: &str, filter: &Option<Option<String>>) -> Vec<Line> 
 /// Forget the card `id`'s search and filter (when it closes).
 pub(crate) fn reset(ctx: &egui::Context, id: Id) {
     ctx.data_mut(|d| d.remove::<State>(id));
+    crate::popover_ui::forget(id.with("area"));
 }
 
 /// The picker card `id` under `at` (a field's bottom left corner): `title`, the `items`, the one in
@@ -193,31 +189,24 @@ pub(crate) fn card(ctx: &egui::Context, id: Id, at: Pos2, title: &str, items: &[
     }
     // Under the field, inside the window (above it when there's no room below).
     let screen = ctx.content_rect();
-    let size = ctx.memory(|m| m.area_rect(id.with("area"))).map_or(vec2(W, 360.0), |r| r.size());
+    let size = crate::popover_ui::rect(id.with("area")).map_or(vec2(W, 360.0), |r| r.size());
     let x = at.x.min(screen.max.x - size.x - 8.0).max(screen.min.x + 8.0);
     let mut y = at.y + 4.0;
     if y + size.y > screen.max.y - 8.0 {
         y = (at.y - 30.0 - size.y).max(screen.min.y + 8.0).min(screen.max.y - size.y - 8.0);
     }
     let query_before = st.query.clone();
-    let area = egui::Area::new(id.with("area")).order(egui::Order::Foreground).fixed_pos(pos2(x, y)).show(ctx, |ui| {
-        let frame = crate::popover_ui::frame(&t);
-        frame.show(ui, |ui| {
-            ui.set_width(W);
-            ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
-            // Title and close.
-            if crate::popover_ui::header(ui, id, title, W) {
-                out = Outcome::Close;
-            }
-            if let Some(i) = body(ui, &t, id, &mut st, items, current, empty, W, 0.0) {
-                out = Outcome::Pick(i);
-            }
-        });
+    let (closed, rect) = crate::popover_ui::show(ctx, id.with("area"), title, W, crate::popover::Open::At(pos2(x, y)), |ui| {
+        if let Some(i) = body(ui, &t, id, &mut st, items, current, empty, W, 0.0) {
+            out = Outcome::Pick(i);
+        }
     });
+    if closed {
+        out = Outcome::Close;
+    }
     if st.query != query_before {
         st.highlight = 0;
     }
-    let rect = area.response.rect;
     let pressed_outside = ctx.input(|i| i.pointer.any_pressed() && i.pointer.interact_pos().is_some_and(|p| !rect.contains(p)));
     if pressed_outside && matches!(out, Outcome::Open) {
         out = Outcome::Close;
@@ -285,7 +274,7 @@ fn body(ui: &mut Ui, t: &Tokens, id: Id, st: &mut State, items: &[Item], current
             .font(regular(12.0))
             .text_color(t.text)
             .hint_text(tr("Search"))
-            .vertical_align(egui::Align::Center)
+            .align(egui::Align2::LEFT_CENTER)
             .desired_width(te.width()),
     );
     if r.has_focus() {
@@ -325,7 +314,7 @@ fn body(ui: &mut Ui, t: &Tokens, id: Id, st: &mut State, items: &[Item], current
                     let Some(it) = items.get(*i) else { continue };
                     let on = current == Some(&it.pick);
                     let (r, resp) = ui.allocate_exact_size(vec2(w, ROW_H), Sense::click());
-                    resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, on, &it.name));
+                    resp.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, true, on, &it.name));
                     if resp.hovered() && ui.input(|i| i.pointer.delta() != egui::Vec2::ZERO) {
                         st.highlight = k;
                     }
@@ -380,7 +369,7 @@ fn filter_row(ui: &mut Ui, t: &Tokens, id: Id, st: &mut State, libs: &[Option<St
     };
     let (r, resp) = ui.allocate_exact_size(vec2(w, 28.0), Sense::click());
     let text = label(&st.filter);
-    resp.widget_info(|| egui::WidgetInfo::labeled(egui::WidgetType::ComboBox, true, &text));
+    resp.widget_info(|| egui::WidgetInfo::labeled(egui::Role::ComboBox, true, &text));
     let w = ui.painter().layout_no_wrap(text.clone(), regular(11.0), t.text).size().x;
     let chip = Rect::from_min_size(pos2(r.min.x + 10.0, r.min.y + 2.0), vec2(w + 28.0, 22.0));
     if resp.hovered() || st.filter_open {
@@ -398,7 +387,7 @@ fn filter_row(ui: &mut Ui, t: &Tokens, id: Id, st: &mut State, libs: &[Option<St
     choices.extend(libs.iter().cloned().map(Some));
     for c in choices {
         let (r, resp) = ui.allocate_exact_size(vec2(w, 26.0), Sense::click());
-        resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, st.filter == c, label(&c)));
+        resp.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, true, st.filter == c, label(&c)));
         if resp.hovered() {
             ui.painter().rect_filled(r.shrink2(vec2(6.0, 1.0)), CornerRadius::same(6), t.hover);
         }
@@ -431,6 +420,7 @@ fn row(ui: &Ui, t: &Tokens, r: Rect, it: &Item, on: bool) {
     }
     let value = match &it.value {
         Some(VariableValue::Color(c)) => c.to_hex().trim_start_matches('#').to_uppercase(),
+        Some(VariableValue::Number(x)) => crate::units_ui::list_number(*x),
         Some(v) => v.display(),
         None => String::new(),
     };
@@ -580,7 +570,14 @@ pub(crate) fn picker(app: &mut FigApp, ctx: &egui::Context) {
         close(ctx);
         return;
     }
-    match card(ctx, id, p.at, tr("Variables"), &items, current.as_ref(), empty) {
+    // Numbers in the unit of the field they bind to.
+    crate::units_ui::list_for(match &p.target {
+        Target::Bind { field, .. } => Some(field.as_str()),
+        _ => None,
+    });
+    let outcome = card(ctx, id, p.at, tr("Variables"), &items, current.as_ref(), empty);
+    crate::units_ui::list_for(None);
+    match outcome {
         Outcome::Open => {}
         Outcome::Close => close(ctx),
         Outcome::Pick(i) => {
@@ -645,9 +642,6 @@ mod tests {
         assert!(!style_fits(None, "effects/0/color", &fill));
         assert!(style_fits(None, "fills/0/color", &fill));
         assert!(!style_fits(None, "fills/0/color", &shadow));
-        assert!(paint_fits(&fill, false) && !paint_fits(&fill, true));
-        assert!(paint_fits(&var(VariableType::Color, Some(vec!["ALL_FILLS"])), false));
-        assert!(!paint_fits(&var(VariableType::Color, Some(vec![])), false));
     }
 
     #[test]

@@ -4,9 +4,11 @@
 //!   export converts (`K = 1 − max(R, G, B)`), so the numbers are the ones the PDF will hold.
 //! - **Copy as**: the colour as Hex, RGB, HSL, HSB, LCH, OKLCH, CMYK or CSS, to the clipboard — a
 //!   converter between colour spaces.
-//! - **Contrast** under the fields: the WCAG 2 ratio (with AA / AAA) and the APCA lightness
-//!   contrast (Lc) of the colour against what it sits on (the nearest frame with a solid fill,
-//!   else the page).
+//! - **Contrast both ways** under the fields: the colour on what it sits on (the layers painted
+//!   under the layer, else the page), and that background's colour on the colour — an `Aa` sample
+//!   of each with the WCAG 2 ratio and level and the APCA lightness contrast (Lc). WCAG gives the
+//!   same ratio both ways, APCA doesn't (light on dark reads differently from dark on light), so
+//!   the pairing that reads better is marked.
 
 use egui::{Id, Ui};
 use figcraft_color::oklch_profile::Oklch;
@@ -213,7 +215,50 @@ fn level(ratio: f32) -> &'static str {
     }
 }
 
-/// Under the picker's fields: "Copy as" and the contrast against the colour's backdrop.
+/// The two ways to pair a colour `fg` (opaque, as seen) with its backdrop `bg`: `fg` on `bg`, and
+/// `bg` on `fg`, each as (text, background, WCAG ratio, APCA Lc); and which one reads better (the
+/// larger |Lc|; None when they are within 1 Lc of each other).
+pub(crate) fn both_ways(fg: Color, bg: Color) -> ([(Color, Color, f32, f64); 2], Option<usize>) {
+    let ratio = fg.contrast(bg);
+    let ways = [(fg, bg, ratio, apca(fg, bg)), (bg, fg, ratio, apca(bg, fg))];
+    let (a, b) = (ways[0].3.abs(), ways[1].3.abs());
+    let better = if (a - b).abs() < 1.0 {
+        None
+    } else if a > b {
+        Some(0)
+    } else {
+        Some(1)
+    };
+    (ways, better)
+}
+
+/// One pairing: an `Aa` sample (`text` on `bg`), the ratio and level, the Lc; `better` marks it.
+fn pairing(ui: &mut Ui, w: f32, (text, bg, ratio, lc): (Color, Color, f32, f64), caption: &str, better: bool) -> egui::Response {
+    let t = Tokens::get(ui.ctx());
+    let (r, resp) = ui.allocate_exact_size(egui::vec2(w, 40.0), egui::Sense::hover());
+    let p = ui.painter();
+    let sample = egui::Rect::from_min_size(r.min, egui::vec2(40.0, 40.0));
+    let to32 = |c: Color| crate::theme::doc_c32(ui.ctx(), c);
+    p.rect_filled(sample, egui::CornerRadius::same(6), to32(bg));
+    p.rect_stroke(
+        sample,
+        egui::CornerRadius::same(6),
+        egui::Stroke::new(if better { 1.5 } else { 1.0 }, if better { t.accent } else { t.border }),
+        egui::StrokeKind::Inside,
+    );
+    p.text(sample.center(), egui::Align2::CENTER_CENTER, "Aa", crate::theme::semibold(15.0), to32(text));
+    let x = sample.max.x + 8.0;
+    let clip = egui::Rect::from_min_max(egui::pos2(x, r.min.y), r.max);
+    let p = p.with_clip_rect(clip);
+    let col = if ratio >= 4.5 { t.text } else { t.warning };
+    p.text(egui::pos2(x, r.min.y + 2.0), egui::Align2::LEFT_TOP, format!("{}:1 {}", n(f64::from(ratio), 2), level(ratio)), crate::theme::regular(10.5), col);
+    p.text(egui::pos2(x, r.min.y + 15.0), egui::Align2::LEFT_TOP, format!("Lc {}", n(lc, 0)), crate::theme::regular(10.5), t.text_secondary);
+    let mark = if better { format!("✓ {}", tr("Reads better")) } else { String::new() };
+    p.text(egui::pos2(x, r.min.y + 28.0), egui::Align2::LEFT_TOP, mark, crate::theme::regular(9.5), t.accent_text);
+    resp.on_hover_text(caption)
+}
+
+/// Under the picker's fields: "Copy as", and the contrast both ways with the colour's backdrop.
 pub(crate) fn below_fields(app: &mut FigApp, ui: &mut Ui, c: Color, target: &PickerTarget) {
     let Ok(doc) = app.session.doc() else { return };
     let profile = doc.color_profile;
@@ -224,20 +269,19 @@ pub(crate) fn below_fields(app: &mut FigApp, ui: &mut Ui, c: Color, target: &Pic
     };
     let bg = backdrop(doc, layer);
     let fg = over(c, bg);
-    let ratio = fg.contrast(bg);
-    let lc = apca(fg, bg);
-    let t = Tokens::get(ui.ctx());
+    let (ways, better) = both_ways(fg, bg);
     ui.horizontal(|ui| {
         ui.add_space(16.0);
         copy_as(app, ui, c, profile);
-        ui.add_space(4.0);
-        let (sw, _) = ui.allocate_exact_size(egui::vec2(12.0, 12.0), egui::Sense::hover());
-        ui.painter().rect_filled(sw, egui::CornerRadius::same(3), crate::theme::doc_c32(ui.ctx(), bg));
-        ui.painter().rect_stroke(sw, egui::CornerRadius::same(3), egui::Stroke::new(1.0, t.border), egui::StrokeKind::Inside);
-        let text = format!("{}:1 {} · Lc {}", n(f64::from(ratio), 2), level(ratio), n(lc, 0));
-        let tip = format!("{} {}", tr("Contrast with"), bg.to_css_hex());
-        let col = if ratio >= 4.5 { t.text_secondary } else { t.warning };
-        ui.label(egui::RichText::new(text).font(crate::theme::regular(10.5)).color(col)).on_hover_text(tip);
+    });
+    ui.horizontal(|ui| {
+        ui.add_space(16.0);
+        ui.spacing_mut().item_spacing.x = 8.0;
+        let w = ((ui.available_width() - 16.0 - 8.0) / 2.0).max(80.0);
+        let on_bg = format!("{} · {} {}", tr("This colour on its background"), tr("Contrast with"), bg.to_css_hex());
+        let swapped = format!("{} · {} {}", tr("Its background on this colour"), tr("Contrast with"), fg.to_css_hex());
+        pairing(ui, w, ways[0], &on_bg, better == Some(0));
+        pairing(ui, w, ways[1], &swapped, better == Some(1));
     });
 }
 
@@ -264,6 +308,12 @@ mod tests {
         assert!((apca(w, b) + 107.88).abs() < 0.1, "{}", apca(w, b));
         assert_eq!(level(4.6), "AA");
         let half = over(Color::new(0.0, 0.0, 0.0, 0.5), w);
+        // Both ways: the same WCAG ratio, APCA prefers one.
+        let (ways, better) = both_ways(Color::from_hex("#FFFFFF").unwrap(), Color::from_hex("#1E40AF").unwrap());
+        assert_eq!(ways[0].2, ways[1].2);
+        assert!(ways[0].3 < 0.0 && ways[1].3 > 0.0, "light on dark is negative, dark on light positive");
+        assert_eq!(better, Some(0), "white on a dark blue reads better than the blue on white in APCA");
+        assert_eq!(both_ways(Color::BLACK, Color::BLACK).1, None);
         assert_eq!(half.to_hex(), "808080");
     }
 

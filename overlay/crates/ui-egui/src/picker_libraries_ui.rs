@@ -44,23 +44,29 @@ pub(crate) fn target_of(target: &PickerTarget) -> Option<Target> {
     })
 }
 
-/// The picker's header (`hr`): the Custom and Libraries tabs (Custom alone where variables don't
-/// apply). True while Libraries is open.
+/// The title FigCraft's popover header shows: none where the tabs take the header, else *Custom*.
+pub(crate) fn title(target: &PickerTarget) -> String {
+    if target_of(target).is_some() { String::new() } else { tr("Custom").to_string() }
+}
+
+/// The Custom and Libraries tabs in the picker's header `hr` (as FigCraft's popover drew it last
+/// frame), where variables apply. True while Libraries is open.
 pub(crate) fn header(ui: &mut Ui, hr: Rect, target: &PickerTarget) -> bool {
-    let t = Tokens::get(ui.ctx());
     if target_of(target).is_none() {
-        ui.painter().text(pos2(hr.min.x + 16.0, hr.center().y), Align2::LEFT_CENTER, tr("Custom"), semibold(11.0), t.text);
-        crate::popover_ui::divider(ui, hr);
         return false;
     }
     let mut libraries = ui.data(|d| d.get_temp::<bool>(tab_id())).unwrap_or(false);
+    if !hr.is_positive() {
+        return libraries;
+    }
+    let t = Tokens::get(ui.ctx());
     let mut x = hr.min.x + 8.0;
     for (label, is_libraries) in [(tr("Custom"), false), (tr("Libraries"), true)] {
         let gw = ui.painter().layout_no_wrap(label.to_string(), semibold(11.0), t.text).size().x;
         let r = Rect::from_min_size(pos2(x, hr.center().y - 12.0), vec2(gw + 16.0, 24.0));
         let resp = ui.interact(r, tab_id().with(is_libraries), Sense::click());
         let on = libraries == is_libraries;
-        resp.widget_info(|| egui::WidgetInfo::selected(egui::WidgetType::Button, true, on, label));
+        resp.widget_info(|| egui::WidgetInfo::selected(egui::Role::Button, true, on, label));
         if on || resp.hovered() {
             ui.painter().rect_filled(r, CornerRadius::same(6), t.hover);
         }
@@ -71,7 +77,6 @@ pub(crate) fn header(ui: &mut Ui, hr: Rect, target: &PickerTarget) -> bool {
         }
         x = r.max.x + 2.0;
     }
-    crate::popover_ui::divider(ui, hr);
     libraries
 }
 

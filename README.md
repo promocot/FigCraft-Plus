@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <b>FigCraft Plus 8</b> · built on FigCraft <b>v0.12.1</b>, the latest official release ·
+  <b>FigCraft Plus 9</b> · built on FigCraft <b>v0.13.1</b>, the latest official release ·
   <code>.figcraft</code> files stay compatible with the official app, both ways
 </p>
 
@@ -113,12 +113,9 @@ what you edit are offered.
 
 > ### 🗺 Roadmap — what's next
 >
-> **Now (on FigCraft 0.12):** rulers and Dev Mode in the document's unit (CSS code in px or rem) ·
-> number variables shown with their unit · `em` for letter spacing and line height · contrast
-> checked both ways (the colour on its background and the background on it).
->
-> **After FigCraft 0.13:** richer CSS export (`oklch()`, `rem`, relative colours, `calc()`) and CSS
-> import · edit and bind many text styles at once · **Design System Inspector**.
+> **Now (on FigCraft 0.13):** richer CSS export (`oklch()`, `rem`, relative colours, `calc()`) and
+> CSS import · edit and bind many text styles at once · remembered font replacements · then the
+> **Design System Inspector**.
 >
 > **After FigCraft 0.14:** sizes in %, vw and vh · auto layout from variables · line height and
 > gradients as tokens.
@@ -138,7 +135,7 @@ what you edit are offered.
   - [Derived colours and calculated variables](#derived-colours-and-calculated-variables)
   - [Units everywhere: px, rem, mm, cm, in, pt](#units-everywhere-px-rem-mm-cm-in-pt)
   - [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker)
-  - [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca)
+  - [Contrast both ways: WCAG and APCA](#contrast-both-ways-wcag-and-apca)
   - [Colour variables in the picker: the Libraries tab](#colour-variables-in-the-picker-the-libraries-tab)
   - [FigCraft Plus preferences](#figcraft-plus-preferences)
   - [A better picker](#a-better-picker)
@@ -166,17 +163,17 @@ what you edit are offered.
 version; Plus goes further. Features FigCraft has since added itself are
 [listed separately](#now-in-figcraft-itself-removed-from-plus) — they are no longer part of Plus.
 
-| Feature | In FigCraft v0.12.1 | In FigCraft Plus | |
+| Feature | In FigCraft v0.13.1 | In FigCraft Plus | |
 |---|---|---|---|
-| [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way) | FigCraft 0.12 has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB. | The whole picker works in OKLCH (an OKLCH plane with the exact gamut edge, an OKLCH hue strip), values match oklch.com and CSS, and Display P3 files are read in P3. | 🔵 Enhanced |
+| [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way) | FigCraft has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB. | The whole picker works in OKLCH (an OKLCH plane with the exact gamut edge, an OKLCH hue strip), values match oklch.com and CSS, and Display P3 files are read in P3. | 🔵 Enhanced |
 | [Derived colours and calculated variables](#derived-colours-and-calculated-variables) | A variable can be an *alias* of another — an exact copy, nothing more. | A colour can be *made from* another (transparency, lighter / darker, its complement, a mix of two), and a number from other numbers, all kept in step in every mode. | 🟣 Exclusive |
-| [Units everywhere: px, rem, mm, cm, in, pt](#units-everywhere-px-rem-mm-cm-in-pt) | Everything is shown and typed in px; mm, cm and in only in the PDF export's settings; Dev Mode rem uses a fixed 16. | Each file picks a **layout** unit (px, rem, mm, cm, in, pt) and a **text** unit (px, rem, pt) with its own root size; every field shows it, and any field takes any unit (`210mm`, `1.5rem`, `10mm + 2`). | 🟣 Exclusive |
+| [Units everywhere: px, rem, mm, cm, in, pt](#units-everywhere-px-rem-mm-cm-in-pt) | Everything is shown and typed in px; mm, cm and in only in the PDF export's settings; Dev Mode rem uses a fixed 16. | Each file picks a **layout** unit (px, rem, mm, cm, in, pt) and a **text** unit (px, rem, pt) with its own root size; every field, the rulers, Dev Mode and number variables show it, and any field takes any unit (`210mm`, `1.5rem`, `1.5em`, `10mm + 2`). | 🟣 Exclusive |
 | [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker) | The picker offers Hex, RGB, HSL, HSB, LCH, OKLCH and CSS; CMYK exists only as a PDF export option. | **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click. | 🟣 Exclusive |
-| [Contrast check: WCAG and APCA](#contrast-check-wcag-and-apca) | No contrast check in the interface. | Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what is really under the layer — any shape behind it, not only its frame. | 🟣 Exclusive |
+| [Contrast both ways: WCAG and APCA](#contrast-both-ways-wcag-and-apca) | No contrast check in the interface. | Under the picker's fields, two `Aa` samples — the colour on what is really under the layer, and that background on the colour — each with the WCAG ratio and level and the APCA Lc; the better pairing is marked. | 🟣 Exclusive |
 | [Colour variables in the picker: the Libraries tab](#colour-variables-in-the-picker-the-libraries-tab) | Colour variables are applied from the style menu next to Fill or Stroke; the picker itself only edits a colour. | A **Libraries** tab beside **Custom** in the colour picker: this file's and the enabled libraries' colour variables, with search — only those whose scope fits what you edit (a stroke offers stroke colours). | 🔵 Enhanced |
 | [FigCraft Plus preferences](#figcraft-plus-preferences) | The colour picker always opens in Hex; there are no units to choose. | Preferences ▸ FigCraft Plus: the layout and text units and root size for new files, and the model the colour picker opens in. | 🟣 Exclusive |
 | [A better picker](#a-better-picker) | Fields without captions, one fixed width. | A caption over every field, a width that fits the model, and a draggable edge. | 🔵 Enhanced |
-| [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing) | The picker opens at a fixed place on the right and closes when the selection changes. | It opens beside the swatch you clicked, stays on top, and moves to the same slot of the newly selected layer, so you keep editing without reopening it. | 🔵 Enhanced |
+| [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing) | The picker opens beside the Design panel and closes when the selection changes. | It moves to the same slot of the newly selected layer, so you keep editing without reopening it; opened from a style dialog, it opens beside the dialog. | 🔵 Enhanced |
 | [Colours driven by number variables](#colours-driven-by-number-variables) | A colour can be bound to a colour variable as a whole. | Each channel (L, C, H, R, G, B, H, S, alpha…) can follow its own number variable: one `brand/hue` restyles every colour built on it. | 🟣 Exclusive |
 | [Variables in text: weight, paragraph spacing and indent](#variables-in-text-weight-paragraph-spacing-and-indent) | Font family and font style take string variables. | The weight takes a number variable too (400, 700), and paragraph spacing and indent take number variables. | 🔵 Enhanced |
 | [Your own fonts, travelling with the app](#your-own-fonts-travelling-with-the-app) | Fonts come from the system (and Adobe Fonts / font managers on macOS). | A `fonts` folder next to `figcraft.exe` — your fonts travel on the USB drive — with *Add fonts…*, an *In this file* section and *Added* tags. | 🟣 Exclusive |
@@ -223,6 +220,9 @@ Features FigCraft users asked for in the official tracker that FigCraft itself h
 | OKLCH in the colour picker's model menu | 0.12 — LCH and OKLCH models |
 | Font family and font style bound to string variables | 0.12 |
 | Colour variables offered by fill / stroke scope in the style picker | 0.12 |
+| One popover style (header, close button, shadow), closed by Escape and a press outside | 0.13 — FigCraft's own popover, which Plus's popovers now use |
+| The colour picker opening beside the Design panel, at the swatch's height | 0.13 |
+| The style menu restyled light in the light theme | 0.13 keeps its dark style menu; Plus no longer recolours it |
 | Google Fonts download | removed earlier (fonts folder instead) |
 
 ## Add-ons
@@ -231,7 +231,7 @@ Features FigCraft users asked for in the official tracker that FigCraft itself h
 
 **🔵 Enhanced** — better in FigCraft Plus
 
-> **FigCraft:** FigCraft 0.12 has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB.
+> **FigCraft:** FigCraft has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB.
 >
 > **FigCraft Plus:** The whole picker works in OKLCH (an OKLCH plane with the exact gamut edge, an OKLCH hue strip), values match oklch.com and CSS, and Display P3 files are read in P3.
 
@@ -331,7 +331,20 @@ the files and keeps the last computed values.
   exports as an exact A4 page, `85mm` × `55mm` as a business card. rem is the file's root size.
 - Values are stored in px, as FigCraft stores them; the units and root size are kept in the file as
   text the official FigCraft ignores, so it opens the file as before (and shows px).
-- Dev Mode's px → rem code uses the file's root size instead of a fixed 16.
+<img src="docs/images/40-rulers-dev-mode.png" width="720" alt="A document in mm: the rulers count 0, 20, 40 … mm, the measurements read 14.11mm and 125.33mm, Dev Mode lists Width 70.56mm and Height 28.22mm while its CSS says width: 200px">
+
+- **Rulers** tick on round numbers of the layout unit (every 10 mm, every 0.5 in), and guides
+  show their position in it.
+- **Dev Mode in two units:** the properties it lists show the document's units (and copy as
+  shown); the code it generates keeps its own unit — px or rem, of the file's root size, stored
+  in the file — so a CSS file in millimetres never happens by accident.
+- **Number variables** show the unit of what they size in the Variables editor: one bound to (or
+  scoped for) sizes, spacing, radius or strokes the layout unit, one for type the text unit;
+  opacity, weight and plain numbers stay bare. The variable list shows numbers in the unit of the
+  field they would bind to. The stored value never changes.
+  <img src="docs/images/41-number-variables.png" width="560" alt="The Variables editor: space/m (scoped to gap) reads 5.64mm, font/body (font size) 12pt, opacity/muted 0.6 and count 3 stay bare">
+- **em** for line height and letter spacing: `1.5em` is 150%, `0.02em` is 2% — relative to the
+  font size, as in CSS, stored as FigCraft's percentage.
 - **Coming later:** `%`, `vw` and `vh` — sizes relative to the parent frame
   ([roadmap](ROADMAP.md)).
 
@@ -355,23 +368,27 @@ the files and keeps the last computed values.
 - **Copy as** under the fields: Hex, `rgb()`, `hsl()`, HSB, `lch()`, `oklch()` (oklch.com
   precision), `device-cmyk()` or CSS — a converter between colour spaces.
 
-### Contrast check: WCAG and APCA
+### Contrast both ways: WCAG and APCA
 
 **🟣 Exclusive** — only in FigCraft Plus (for now)
 
 > **FigCraft:** No contrast check in the interface.
 >
-> **FigCraft Plus:** Under the picker's fields: the WCAG 2 ratio with its level, and the APCA Lc, against what is really under the layer.
+> **FigCraft Plus:** Under the picker's fields, two `Aa` samples — the colour on what is really under the layer, and that background's colour on the colour — each with the WCAG 2 ratio and level and the APCA Lc. The pairing that reads better is marked.
 
 <img src="docs/images/34-contrast-backdrop.png" width="350" alt="A white button on a magenta rectangle: the picker shows 6.46:1 AA · Lc -86 against the magenta">
+
+<img src="docs/images/39-contrast-both-ways.png" width="362" alt="Under the picker's fields: white Aa on blue, 8.72:1 AAA, Lc -94, marked Reads better; blue Aa on white, 8.72:1 AAA, Lc 89">
 
 - **The backdrop is what is really under the layer**, at its centre: any shape, frame or
   gradient behind it (a button on a coloured rectangle is checked against the rectangle, not the
   page), hidden and clipped-away layers left out. Half-transparent layers are blended in, down to
-  the first opaque one and the page's background. The small swatch shows the colour it found;
-  hover the line to see it.
+  the first opaque one and the page's background. Hover a sample to see the colour it found.
+- **Both ways:** WCAG gives the same ratio whichever colour is the text; APCA doesn't — light text
+  on dark reads differently from dark text on light — so the sample with the larger |Lc| is marked
+  *Reads better*. A quick way to see whether swapping foreground and background would help.
 - WCAG levels for normal text: **AAA** ≥ 7, **AA** ≥ 4.5, **AA Large** ≥ 3; below 4.5 the line is
-  highlighted. APCA Lc follows APCA-W3 (black on white ≈ 106, white on black ≈ −108).
+  shown in the warning colour. APCA Lc follows APCA-W3 (black on white ≈ 106, white on black ≈ −108).
 
 ### Colour variables in the picker: the Libraries tab
 
@@ -430,27 +447,15 @@ They are saved in `figcraft-plus.json` next to `figcraft.exe`, so a copy on a US
 
 **🔵 Enhanced** — better in FigCraft Plus
 
-> **FigCraft:** The picker opens at a fixed place on the right and closes when the selection changes.
+> **FigCraft:** The picker opens beside the Design panel at the swatch's height, and closes when the selection changes.
 >
-> **FigCraft Plus:** It opens beside the swatch you clicked, stays on top, and moves to the same slot of the newly selected layer, so you keep editing without reopening it.
+> **FigCraft Plus:** It moves to the same slot of the newly selected layer, so you keep editing without reopening it.
 
-<p>
-<img src="docs/images/21-picker-beside-fill.png" width="420" alt="The picker beside the Design panel, at the fill's height">
-<img src="docs/images/20-picker-beside-variable.png" width="450" alt="The picker beside a colour variable's value, above the Variables editor">
-</p>
-
-- **It opens beside the control that opened it**: left of the Design panel at the fill's (stroke's,
-  effect's…) height; beside a colour variable's value in the Variables editor; beside a style's
-  paint. When there's no room it opens on the other side, and it always stays inside the window.
-- **It stays on top** of every panel and window, the Variables editor included.
-- **It follows its control** when a panel scrolls, the window is resized or the Variables editor
-  is moved.
 - **Select another layer** (on the canvas or in Layers) and it switches to the same slot of that
-  layer — Fill 1 stays Fill 1. If the layer has no such slot, or nothing is selected, it closes.
-- **Click outside it** — empty canvas, the same layer again, anywhere in the panels — and it
-  closes; the click still does its usual job (an empty spot deselects). Clicking another swatch
-  moves it there; dragging (moving layers, gradient handles, scrolling) leaves it open. **Escape**
-  closes it too — the same rules as every popover in the Design panel.
+  layer — Fill 1 stays Fill 1, the second shadow stays the second shadow. If the layer has no such
+  slot, or nothing is selected, it closes as FigCraft's does.
+- **Opened from a style dialog**, it opens beside the dialog instead of over it.
+- Where it opens otherwise, Escape and a press outside closing it are FigCraft's own (since 0.13).
 
 ### Colours driven by number variables
 

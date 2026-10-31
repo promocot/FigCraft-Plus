@@ -6,15 +6,21 @@
     "insert": "mod picker_place_ui;"
   },
   {
-    "note": "picker: follow the opener and the selection, close on a canvas click",
+    "note": "picker: follow the selection (the same slot of newly selected layers)",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
     "after": "^pub fn show\\(app: &mut FigApp, ctx: &egui::Context\\) \\{$",
     "insert": "    crate::picker_place_ui::follow(app, ctx, |a, t| current_paint(a, t).is_some());"
   },
   {
-    "note": "picker: above every panel and window",
+    "note": "picker: opened from a style dialog, beside the dialog",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": "        .id(window_id())\n        .title_bar(false)\n",
-    "replace": "        .id(window_id())\n        .title_bar(false)\n        .order(egui::Order::Foreground)\n"
+    "find": "    // The colour picker's own header — title 16 in, the X 8 in from the right — is the shared\n",
+    "replace": "    // FigCraft Plus: beside a style dialog that opened it.\n    let open = crate::picker_place_ui::open(app, ctx, open, w);\n    // The colour picker's own header — title 16 in, the X 8 in from the right — is the shared\n"
+  },
+  {
+    "note": "picker: a press in a Plus popover (a channel's variable list, the style dialog) is not outside it",
+    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
+    "find": "    held.extend(crate::variable_ui::picker_rect(ctx));\n",
+    "replace": "    held.extend(crate::variable_ui::picker_rect(ctx));\n    held.extend(crate::popover_ui::open_rects());\n"
   }
 ]

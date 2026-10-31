@@ -26,8 +26,8 @@
   {
     "note": "Local styles: a click edits the style in the style dialog",
     "file": "crates/ui-egui/src/widgets/style_picker.rs",
-    "find": "fn edit_local(app: &mut FigApp, ui: &Ui, slot: StyleSlot, id: &str) {\n    let y = ui.input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);\n    let edit = app.session.doc().ok().and_then(|d| d.style(id).map(editing));\n    app.ui.style_picker = Some(Picker { slot, ids: app.session.selection(), y, query: String::new(), edit });\n}\n",
-    "replace": "fn edit_local(app: &mut FigApp, ui: &Ui, _slot: StyleSlot, id: &str) {\n    // FigCraft Plus: the style dialog.\n    let y = ui.input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);\n    crate::style_dialog_ui::open_edit(app, ui.ctx(), id, y);\n}\n"
+    "find": "fn edit_local(app: &mut FigApp, ui: &Ui, slot: StyleSlot, id: &str) {\n    let y = ui.input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);\n    let edit = app.session.doc().ok().and_then(|d| d.style(id).map(editing));\n    crate::colorpicker::close(app);\n    app.ui.style_picker_popover = None;\n    app.ui.style_picker = Some(Picker { slot, ids: app.session.selection(), y, query: String::new(), edit });\n}\n",
+    "replace": "fn edit_local(app: &mut FigApp, ui: &Ui, _slot: StyleSlot, id: &str) {\n    // FigCraft Plus: the style dialog.\n    let y = ui.input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);\n    crate::colorpicker::close(app);\n    app.ui.style_picker_popover = None;\n    crate::style_dialog_ui::open_edit(app, ui.ctx(), id, y);\n}\n"
   },
   {
     "note": "variable list: a style's weight or style binding",

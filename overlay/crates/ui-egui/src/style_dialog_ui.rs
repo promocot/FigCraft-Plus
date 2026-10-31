@@ -60,12 +60,16 @@ fn get(ctx: &egui::Context) -> Option<Dialog> {
 }
 
 fn put(ctx: &egui::Context, d: Option<Dialog>) {
+    let open = d.is_some();
     ctx.data_mut(|m| match d {
         Some(d) => {
             m.insert_temp(dialog_id(), d);
         }
         None => m.remove::<Dialog>(dialog_id()),
     });
+    if !open {
+        crate::popover_ui::forget(area_id());
+    }
 }
 
 /// The style the dialog shows (tests).
@@ -231,7 +235,7 @@ pub(crate) fn show(app: &mut FigApp, ctx: &egui::Context) {
     let t = Tokens::get(ctx);
     let screen = ctx.content_rect();
     let x = (screen.max.x - app.ui.right_width - W - 16.0).max(screen.min.x + 8.0);
-    let h = ctx.memory(|m| m.area_rect(Id::unique("figcraftplus_style_dialog_area"))).map_or(420.0, |r| r.height());
+    let h = crate::popover_ui::rect(area_id()).map_or(420.0, |r| r.height());
     let y = d.y.clamp(screen.min.y + 48.0, (screen.max.y - h - 8.0).max(screen.min.y + 48.0));
     let mut close = false;
     let mut create = false;
@@ -243,88 +247,72 @@ pub(crate) fn show(app: &mut FigApp, ctx: &egui::Context) {
         StyleKind::Grid { .. } => (tr("Create new layout guide style"), tr("Edit layout guide style"), tr("New layout guide style")),
     };
     let title = if d.creating { create_title } else { edit_title };
-    let area = egui::Area::new(Id::unique("figcraftplus_style_dialog_area")).order(egui::Order::Foreground).fixed_pos(pos2(x, y)).show(ctx, |ui| {
-        crate::popover_ui::frame(&t).show(ui, |ui| {
-            ui.set_width(W);
-            ui.spacing_mut().item_spacing = vec2(8.0, 6.0);
-            // Header.
-            let (hr, _) = ui.allocate_exact_size(vec2(W, crate::popover_ui::HEADER_H), Sense::hover());
-            ui.painter().text(pos2(hr.min.x + 16.0, hr.center().y), Align2::LEFT_CENTER, title, semibold(12.0), t.text);
-            let cr = Rect::from_center_size(pos2(hr.max.x - 20.0, hr.center().y), vec2(24.0, 24.0));
-            let cresp = ui.interact(cr, Id::unique("sd_close"), Sense::click()).tip(tr("Close"));
-            if cresp.hovered() {
-                ui.painter().rect_filled(cr, CornerRadius::same(5), t.hover);
+    let (x_clicked, dialog_rect) = crate::popover_ui::show(ctx, area_id(), title, W, crate::popover::Open::At(pos2(x, y)), |ui| {
+        ui.spacing_mut().item_spacing = vec2(8.0, 6.0);
+        preview(ui, &st, &t);
+        separator(ui, &t);
+        // Name and description.
+        ui.add_space(4.0);
+        labelled(ui, tr("Name"), &t, |ui| {
+            let r = ui.add(egui::TextEdit::singleline(&mut d.name).hint_text(hint).font(regular(11.0)).desired_width(W - 112.0));
+            if d.focus_name {
+                r.request_focus();
+                d.focus_name = false;
             }
-            icons::paint(ui.painter(), cr.shrink(6.0), Icon::Close, t.icon);
-            if cresp.clicked() {
-                close = true;
-            }
-            separator(ui, &t);
-            preview(ui, &st, &t);
-            separator(ui, &t);
-            // Name and description.
-            ui.add_space(4.0);
-            labelled(ui, tr("Name"), &t, |ui| {
-                let r = ui.add(egui::TextEdit::singleline(&mut d.name).hint_text(hint).font(regular(11.0)).desired_width(W - 112.0));
-                if d.focus_name {
-                    r.request_focus();
-                    d.focus_name = false;
-                }
-                if !d.creating && r.lost_focus() && !d.name.trim().is_empty() && d.name.trim() != st.name {
-                    app.run("style.update", json!({"style": st.id, "name": d.name.trim()}));
-                }
-            });
-            labelled(ui, tr("Description"), &t, |ui| {
-                let r = ui
-                    .add(egui::TextEdit::singleline(&mut d.description).hint_text(tr("What it's for")).font(regular(11.0)).desired_width(W - 112.0));
-                if !d.creating && r.lost_focus() && d.description != st.description {
-                    app.run("style.update", json!({"style": st.id, "description": d.description}));
-                }
-            });
-            ui.add_space(6.0);
-            separator(ui, &t);
-            // Properties.
-            let (pr, _) = ui.allocate_exact_size(vec2(W, 36.0), Sense::hover());
-            ui.painter().text(pos2(pr.min.x + 16.0, pr.center().y), Align2::LEFT_CENTER, tr("Properties"), semibold(11.0), t.text);
-            if !matches!(st.kind, StyleKind::Text { .. }) {
-                let ar = Rect::from_center_size(pos2(pr.max.x - 22.0, pr.center().y), vec2(24.0, 24.0));
-                let aresp = ui.interact(ar, Id::unique("sd_add"), Sense::click()).tip(tr("Add"));
-                if aresp.hovered() {
-                    ui.painter().rect_filled(ar, CornerRadius::same(5), t.hover);
-                }
-                icons::paint(ui.painter(), ar.shrink(6.0), Icon::Plus, t.icon);
-                if aresp.clicked() {
-                    add_property(app, &st);
-                }
-            }
-            match &st.kind {
-                StyleKind::Text { style } => text_props(app, ui, &doc, &st, style, &mut d.more),
-                StyleKind::Paint { paints } => paint_rows(app, ui, &doc, &st, paints),
-                StyleKind::Effect { effects } => {
-                    let labels: Vec<String> = effects.iter().map(|e| tr(e.label()).to_string()).collect();
-                    let vis: Vec<bool> = effects.iter().map(|e| e.visible).collect();
-                    list_rows(app, ui, &st, &labels, &vis, Icon::Effects, &mut d.open);
-                }
-                StyleKind::Grid { grids } => {
-                    let labels: Vec<String> = grids.iter().map(grid_label).collect();
-                    let vis: Vec<bool> = grids.iter().map(|g| g.visible).collect();
-                    list_rows(app, ui, &st, &labels, &vis, Icon::Grid, &mut d.open);
-                }
-            }
-            ui.add_space(8.0);
-            // Footer.
-            if d.creating {
-                separator(ui, &t);
-                let (fr, _) = ui.allocate_exact_size(vec2(W, 48.0), Sense::hover());
-                let br = Rect::from_min_max(pos2(fr.max.x - 120.0, fr.min.y + 10.0), pos2(fr.max.x - 14.0, fr.max.y - 10.0));
-                let mut child = ui.new_child(egui::UiBuilder::new().max_rect(br));
-                if widgets::button(&mut child, tr("Create style"), true, true).clicked() {
-                    create = true;
-                }
+            if !d.creating && r.lost_focus() && !d.name.trim().is_empty() && d.name.trim() != st.name {
+                app.run("style.update", json!({"style": st.id, "name": d.name.trim()}));
             }
         });
+        labelled(ui, tr("Description"), &t, |ui| {
+            let r = ui
+                .add(egui::TextEdit::singleline(&mut d.description).hint_text(tr("What it's for")).font(regular(11.0)).desired_width(W - 112.0));
+            if !d.creating && r.lost_focus() && d.description != st.description {
+                app.run("style.update", json!({"style": st.id, "description": d.description}));
+            }
+        });
+        ui.add_space(6.0);
+        separator(ui, &t);
+        // Properties.
+        let (pr, _) = ui.allocate_exact_size(vec2(W, 36.0), Sense::hover());
+        ui.painter().text(pos2(pr.min.x + 16.0, pr.center().y), Align2::LEFT_CENTER, tr("Properties"), semibold(11.0), t.text);
+        if !matches!(st.kind, StyleKind::Text { .. }) {
+            let ar = Rect::from_center_size(pos2(pr.max.x - 22.0, pr.center().y), vec2(24.0, 24.0));
+            let aresp = ui.interact(ar, Id::unique("sd_add"), Sense::click()).tip(tr("Add"));
+            if aresp.hovered() {
+                ui.painter().rect_filled(ar, CornerRadius::same(5), t.hover);
+            }
+            icons::paint(ui.painter(), ar.shrink(6.0), Icon::Plus, t.icon);
+            if aresp.clicked() {
+                add_property(app, &st);
+            }
+        }
+        match &st.kind {
+            StyleKind::Text { style } => text_props(app, ui, &doc, &st, style, &mut d.more),
+            StyleKind::Paint { paints } => paint_rows(app, ui, &doc, &st, paints),
+            StyleKind::Effect { effects } => {
+                let labels: Vec<String> = effects.iter().map(|e| tr(e.label()).to_string()).collect();
+                let vis: Vec<bool> = effects.iter().map(|e| e.visible).collect();
+                list_rows(app, ui, &st, &labels, &vis, Icon::Effects, &mut d.open);
+            }
+            StyleKind::Grid { grids } => {
+                let labels: Vec<String> = grids.iter().map(grid_label).collect();
+                let vis: Vec<bool> = grids.iter().map(|g| g.visible).collect();
+                list_rows(app, ui, &st, &labels, &vis, Icon::Grid, &mut d.open);
+            }
+        }
+        ui.add_space(8.0);
+        // Footer.
+        if d.creating {
+            separator(ui, &t);
+            let (fr, _) = ui.allocate_exact_size(vec2(W, 48.0), Sense::hover());
+            let br = Rect::from_min_max(pos2(fr.max.x - 120.0, fr.min.y + 10.0), pos2(fr.max.x - 14.0, fr.max.y - 10.0));
+            let mut child = ui.new_child(egui::UiBuilder::new().max_rect(br));
+            if widgets::button(&mut child, tr("Create style"), true, true).clicked() {
+                create = true;
+            }
+        }
     });
-    let dialog_rect = area.response.rect;
+    close |= x_clicked;
     // The settings popover of the open effect or grid, left of the dialog.
     if let Some(i) = d.open {
         let shown = match &st.kind {
@@ -337,7 +325,7 @@ pub(crate) fn show(app: &mut FigApp, ctx: &egui::Context) {
             let py = (dialog_rect.min.y + 180.0 + i as f32 * 32.0).min(screen.max.y - 320.0).max(screen.min.y + 48.0);
             let mut shut = false;
             egui::Area::new(Id::unique("figcraftplus_style_popover")).order(egui::Order::Foreground).fixed_pos(pos2(px, py)).show(ctx, |ui| {
-                crate::popover_ui::frame(&t).show(ui, |ui| {
+                crate::popover_ui::frame(ui).show(ui, |ui| {
                     ui.set_width(POP_W);
                     ui.spacing_mut().item_spacing = vec2(8.0, 6.0);
                     match &st.kind {
@@ -1230,4 +1218,9 @@ mod tests {
             .unwrap();
         assert_eq!(style(&s), "Light Italic");
     }
+}
+
+/// The dialog's popover (its egui area).
+fn area_id() -> Id {
+    Id::unique("figcraftplus_style_dialog_area")
 }

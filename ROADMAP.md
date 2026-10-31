@@ -17,28 +17,16 @@ Everything below serves one of them.
 
 | Stage | When | Theme |
 |---|---|---|
-| **1** | now, on FigCraft 0.12 | Measurement, part 2 · contrast both ways |
-| **2** | after FigCraft 0.13 | Design system ↔ code |
-| **3** | after FigCraft 0.13 | Design System Inspector |
+| **1** | ✅ done in Plus 9 | Measurement, part 2 · contrast both ways |
+| **2** | now, on FigCraft 0.13 | Design system ↔ code |
+| **3** | on FigCraft 0.13 | Design System Inspector |
 | **4** | after FigCraft 0.14 | Responsive layout |
 | **5** | after FigCraft 0.14 | Web typography and colour tokens |
 | — | later | Print and export |
 
 ---
 
-## ▶ Stage 1 — now, on FigCraft 0.12: measurement, part 2 and contrast both ways
-
-*In progress. Finishes the units work of Plus 7 and 8.*
-
-| | Feature | What it gives you |
-|---|---|---|
-| ⬜ | **Rulers in the document's unit** | Measure a print page in mm on the canvas, not only in the fields |
-| ⬜ | **Dev Mode in two units:** what it *shows* follows the document's unit; the **code** it generates has its own choice (px or rem) | 84.67 mm on screen, `width: 320px` (or `20rem`) in the CSS — never a CSS file in millimetres by accident |
-| ⬜ | **Number variables with a unit:** a variable used for sizes, spacing or radius shows in the layout unit, one used for font size in the text unit; opacity, weight and plain numbers stay bare. The stored value never changes | `space/m = 16` no longer reads 16 in the Variables editor and 5.64 mm in the field |
-| ⬜ | **em for letter spacing and line height** — relative to the font size, as in CSS | Type settings that scale with the size, written the way the web writes them |
-| ⬜ | **Contrast both ways** — for the selected layer, two previews side by side: its colour on the background, and the background's colour on it (`Aa` samples), each with the WCAG ratio and level and the APCA Lc. WCAG gives the same ratio both ways; APCA doesn't (light text on dark reads differently from dark on light), so the better pairing is marked | See at a glance whether swapping foreground and background reads better, instead of guessing from one number |
-
-## 🔜 Stage 2 — after FigCraft 0.13: design system ↔ code
+## ▶ Stage 2 — now, on FigCraft 0.13: design system ↔ code
 
 *FigCraft already exports variables as JSON, CSS (in px), Tailwind and Dart, and imports JSON. Plus
 adds what it leaves out.*
@@ -51,7 +39,7 @@ adds what it leaves out.*
 | ⬜ | **Bind variables to many styles at once** — pick text styles, map their size, line height, weight… to variables by name, preview, apply as one undo step | Hundreds of clicks to move a type scale onto variables become one |
 | ⬜ | **Remember missing-font replacements** — "always use Inter for Helvetica" | Open files from others without choosing the same replacements again |
 
-## 🔍 Stage 3 — after FigCraft 0.13: Design System Inspector
+## 🔍 Stage 3 — on FigCraft 0.13: Design System Inspector
 
 | | Feature | What it gives you |
 |---|---|---|
@@ -102,7 +90,10 @@ Often asked for, and FigCraft has it already, so Plus doesn't add it: **Paste to
 (Edit menu) · **stroke weight per side** · **variable font axes** (Typography) · **bleed, crop
 marks and CMYK in the print PDF** · **line height in %** (as a value) · **layout grid styles** ·
 **gradient stops bound to colour variables** · **outline view** · **variables export** (JSON, CSS,
-Tailwind, Dart) **and import** (JSON).
+Tailwind, Dart) **and import** (JSON) · **px or rem in Dev Mode's code** · since 0.13: **one popover
+style** that closes on Escape and a press outside · **the colour picker beside the Design panel** ·
+**colour variables with an alpha, and mixes of two** (as variable values) · **a portable mode**
+(settings next to the app) · **custom dash patterns** for strokes.
 
 ## ✅ Done
 
@@ -110,6 +101,7 @@ Full details in the [changelog](CHANGELOG.md).
 
 | Release | Highlights |
 |---|---|
+| **Plus 9** | On FigCraft 0.13.1 (FigCraft's own popovers now) · rulers and Dev Mode in the document's unit, the code in px or rem · number variables shown in the unit of what they size · em for line height and letter spacing · contrast both ways |
 | **Plus 8** | Switch the document's unit from any length field (click its unit, or right-click) · one way to close every popover · decimals shown, 0–4 |
 | **Plus 7** | **Units everywhere:** a layout unit (px, rem, mm, cm, in, pt) and a text unit (px, rem, pt) per file, in every field and on the canvas · one popover style across the Design panel |
 | **Plus 6** | Contrast check against what is really under the layer (any shape behind it) · a **Libraries** tab in the colour picker with the colour variables whose scope fits |

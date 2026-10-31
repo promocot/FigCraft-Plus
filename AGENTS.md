@@ -37,7 +37,7 @@ Releases as `v<figcraft>-plus.<N>`, named "FigCraft Plus N · FigCraft vX".
 1. **Never name the commercial design tool FigCraft is modelled on** (the incumbent its own docs
    compare against) — not in the README, docs, changelog, commit messages, UI strings, release
    notes, topics or images, and not in this file. The owner wants zero legal exposure. Compare only
-   with FigCraft ("In FigCraft v0.12.1 …"). Upstream FigCraft's own files may name it; ours never
+   with FigCraft ("In FigCraft v0.13.1 …"). Upstream FigCraft's own files may name it; ours never
    do. Before every push: `grep -rIni "<that name>" --exclude-dir=.git .` must find nothing.
 2. **Files stay compatible with the official FigCraft, both ways.**
    - Never change FigCraft's document model or file format. `scripts/apply.py` stops the build if
@@ -88,13 +88,13 @@ docs/images/                   README screenshots, GIFs, hero; docs/social-previ
 | `engine/cmd/var_order.rs` | Reordering and sorting variables, groups, collections (also as commands) |
 | `ui-egui/oklch_fields.rs` | Colour picker models (Hex, RGB, HSL, HSB, LCH, OKLCH, CMYK, CSS), the OKLCH plane and hue strip, captions, resizable width, the CSS field with formulas |
 | `ui-egui/color_tools_ui.rs` | CMYK row (same naive formula as FigCraft's CMYK PDF export), *Copy as*, WCAG/APCA contrast against the layers really under the layer |
-| `ui-egui/picker_place_ui.rs` | Where the picker opens; follows the selection to the same slot; closes on an outside click or Escape |
+| `ui-egui/picker_place_ui.rs` | The picker follows the selection to the same slot; opens beside a style dialog (FigCraft 0.13 places and closes it otherwise) |
 | `ui-egui/picker_libraries_ui.rs` | The picker's **Libraries** tab: colour variables filtered by the scope of what is edited |
 | `ui-egui/var_picker_ui.rs` | One variable picker card everywhere (`card`, `embedded`, `offered`, `apply`); scopes |
 | `ui-egui/units_ui.rs` | **Units**: per-document layout unit (px, rem, mm, cm, in, pt) and text unit (px, rem, pt); which fields are lengths; the field wrapper's conversion; the unit chip and right-click unit menu; canvas size label and measurements |
 | `ui-egui/rem_ui.rs` | Root size, parsing typed units (`210mm`, `1.5rem`, the "explicit unit" flag), text-unit helpers |
 | `ui-egui/prefs_plus_ui.rs` | Preferences ▸ FigCraft Plus (`figcraft-plus.json` next to the exe: units, root size, decimals, picker model); the Units popover |
-| `ui-egui/popover_ui.rs` | The one popover look (frame, header, close button, divider) and closing rules; `PanelMenus` draws FigCraft's dark style menu in panel colours |
+| `ui-egui/popover_ui.rs` | Our popovers (variable list, Units, style dialogs) on FigCraft 0.13's `popover::Popover`, kept per id; `open_rects` (held by the colour picker); selection-change closing |
 | `ui-egui/style_dialog_ui.rs`, `styles_plus_ui.rs`, `style_groups_ui.rs` | Create/edit styles in a dialog with preview; the **+** on Local styles; nested style groups |
 | `ui-egui/text_vars_ui.rs` | Weight, paragraph spacing and indent from variables |
 | `ui-egui/fonts_ui.rs` | Portable `fonts` folder, *Add fonts…*, *In this file* |
@@ -134,7 +134,7 @@ new release notes.
 ## 5. Local development loop
 
 ```sh
-git clone --depth 1 --branch v0.12.1 https://github.com/storytold/figcraft work   # the tag CI builds
+git clone --depth 1 --branch v0.13.1 https://github.com/storytold/figcraft work   # the tag CI builds
 python3 scripts/apply.py work
 cd work
 cargo build --bin figcraft             # dev profile: ~11 min the first time, ~2 min after
@@ -210,26 +210,24 @@ inside). Lessons learned:
 
 ## 8. Where things stand (update this section when you finish work)
 
-- **Released:** Plus 8 on FigCraft v0.12.1 (2026-10-30). Units everywhere: a unit chip and a
-  right-click unit menu on length fields, one popover look and the same closing rules, Decimals
-  shown 0–4.
-- **Next — roadmap Stage 1 (on 0.12):**
-  - rulers in the document's unit;
-  - Dev Mode showing the document unit, with **CSS code in its own unit** (px or rem — never mm);
-  - number variables shown with their unit by role (FigCraft's `engine/assets/token_roles.rs`
-    already infers roles);
-  - `em` for letter spacing and line height.
-  - contrast both ways in the picker (`color_tools_ui::below_fields`): the colour on its backdrop
-    and the backdrop on the colour, as two `Aa` previews with WCAG and APCA each. WCAG is symmetric,
-    APCA is not (polarity) — mark the better pairing; keep it compact under the fields.
-- **After 0.13:**
+- **Released:** Plus 9 on FigCraft v0.13.1 (2026-10-31). Ported to 0.13.1; removed what 0.13
+  does itself (picker frame, placement and outside-press closing; the style-menu restyle, hook
+  0018 deleted; our popover frame — Plus popovers now use FigCraft's `Popover`). Stage 1 done:
+  rulers and guides in the layout unit (`units_ui::ruler_step`), Dev Mode properties in the
+  document units and the code unit kept per file (`figcraftplus.codeUnit`), number variables shown
+  by role (`units_ui::number_roles`, own mapping: line height / letter spacing count as text), `em`
+  for line height and letter spacing (`rem_ui::em`, stored as %), contrast both ways
+  (`color_tools_ui::both_ways`).
+- **Next — roadmap Stage 2 (on 0.13):**
   - richer CSS variable export (FigCraft already exports JSON, CSS in px, Tailwind and Dart, and
     imports JSON; Plus adds `oklch()`, `rem`, relative colours, `calc()`, and CSS import);
-  - bulk editing and binding of text styles;
-  - Design System Inspector.
+  - bulk editing and binding of text styles; remembered missing-font replacements (0.13 downloads
+    missing fonts but doesn't remember replacements).
+  - Idea: write simple alpha / sRGB mixes as FigCraft 0.13's native `ColorAlpha` / `ColorMix`
+    variable values instead of a description formula.
+- **Stage 3 (on 0.13):** Design System Inspector.
 - **After 0.14:** %, vw, vh; auto layout from variables; line height % tokens; gradient tokens.
 - **Known gaps:**
-  - The style menu header has no close button (it's FigCraft's header with its own buttons).
   - Style dialogs keep their own closing rules (an outside click must not lose a style being
     created).
   - Some effect fields (noise, texture), grid tracks and prototype offsets stay in px.
@@ -237,5 +235,5 @@ inside). Lessons learned:
   - Branch `support` holds a "Support FigCraft Plus" section and `.github/FUNDING.yml` with a
     `KOFI_NAME` placeholder. It waits for the owner's GitHub Sponsors approval or Ko-fi name.
   - A duplicated component outside a frame doesn't create an instance — an upstream bug; re-check
-    after FigCraft 0.13 before touching it.
+    on FigCraft 0.13 before touching it.
   - Repository topics and the social preview must be set by the owner in the GitHub UI.

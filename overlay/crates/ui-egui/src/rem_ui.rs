@@ -19,7 +19,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 use figcraft_doc::Document;
 
 use crate::FigApp;
-use crate::widgets::{self, FieldEdit};
+use crate::widgets;
 
 /// The layer data key (on a page) holding the file's root size in px.
 pub(crate) const PAGE_KEY: &str = "figcraftplus.remRoot";
@@ -142,27 +142,33 @@ fn num(v: f64) -> String {
     crate::units_ui::num(v)
 }
 
-// ---- the font size field --------------------------------------------------------------------------
+// ---- em -----------------------------------------------------------------------------------------
 
-/// The value the font size field shows: as it is. The field is a text length (`units_ui`): it
-/// shows and takes the text unit like every other length field.
-pub(crate) fn shown(px: Option<f64>) -> Option<f64> {
-    px
-}
-
-/// The font size field's suffix: none (the field's unit chip shows the unit).
-pub(crate) fn suffix() -> &'static str {
-    ""
-}
-
-/// The font size field's edit: already px (`units_ui::back`).
-pub(crate) fn to_px(e: Option<FieldEdit>) -> Option<FieldEdit> {
-    e
+/// A line height or letter spacing typed in em — relative to the font size, as in CSS — as the
+/// percentage FigCraft stores (`1.5em` is 150%, `0.02em` is 2%). None when `text` isn't in em
+/// (`rem` is the root size, not em).
+pub(crate) fn em(text: &str) -> Option<f64> {
+    let t = text.trim();
+    let n = t.to_ascii_lowercase().strip_suffix("em")?.trim_end().to_string();
+    if n.is_empty() || n.ends_with('r') {
+        return None;
+    }
+    widgets::eval(&n, None).filter(|v| v.is_finite()).map(|v| v * 100.0)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn em_is_a_percentage_of_the_font_size() {
+        assert_eq!(em("1.5em"), Some(150.0));
+        assert_eq!(em(" 0.02 em"), Some(2.0));
+        assert_eq!(em("-0.01em"), Some(-1.0));
+        assert_eq!(em("1.5rem"), None, "rem is the root size");
+        assert_eq!(em("150%"), None);
+        assert_eq!(em("em"), None);
+    }
 
     #[test]
     fn rem_is_the_root_size() {

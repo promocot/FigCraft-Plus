@@ -46,7 +46,7 @@ pub(crate) fn header(app: &mut FigApp, ui: &mut Ui, doc: &Document) {
         if dim { t.text_secondary } else { t.text },
     );
     let b = Rect::from_min_size(pos2(rect.max.x - 32.0, rect.center().y - 12.0), vec2(24.0, 24.0));
-    let resp = ui.interact(b, ui.id().with("local_styles_create"), Sense::click()).tip(tr("Create style"));
+    let resp = ui.interact(b, ui.scope_id().with("local_styles_create"), Sense::click()).tip(tr("Create style"));
     if resp.hovered() {
         ui.painter().rect_filled(b, CornerRadius::same(5), t.hover);
     }

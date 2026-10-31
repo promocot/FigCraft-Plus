@@ -32,8 +32,8 @@
   {
     "note": "variables: sort a collection",
     "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
-    "find": "            if menu_item(ui, tr(\"Delete collection\"), \"\") {\n",
-    "replace": "            crate::var_order_ui::sort_menu(app, ui, &c.id, None);\n            if menu_item(ui, tr(\"Delete collection\"), \"\") {\n"
+    "find": "        if view.editable() && menu_item(ui, tr(\"Delete collection\"), \"\") {\n",
+    "replace": "        if view.editable() {\n            crate::var_order_ui::sort_menu(app, ui, &c.id, None);\n        }\n        if view.editable() && menu_item(ui, tr(\"Delete collection\"), \"\") {\n"
   },
   {
     "note": "variables: groups in file order (collect names)",

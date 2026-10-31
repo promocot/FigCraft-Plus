@@ -46,5 +46,11 @@
     "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
     "find": "    egui::Window::new(tr(\"Edit variable\"))\n        .id(Id::unique(\"variable_details\"))\n",
     "replace": "    egui::Window::new(tr(\"Edit variable\"))\n        .id(Id::unique(\"variable_details\"))\n        .order(egui::Order::Foreground)\n        .fixed_pos(crate::text_vars_ui::details_pos(ctx))\n"
+  },
+  {
+    "note": "text: the plain spacing input is no longer used here (every spacing field takes a variable)",
+    "file": "crates/ui-egui/src/panels/typography/fields.rs",
+    "find": "spacing_field, spacing_input};",
+    "replace": "spacing_field};"
   }
 ]

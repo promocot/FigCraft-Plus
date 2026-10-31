@@ -20,19 +20,19 @@
   {
     "note": "picker: Copy as and contrast under the fields",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": "                crate::oklch_fields::bindings_ui(app, ui, nc, &MODELS);\n",
-    "replace": "                crate::oklch_fields::bindings_ui(app, ui, nc, &MODELS);\n                crate::color_tools_ui::below_fields(app, ui, nc, &target);\n"
+    "find": "            crate::oklch_fields::bindings_ui(app, ui, nc, &MODELS);\n",
+    "replace": "            crate::oklch_fields::bindings_ui(app, ui, nc, &MODELS);\n            crate::color_tools_ui::below_fields(app, ui, nc, &target);\n"
   },
   {
     "note": "English: colour tools",
     "file": "crates/ui-egui/locales/en.toml",
     "after": "^\"Search fonts\" = ",
-    "insert": "\"Copied\" = \"Copied\"\n\"Contrast with\" = \"Contrast with\""
+    "insert": "\"Copied\" = \"Copied\"\n\"Contrast with\" = \"Contrast with\"\n\"Reads better\" = \"Reads better\"\n\"This colour on its background\" = \"This colour on its background\"\n\"Its background on this colour\" = \"Its background on this colour\""
   },
   {
     "note": "Russian: colour tools",
     "file": "crates/ui-egui/locales/ru.toml",
     "after": "^\"Search fonts\" = ",
-    "insert": "\"Copied\" = \"Скопировано\"\n\"Contrast with\" = \"Контраст с\""
+    "insert": "\"Copied\" = \"Скопировано\"\n\"Contrast with\" = \"Контраст с\"\n\"Reads better\" = \"Читается лучше\"\n\"This colour on its background\" = \"Этот цвет на своём фоне\"\n\"Its background on this colour\" = \"Его фон на этом цвете\""
   }
 ]

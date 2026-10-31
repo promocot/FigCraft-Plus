@@ -6,16 +6,10 @@
     "insert": "mod picker_libraries_ui;"
   },
   {
-    "note": "picker: Custom | Libraries tabs in the header",
+    "note": "picker: Custom | Libraries tabs in the header; the Libraries list instead of the colour controls",
     "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": "            ui.painter().text(pos2(hr.min.x + 16.0, hr.center().y), Align2::LEFT_CENTER, tr(\"Custom\"), semibold(11.0), t.text);\n",
-    "replace": "            // FigCraft Plus: Custom | Libraries (colour variables that fit what this picker edits).\n            let libraries_tab = crate::picker_libraries_ui::header(ui, hr, &target);\n"
-  },
-  {
-    "note": "picker: the Libraries tab's list instead of the colour controls",
-    "file": "crates/ui-egui/src/widgets/colorpicker.rs",
-    "find": "            if cresp.clicked() {\n                close_now = true;\n            }\n            // Paint type.\n",
-    "replace": "            if cresp.clicked() {\n                close_now = true;\n            }\n            if libraries_tab {\n                crate::picker_libraries_ui::list(app, ui, w, &target);\n                ui.add_space(8.0);\n                crate::oklch_fields::resize_handle(ui, w);\n                return;\n            }\n            // Paint type.\n"
+    "find": "    let closed = pop.show(ctx, open, Hold { rects: &held, escape: false }, |ui| {\n        ui.spacing_mut().item_spacing = vec2(8.0, 8.0);\n",
+    "replace": "    let closed = pop.show(ctx, open, Hold { rects: &held, escape: false }, |ui| {\n        ui.spacing_mut().item_spacing = vec2(8.0, 8.0);\n        // FigCraft Plus: Custom | Libraries (colour variables that fit what this picker edits).\n        if crate::picker_libraries_ui::header(ui, header, &target) {\n            crate::picker_libraries_ui::list(app, ui, w, &target);\n            ui.add_space(8.0);\n            crate::oklch_fields::resize_handle(ui, w);\n            return;\n        }\n"
   },
   {
     "note": "English: Libraries tab",
