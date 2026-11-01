@@ -231,7 +231,10 @@ inside). Lessons learned:
   for line height and letter spacing (`rem_ui::em`, stored as %), contrast both ways
   (`color_tools_ui::both_ways`).
 - **Next — roadmap Stage 4 (after FigCraft 0.14):** %, vw, vh; auto layout from variables; align
-  to a key object. Then Stage 5. Done items below are kept for reference.
+  to a key object. Then Stage 5, then Stage 6 (print: DPI / PPI per top-level frame — page plugin
+  data, default in Preferences, 72 for the web; changing it scales the frame and its content by
+  new/old, keeps the physical size, moves neighbouring frames aside, mm/cm/in/pt and exports read
+  the frame's DPI; PDF/X). Done items below are kept for reference.
 - **Was Stage 2 (done in Plus 11):**
   - richer CSS variable export (FigCraft already exports JSON, CSS in px, Tailwind and Dart, and
     imports JSON; Plus adds `oklch()`, `rem`, relative colours, `calc()`, and CSS import);

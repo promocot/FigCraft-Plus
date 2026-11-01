@@ -114,7 +114,8 @@ what you edit are offered.
 > ### 🗺 Roadmap — what's next
 >
 > **Next — after FigCraft 0.14:** sizes in %, vw and vh · auto layout from variables · line height and
-> gradients as tokens.
+> gradients as tokens · **print: a resolution (DPI) per frame** — switch a frame from 72 to 300 and it
+> scales with its content, without overlapping its neighbours · PDF/X.
 >
 > **[See the full roadmap →](ROADMAP.md)** · **[Ask for a feature →](../../issues/new?template=feature_request.yml)**
 > — the most 👍-ed requests move up.
