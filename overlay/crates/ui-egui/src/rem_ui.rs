@@ -72,6 +72,7 @@ pub(crate) fn doc_root(doc: &Document) -> f64 {
 
 /// Each frame: the open file's root size and units (and a unit picked from a field's chip).
 pub(crate) fn tick(app: &mut FigApp, ctx: &egui::Context) {
+    crate::responsive_ui::tick();
     crate::units_ui::apply_pending(app, ctx);
     let doc = app.session.doc().ok();
     let r = doc.map(doc_root).unwrap_or(DEFAULT_ROOT);
@@ -89,6 +90,11 @@ pub(crate) fn begin_parse() {
 /// A number `v` typed with `unit`, in px: rem is the root size; mm, cm, in and pt are print
 /// lengths (a px is a point, as in FigCraft's print export).
 pub(crate) fn unit(v: f64, unit: &str) -> f64 {
+    // FigCraft Plus: %, vw and vh in W / H (responsive_ui).
+    if let Some(px) = crate::responsive_ui::unit(v, unit) {
+        EXPLICIT.with(|e| e.set(true));
+        return px;
+    }
     let k = match unit.to_ascii_lowercase().as_str() {
         "rem" => root(),
         "px" | "pt" => 1.0,

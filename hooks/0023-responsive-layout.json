@@ -1,0 +1,104 @@
+[
+  {
+    "note": "engine: responsive layout and key object modules",
+    "file": "crates/engine/src/lib.rs",
+    "after": "^pub mod \\w+;$",
+    "insert": "pub mod responsive;\npub mod key_object;"
+  },
+  {
+    "note": "engine: register the responsive layout commands",
+    "file": "crates/engine/src/cmd.rs",
+    "after": "^\\s*list\\.extend\\(variables_io::specs\\(\\)\\);$",
+    "insert": "        list.extend(crate::responsive::specs());"
+  },
+  {
+    "note": "engine: relative sizes and layout variables follow every edit",
+    "file": "crates/engine/src/derived.rs",
+    "find": "    crate::oklch_links::resolve(doc, before, &touched);\n    touched.extend(doc.take_dirty());\n",
+    "replace": "    crate::oklch_links::resolve(doc, before, &touched);\n    touched.extend(doc.take_dirty());\n    // FigCraft Plus: % / vw / vh sizes and auto layout from variables.\n    crate::responsive::resolve(doc, before, &touched);\n    touched.extend(doc.take_dirty());\n"
+  },
+  {
+    "note": "canvas: a click in a selection picks the key object (a second click selects just it)",
+    "file": "crates/engine/src/canvas/tools/draw.rs",
+    "find": "                        if sel.len() > 1 && (sel.contains(&k) || sel.iter().any(|s| doc.is_ancestor(*s, k))) {\n                            self.set_selection(vec![k]);\n                        }\n",
+    "replace": "                        if sel.len() > 1 && (sel.contains(&k) || sel.iter().any(|s| doc.is_ancestor(*s, k))) {\n                            // FigCraft Plus: the first click makes it the key object; a click on the key selects just it.\n                            if !crate::key_object::click(&sel, k) {\n                                self.set_selection(vec![k]);\n                            }\n                        }\n"
+  },
+  {
+    "note": "align: to the key object, which stays put",
+    "file": "crates/engine/src/cmd/arrange.rs",
+    "find": "    let ids = roots(doc, &ids);\n    let Some(target) = align_target(doc, &ids) else { return ok() };\n    for i in ids {\n",
+    "replace": "    let ids = roots(doc, &ids);\n    // FigCraft Plus: a key object is the target, and stays put.\n    let key = crate::key_object::key_in(&ids);\n    let Some(target) = key.and_then(|k| doc.world_bounds(k)).or_else(|| align_target(doc, &ids)) else { return ok() };\n    for i in ids {\n        if Some(i) == key {\n            continue;\n        }\n"
+  },
+  {
+    "note": "ui: responsive layout module",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod windows;$",
+    "insert": "mod responsive_ui;"
+  },
+  {
+    "note": "number fields: % is a unit in W / H on a side that is a percentage",
+    "file": "crates/ui-egui/src/widgets/field_math.rs",
+    "after": "^pub fn parse\\(text: &str, percent_unit: bool\\) -> Option<Typed> \\{$",
+    "insert": "    let percent_unit = percent_unit || crate::responsive_ui::percent_typing();"
+  },
+  {
+    "note": "layout: W takes %, vw and vh",
+    "file": "crates/ui-egui/src/panels/layout_panel.rs",
+    "find": "        let e = crate::variable_ui::number_field_mixed(app, ui, &ids, \"width\", Id::unique(\"lay_w\"), Lead::Text(\"W\"), w, \"\", col);\n        app.field_of(&ids, \"width\", e, w_of, |v| json!(v.max(0.0)));\n",
+    "replace": "        // FigCraft Plus: 50%, 100vw typed here make the side relative.\n        crate::responsive_ui::field_begin(doc, sel, true);\n        let e = crate::variable_ui::number_field_mixed(app, ui, &ids, \"width\", Id::unique(\"lay_w\"), Lead::Text(\"W\"), w, \"\", col);\n        crate::responsive_ui::field_end();\n        if !crate::responsive_ui::after_field(app, &ids, true, e.is_some()) {\n            app.field_of(&ids, \"width\", e, w_of, |v| json!(v.max(0.0)));\n        }\n"
+  },
+  {
+    "note": "layout: H takes %, vw and vh",
+    "file": "crates/ui-egui/src/panels/layout_panel.rs",
+    "find": "        let e = crate::variable_ui::number_field_mixed(app, ui, &ids, \"height\", Id::unique(\"lay_h\"), Lead::Text(\"H\"), h, \"\", col);\n        app.field_of(&ids, \"height\", e, h_of, |v| json!(v.max(0.0)));\n",
+    "replace": "        crate::responsive_ui::field_begin(doc, sel, false);\n        let e = crate::variable_ui::number_field_mixed(app, ui, &ids, \"height\", Id::unique(\"lay_h\"), Lead::Text(\"H\"), h, \"\", col);\n        crate::responsive_ui::field_end();\n        if !crate::responsive_ui::after_field(app, &ids, false, e.is_some()) {\n            app.field_of(&ids, \"height\", e, h_of, |v| json!(v.max(0.0)));\n        }\n"
+  },
+  {
+    "note": "layout: relative W / H for layers without FigCraft's sizing menu",
+    "file": "crates/ui-egui/src/panels/layout_panel.rs",
+    "find": "    if !(has_al || parent_al || is_text) {\n        return;\n    }\n",
+    "replace": "    if !(has_al || parent_al || is_text) {\n        // FigCraft Plus: %, vw and vh.\n        crate::responsive_ui::relative_row(app, ui, doc, sel, col);\n        return;\n    }\n"
+  },
+  {
+    "note": "layout: the sizing menu reads a relative side",
+    "file": "crates/ui-egui/src/panels/layout_panel.rs",
+    "find": "            let resp = widgets::dropdown(ui, label, col, Some(icon));\n            if any_limit {\n",
+    "replace": "            let resp = widgets::dropdown(ui, &crate::responsive_ui::sizing_label(doc, sel, horizontal, label), col, Some(icon));\n            if any_limit {\n"
+  },
+  {
+    "note": "layout: the sizing menu offers %, vw / vh; FigCraft's sizings end them",
+    "file": "crates/ui-egui/src/panels/layout_panel.rs",
+    "find": "                for (l, v) in opts {\n                    if menu_item(ui, l, \"\") {\n                        app.set_props(&ids2, json!({axis.sizing: v}));\n                        ui.close();\n                    }\n                }\n",
+    "replace": "                for (l, v) in opts {\n                    if menu_item(ui, l, \"\") {\n                        crate::responsive_ui::clear(app, doc, &ids2, horizontal);\n                        app.set_props(&ids2, json!({axis.sizing: v}));\n                        ui.close();\n                    }\n                }\n                // FigCraft Plus: a share of the parent or of the viewport.\n                crate::responsive_ui::sizing_menu(app, ui, doc, &ids2, horizontal);\n"
+  },
+  {
+    "note": "layout: room for the variables button in the direction row",
+    "file": "crates/ui-egui/src/panels/layout_panel.rs",
+    "find": "        let wrap = if l.mode != LayoutMode::Grid { 24.0 + widgets::GUTTER } else { 0.0 };\n",
+    "replace": "        let wrap = if l.mode != LayoutMode::Grid { 24.0 + widgets::GUTTER } else { 0.0 } + 24.0 + widgets::GUTTER;\n"
+  },
+  {
+    "note": "layout: auto layout from variables (the button and its popover)",
+    "file": "crates/ui-egui/src/panels/layout_panel.rs",
+    "find": "            if resp.clicked() {\n                app.set_props(ids, json!({\"wrap\": !l.wrap}));\n            }\n        }\n    });\n}\n",
+    "replace": "            if resp.clicked() {\n                app.set_props(ids, json!({\"wrap\": !l.wrap}));\n            }\n        }\n        // FigCraft Plus: direction, wrap, alignment and sizing from variables.\n        if let Ok(doc) = app.session.doc().cloned() {\n            crate::responsive_ui::vars_button(ui, &doc, ids);\n        }\n    });\n    crate::responsive_ui::vars_popover(app, ui.ctx());\n}\n"
+  },
+  {
+    "note": "canvas: the key object's outline",
+    "file": "crates/ui-egui/src/canvas/overlays.rs",
+    "find": "    // Constraint guides belong to the normal selection overlay: not while the Shape Builder\n",
+    "replace": "    // FigCraft Plus: the key object the align buttons move the others to.\n    crate::responsive_ui::key_outline(app, painter, doc, sel, shift);\n    // Constraint guides belong to the normal selection overlay: not while the Shape Builder\n"
+  },
+  {
+    "note": "English: responsive layout",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Percent of parent (%)\" = \"Percent of parent (%)\"\n\"Viewport width (vw)\" = \"Viewport width (vw)\"\n\"Viewport height (vh)\" = \"Viewport height (vh)\"\n\"Layout from variables\" = \"Layout from variables\"\n\"Main alignment\" = \"Main alignment\"\n\"Cross alignment\" = \"Cross alignment\"\n\"Width sizing\" = \"Width sizing\"\n\"Height sizing\" = \"Height sizing\"\n\"Each follows a string or boolean variable in the frame's modes: row / column, wrap, start / center / end / space-between, hug / fill / fixed.\" = \"Each follows a string or boolean variable in the frame's modes: row / column, wrap, start / center / end / space-between, hug / fill / fixed.\"\n\"No string or boolean variables in this file yet.\" = \"No string or boolean variables in this file yet.\"\n\"Key object for aligning\" = \"Key object for aligning\"\n\"With several layers selected, click one: the others align to it. Click it again to select just it.\" = \"With several layers selected, click one: the others align to it. Click it again to select just it.\""
+  },
+  {
+    "note": "Russian: responsive layout",
+    "file": "crates/ui-egui/locales/ru.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Percent of parent (%)\" = \"Процент от родителя (%)\"\n\"Viewport width (vw)\" = \"Ширина вьюпорта (vw)\"\n\"Viewport height (vh)\" = \"Высота вьюпорта (vh)\"\n\"Layout from variables\" = \"Layout из переменных\"\n\"Main alignment\" = \"Выравнивание по главной оси\"\n\"Cross alignment\" = \"Выравнивание по поперечной оси\"\n\"Width sizing\" = \"Размер по ширине\"\n\"Height sizing\" = \"Размер по высоте\"\n\"Each follows a string or boolean variable in the frame's modes: row / column, wrap, start / center / end / space-between, hug / fill / fixed.\" = \"Каждое следует за строковой или логической переменной в режимах фрейма: row / column, wrap, start / center / end / space-between, hug / fill / fixed.\"\n\"No string or boolean variables in this file yet.\" = \"В файле пока нет строковых или логических переменных.\"\n\"Key object for aligning\" = \"Ключевой объект для выравнивания\"\n\"With several layers selected, click one: the others align to it. Click it again to select just it.\" = \"При выделении нескольких слоёв кликните по одному: остальные выравниваются по нему. Повторный клик выделяет только его.\""
+  }
+]

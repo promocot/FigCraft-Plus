@@ -7,6 +7,21 @@ Every FigCraft Plus release, newest first. Each one is built on an official FigC
 **🟣 Exclusive** — FigCraft has nothing like it yet. **🔵 Enhanced** — FigCraft has a basic
 version; Plus goes further.
 
+## Plus 12 · FigCraft v0.14.0 — 2026-11-01
+
+Every add-on carried over to FigCraft 0.14.0 (nothing it added duplicates Plus; the CSS export now
+uses FigCraft's unique custom property names). Roadmap stage 4:
+
+- 🟣 **Sizes in %, vw and vh.** A width or height can be a share of the parent (`50%`) or of the
+  frame the layer is in (`100vw`, `100vh`), kept in step when they change. Pick it in the W / H
+  sizing menu or type `100vw` / `50vh`; a size typed by hand ends it.
+- 🟣 **Auto layout from variables.** Direction, wrap, main and cross alignment and the W / H
+  sizing follow string or boolean variables — the variable button in the direction row. A mode
+  switches the layout.
+- 🔵 **Align to a key object.** With several layers selected, a click on one makes it the key
+  (thicker outline): the align buttons move the others to it. Click it again to select just it;
+  Preferences can turn it off.
+
 ## Plus 11 · FigCraft v0.13.1 — 2026-11-01
 
 Roadmap stages 2 and 3.

@@ -20,33 +20,21 @@ Everything below serves one of them.
 | **1** | ✅ done in Plus 9 | Measurement, part 2 · contrast both ways |
 | **2** | ✅ done in Plus 11 | Design system ↔ code |
 | **3** | ✅ done in Plus 11 | Design System Inspector |
-| **4** | after FigCraft 0.14 | Responsive layout |
-| **5** | after FigCraft 0.14 | Web typography and colour tokens |
-| **6** | after FigCraft 0.14 | Print: resolution per frame, PDF/X |
+| **4** | ✅ done in Plus 12 | Responsive layout |
+| **5** | now, on FigCraft 0.14 | Web typography and colour tokens |
+| **6** | on FigCraft 0.14 | Print: resolution per frame, PDF/X |
 | — | later | Export presets, design tokens exchange |
 
 ---
 
-## 📐 Stage 4 — after FigCraft 0.14: responsive layout
-
-*The deepest changes: sizes that follow the parent frame, computed by the layout engine. They come
-last because layout is the code most likely to change between FigCraft releases, so they need the
-most porting.*
-
-| | Feature | What it gives you |
-|---|---|---|
-| ⬜ | **Sizes in %, vw and vh** — width 50%, height 100vh: relative to the parent frame (which one is always shown), kept in step when it changes; `%`, `vw`, `vh` in every size field | Responsive layouts without recalculating by hand; files stay plain px for the official app |
-| ⬜ | **Auto layout from variables** — direction (row / column), Hug / Fill / Fixed and alignment taken from variables, so modes switch them | A card that is a row on Desktop and a column on Mobile — one component, not two |
-| ⬜ | **Align to a key object** — select several layers, click one: the others align to it and it stays put | Precise layout without moving the reference |
-
-## 🔤 Stage 5 — after FigCraft 0.14: web typography and colour tokens
+## ▶ Stage 5 — now, on FigCraft 0.14: web typography and colour tokens
 
 | | Feature | What it gives you |
 |---|---|---|
 | ⬜ | **Line height in % from a variable** — `leading/normal = 140%` follows each text's size | Tight / Normal / Relaxed as tokens, as CSS writes them |
 | ⬜ | **Gradient tokens** — a gradient style built from colour variables, with stops interpolated in OKLCH; change the palette and every gradient follows | Gradients become part of the design system (no new file format: a style with bound stops) |
 
-## 🖨 Stage 6 — after FigCraft 0.14: print
+## 🖨 Stage 6 — on FigCraft 0.14: print
 
 *For print work: a frame knows the resolution it is made for, so a layout started for the screen
 can become a print file without being rebuilt.*
@@ -92,6 +80,7 @@ Full details in the [changelog](CHANGELOG.md).
 
 | Release | Highlights |
 |---|---|
+| **Plus 12** | On FigCraft 0.14.0 · **sizes in %, vw and vh** that follow the parent or the viewport frame · **auto layout from variables** (direction, wrap, alignment, sizing per mode) · **align to a key object** |
 | **Plus 11** | **CSS for code** (oklch, rem, relative colours, `color-mix()`, `calc()`) and **CSS import** · several text styles at once, variables bound by name · remembered missing-font replacements · the **Design System Inspector** |
 | **Plus 10** | The colour picker follows the selection again (clicks on the canvas and in Layers) · *Picker follows the selection* in Preferences, to turn it off |
 | **Plus 9** | On FigCraft 0.13.1 (FigCraft's own popovers now) · rulers and Dev Mode in the document's unit, the code in px or rem · number variables shown in the unit of what they size · em for line height and letter spacing · contrast both ways |

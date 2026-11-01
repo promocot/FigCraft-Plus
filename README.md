@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <b>FigCraft Plus 11</b> · built on FigCraft <b>v0.13.1</b>, the latest official release ·
+  <b>FigCraft Plus 12</b> · built on FigCraft <b>v0.14.0</b>, the latest official release ·
   <code>.figcraft</code> files stay compatible with the official app, both ways
 </p>
 
@@ -113,8 +113,7 @@ what you edit are offered.
 
 > ### 🗺 Roadmap — what's next
 >
-> **Next — after FigCraft 0.14:** sizes in %, vw and vh · auto layout from variables · line height and
-> gradients as tokens · **print: a resolution (DPI) per frame** — switch a frame from 72 to 300 and it
+> **Next (on FigCraft 0.14):** line height in % and gradients as tokens · **print: a resolution (DPI) per frame** — switch a frame from 72 to 300 and it
 > scales with its content, without overlapping its neighbours · PDF/X.
 >
 > **[See the full roadmap →](ROADMAP.md)** · **[Ask for a feature →](../../issues/new?template=feature_request.yml)**
@@ -145,6 +144,8 @@ what you edit are offered.
   - [Variable details & scope, one click away](#variable-details--scope-one-click-away)
   - [A richer variable picker](#a-richer-variable-picker)
   - [Reorder variables: drag & drop and sorting](#reorder-variables-drag--drop-and-sorting)
+  - [Responsive layout: %, vw, vh and layout from variables](#responsive-layout-vw-vh-and-layout-from-variables)
+  - [Align to a key object](#align-to-a-key-object)
   - [Design System Inspector](#design-system-inspector)
   - [Variables as CSS for code, and from CSS](#variables-as-css-for-code-and-from-css)
   - [Text styles together](#text-styles-together)
@@ -164,7 +165,7 @@ what you edit are offered.
 version; Plus goes further. Features FigCraft has since added itself are
 [listed separately](#now-in-figcraft-itself-removed-from-plus) — they are no longer part of Plus.
 
-| Feature | In FigCraft v0.13.1 | In FigCraft Plus | |
+| Feature | In FigCraft v0.14.0 | In FigCraft Plus | |
 |---|---|---|---|
 | [OKLCH, done the oklch.com way](#oklch-done-the-oklchcom-way) | FigCraft has OKLCH fields: lightness in percent, sRGB only, and the HSB square and rainbow stay HSB. | The whole picker works in OKLCH (an OKLCH plane with the exact gamut edge, an OKLCH hue strip), values match oklch.com and CSS, and Display P3 files are read in P3. | 🔵 Enhanced |
 | [Derived colours and calculated variables](#derived-colours-and-calculated-variables) | A variable can be an *alias* of another — an exact copy, nothing more. | A colour can be *made from* another (transparency, lighter / darker, its complement, a mix of two), and a number from other numbers, all kept in step in every mode. | 🟣 Exclusive |
@@ -172,7 +173,7 @@ version; Plus goes further. Features FigCraft has since added itself are
 | [CMYK and Copy as in the colour picker](#cmyk-and-copy-as-in-the-colour-picker) | The picker offers Hex, RGB, HSL, HSB, LCH, OKLCH and CSS; CMYK exists only as a PDF export option. | **CMYK** fields in the picker, and **Copy as** — the colour in any format, one click. | 🟣 Exclusive |
 | [Contrast both ways: WCAG and APCA](#contrast-both-ways-wcag-and-apca) | No contrast check in the interface. | Under the picker's fields, two `Aa` samples — the colour on what is really under the layer, and that background on the colour — each with the WCAG ratio and level and the APCA Lc; the better pairing is marked. | 🟣 Exclusive |
 | [Colour variables in the picker: the Libraries tab](#colour-variables-in-the-picker-the-libraries-tab) | Colour variables are applied from the style menu next to Fill or Stroke; the picker itself only edits a colour. | A **Libraries** tab beside **Custom** in the colour picker: this file's and the enabled libraries' colour variables, with search — only those whose scope fits what you edit (a stroke offers stroke colours). | 🔵 Enhanced |
-| [FigCraft Plus preferences](#figcraft-plus-preferences) | The colour picker always opens in Hex; there are no units to choose. | Preferences ▸ FigCraft Plus: the layout and text units and root size for new files, decimals shown, the model the colour picker opens in, and whether the picker follows the selection. | 🟣 Exclusive |
+| [FigCraft Plus preferences](#figcraft-plus-preferences) | The colour picker always opens in Hex; there are no units to choose. | Preferences ▸ FigCraft Plus: the layout and text units and root size for new files, decimals shown, the model the colour picker opens in, whether the picker follows the selection, the key object. | 🟣 Exclusive |
 | [A better picker](#a-better-picker) | Fields without captions, one fixed width. | A caption over every field, a width that fits the model, and a draggable edge. | 🔵 Enhanced |
 | [A picker that stays with what you're editing](#a-picker-that-stays-with-what-youre-editing) | The picker opens beside the Design panel and closes when the selection changes. | It moves to the same slot of the newly selected layer, so you keep editing without reopening it; opened from a style dialog, it opens beside the dialog. | 🔵 Enhanced |
 | [Colours driven by number variables](#colours-driven-by-number-variables) | A colour can be bound to a colour variable as a whole. | Each channel (L, C, H, R, G, B, H, S, alpha…) can follow its own number variable: one `brand/hue` restyles every colour built on it. | 🟣 Exclusive |
@@ -182,6 +183,8 @@ version; Plus goes further. Features FigCraft has since added itself are
 | [Style groups in Local styles](#style-groups-in-local-styles) | Local styles are grouped by the folders in their names. | Real nested groups: Ctrl+G, New group, drag styles and groups, collapse, rename, ungroup. | 🔵 Enhanced |
 | [Variable details & scope, one click away](#variable-details--scope-one-click-away) | Right-click a variable ▸ Edit variable. | An *Edit variable* button on every row, opening beside the editor and following it. | 🔵 Enhanced |
 | [A richer variable picker](#a-richer-variable-picker) | A plain list of the variables that fit. | One card everywhere: search, library filter, collections and groups, swatches and values, arrow keys and Enter. | 🔵 Enhanced |
+| [Responsive layout: %, vw, vh and layout from variables](#responsive-layout-vw-vh-and-layout-from-variables) | Sizes are px, Hug or Fill; auto layout settings are fixed per frame. | **50%** of the parent, **100vw / 100vh** of the frame it sits in, kept in step; direction, wrap, alignment and sizing **from variables**, so modes switch them. | 🟣 Exclusive |
+| [Align to a key object](#align-to-a-key-object) | Several layers align to their combined box. | Click one of the selection: it becomes the key object, the others align to it and it stays put. | 🔵 Enhanced |
 | [Design System Inspector](#design-system-inspector) | No check of the design system as a whole. | One list of what keeps it from holding together — values typed by hand that a variable holds, broken references, circular formulas, unused, unscoped and duplicate variables — each jumping to its layer or variable, most with a one-click fix. | 🟣 Exclusive |
 | [Variables as CSS for code, and from CSS](#variables-as-css-for-code-and-from-css) | Variables export as CSS in hex and px (formulas flattened) and import from JSON. | **CSS for code:** `oklch()`, `rem`, relative colours, `color-mix()`, `calc()`; and **import CSS custom properties** — `:root` and theme blocks as modes. | 🔵 Enhanced |
 | [Text styles together](#text-styles-together) | Text styles are edited one at a time. | Select several: set font, size, line height, letter spacing for all; bind variables to all of them by name, previewed, one undo step. | 🟣 Exclusive |
@@ -703,6 +706,47 @@ in exports. That fixes imports that arrive in the wrong order (`n-xs, n-6xl, n-s
 - Each drag, Alt+arrow or sort is one undo step. Read-only libraries can't be reordered.
 - The same operations are commands for scripts, the CLI and MCP: `variable.move`,
   `variable.moveGroup`, `variable.moveCollection`, `variable.sort`.
+
+### Responsive layout: %, vw, vh and layout from variables
+
+**🟣 Exclusive** — only in FigCraft Plus (for now)
+
+> **FigCraft:** A size is px, Hug or Fill; an auto layout frame's direction and alignment are set by hand per frame.
+>
+> **FigCraft Plus:** Sizes that are a share of the parent or of the frame on the canvas, kept in step; auto layout that follows variables, so a mode switches it.
+
+<img src="docs/images/46-relative-sizes.png" width="560" alt="A frame with a bar 50% of its width; the W sizing menu offers Fixed, Percent of parent (%), Viewport width (vw)">
+
+- **`%` of the parent**, **`vw` / `vh` of the frame** the layer sits in (its viewport). Pick them in
+  the W / H sizing menu (*Percent of parent*, *Viewport width / height*) — layers outside auto
+  layout get the menu too — or type `100vw`, `50vh` in W / H. The menu then reads `50%`.
+- Resize the parent (or the frame) and the layer follows, its children by their constraints. A
+  share of a share works. Inside auto layout the parent's padding is left out, as in CSS.
+- Typing a size by hand, dragging a handle, or picking Fixed / Hug / Fill ends the share for that
+  side. On a side that is a percentage, `60%` changes the share (elsewhere `%` keeps FigCraft's
+  meaning: a share of the value there now).
+- **Layout from variables:** the variable button at the end of an auto layout frame's direction
+  row binds its **direction** (row / column / grid), **wrap**, **main and cross alignment**
+  (start, center, end, space-between…) and its **W / H sizing** (hug, fill, fixed) to string or
+  boolean variables. Switch the frame's mode — Desktop / Mobile — and the layout follows: one card
+  that is a row on Desktop and a column on Mobile.
+
+  <img src="docs/images/47-layout-variables.png" width="320" alt="Layout from variables: Direction bound to Layout/Card direction, the others None">
+- Files stay plain px with FigCraft's own layout: the shares and bindings are kept as text the
+  official app ignores; it shows the last sizes and layout.
+
+### Align to a key object
+
+**🔵 Enhanced** — better in FigCraft Plus
+
+> **FigCraft:** Several selected layers align to the box around all of them; a click on one of them selects just it.
+>
+> **FigCraft Plus:** With several layers selected, click one: it becomes the **key object** (a thicker outline), and the align buttons move the others to it while it stays put.
+
+<img src="docs/images/48-key-object.png" width="420" alt="Three selected rectangles, the middle one outlined thicker as the key object">
+
+- Click the key again to select just it, as before. Turn it off in **Preferences ▸ FigCraft Plus
+  ▸ Key object for aligning**.
 
 ### Design System Inspector
 

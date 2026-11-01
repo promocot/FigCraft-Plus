@@ -42,11 +42,13 @@ pub(crate) struct Prefs {
     pub picker_follows_selection: bool,
     /// Missing font → the installed family that replaces it (remembered in Missing fonts).
     pub font_replacements: std::collections::BTreeMap<String, String>,
+    /// A click on a layer of a multi-selection makes it the key object the others align to.
+    pub key_object: bool,
 }
 
 impl Default for Prefs {
     fn default() -> Self {
-        Prefs { rem: false, text: String::new(), layout_unit: "px".into(), root: 16.0, color_model: "Hex".into(), precision: 2, picker_follows_selection: true, font_replacements: Default::default() }
+        Prefs { rem: false, text: String::new(), layout_unit: "px".into(), root: 16.0, color_model: "Hex".into(), precision: 2, picker_follows_selection: true, font_replacements: Default::default(), key_object: true }
     }
 }
 
@@ -195,6 +197,11 @@ pub(crate) fn preferences(ui: &mut Ui) {
         set(|p| p.picker_follows_selection = !p.picker_follows_selection);
     }
     widgets::label(ui, tr("The colour picker stays open on the same fill, stroke or effect of the layers you select next. Off: it closes, as in FigCraft."), t.text_secondary);
+    ui.add_space(4.0);
+    if widgets::checkbox(ui, p.key_object, tr("Key object for aligning")) {
+        set(|p| p.key_object = !p.key_object);
+    }
+    widgets::label(ui, tr("With several layers selected, click one: the others align to it. Click it again to select just it."), t.text_secondary);
     if !p.font_replacements.is_empty() {
         ui.add_space(6.0);
         ui.label(egui::RichText::new(tr("Remembered font replacements")).font(regular(11.0)).color(t.text));

@@ -37,7 +37,7 @@ Releases as `v<figcraft>-plus.<N>`, named "FigCraft Plus N · FigCraft vX".
 1. **Never name the commercial design tool FigCraft is modelled on** (the incumbent its own docs
    compare against) — not in the README, docs, changelog, commit messages, UI strings, release
    notes, topics or images, and not in this file. The owner wants zero legal exposure. Compare only
-   with FigCraft ("In FigCraft v0.13.1 …"). Upstream FigCraft's own files may name it; ours never
+   with FigCraft ("In FigCraft v0.14.0 …"). Upstream FigCraft's own files may name it; ours never
    do. Before every push: `grep -rIni "<that name>" --exclude-dir=.git .` must find nothing.
 2. **Files stay compatible with the official FigCraft, both ways.**
    - Never change FigCraft's document model or file format. `scripts/apply.py` stops the build if
@@ -134,7 +134,7 @@ new release notes.
 ## 5. Local development loop
 
 ```sh
-git clone --depth 1 --branch v0.13.1 https://github.com/storytold/figcraft work   # the tag CI builds
+git clone --depth 1 --branch v0.14.0 https://github.com/storytold/figcraft work   # the tag CI builds
 python3 scripts/apply.py work
 cd work
 cargo build --bin figcraft             # dev profile: ~11 min the first time, ~2 min after
@@ -210,7 +210,13 @@ inside). Lessons learned:
 
 ## 8. Where things stand (update this section when you finish work)
 
-- **Released:** Plus 11 on FigCraft v0.13.1 (2026-11-01): roadmap stages 2–3. Engine commands
+- **Released:** Plus 12 on FigCraft v0.14.0 (2026-11-01): ported (all hooks applied as they
+  were; `tokens_css` uses 0.14's `CssNames`), roadmap stage 4. Engine `responsive.rs` (layer data
+  `figcraftplus.layout`: `width 50%`, `height 100vh`, `direction {Var}`…; `resolve` runs in
+  `derived::normalize` after the OKLCH links; commands `layout.relative`, `layout.bindVariable`)
+  and `key_object.rs` (thread-local key; the move tool's click-in-selection makes it; `align.*`
+  uses it); UI `responsive_ui.rs`; hook 0023.
+- **Plus 11** on FigCraft v0.13.1 (2026-11-01): roadmap stages 2–3. Engine commands
   `variable.exportCss` / `variable.importCss` (`engine/cmd/tokens_css.rs`) and
   `designSystem.inspect` (`engine/cmd/ds_inspect.rs`); UI `tokens_ui.rs` (Export ▸ CSS for code,
   Import menu), `ds_inspect_ui.rs` (Inspect button), `text_bulk_ui.rs` (Edit N text styles),
@@ -230,8 +236,7 @@ inside). Lessons learned:
   by role (`units_ui::number_roles`, own mapping: line height / letter spacing count as text), `em`
   for line height and letter spacing (`rem_ui::em`, stored as %), contrast both ways
   (`color_tools_ui::both_ways`).
-- **Next — roadmap Stage 4 (after FigCraft 0.14):** %, vw, vh; auto layout from variables; align
-  to a key object. Then Stage 5, then Stage 6 (print: DPI / PPI per top-level frame — page plugin
+- **Next — roadmap Stage 5 (on 0.14):** line height % variables, gradient tokens. Then Stage 6 (print: DPI / PPI per top-level frame — page plugin
   data, default in Preferences, 72 for the web; changing it scales the frame and its content by
   new/old, keeps the physical size, moves neighbouring frames aside, mm/cm/in/pt and exports read
   the frame's DPI; PDF/X). Done items below are kept for reference.

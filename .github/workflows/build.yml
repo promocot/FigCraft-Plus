@@ -106,6 +106,8 @@ jobs:
           cargo test --locked -p figcraft-engine --lib style
           cargo test --locked -p figcraft-engine --lib tokens_css
           cargo test --locked -p figcraft-engine --lib ds_inspect
+          cargo test --locked -p figcraft-engine --lib responsive
+          cargo test --locked -p figcraft-engine --lib key_object
           cargo test --locked -p figcraft-ui-egui --lib
 
   windows:

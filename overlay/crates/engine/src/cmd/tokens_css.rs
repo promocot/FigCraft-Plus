@@ -23,7 +23,7 @@ use figcraft_doc::{Collection, ColorOperand, Document, Mode, ModeId, Variable, V
 use serde_json::{Value, json};
 
 use super::CommandSpec;
-use crate::codegen::css_var_of;
+use crate::codegen::CssNames;
 use crate::library::{is_remote_collection, local_collections};
 use crate::oklch_links::{self as links, Base, Channel, Derive, Expr, Formula, Model};
 use crate::params::{get, string};
@@ -72,6 +72,8 @@ struct Out<'a> {
     roles: Roles,
     /// Number variables colours read in their channels: plain numbers in CSS.
     in_colours: BTreeSet<VariableId>,
+    /// Each variable's custom property, unique in the file (FigCraft's own names).
+    names: CssNames,
 }
 
 impl Out<'_> {
@@ -82,7 +84,7 @@ impl Out<'_> {
     }
 
     fn reference(&self, key: &str) -> Option<String> {
-        self.var(key).map(|v| format!("var({})", css_var_of(v)))
+        self.var(key).map(|v| format!("var({})", self.names.name(v)))
     }
 
     fn color(&self, c: Color) -> String {
@@ -176,13 +178,13 @@ impl Out<'_> {
     /// FigCraft's own colour calculations as `color-mix()`.
     fn native(&self, v: &VariableValue) -> Option<String> {
         let operand = |o: &ColorOperand| match o {
-            ColorOperand::Variable { variable } => self.doc.variables.get_by_id(variable).map(|t| format!("var({})", css_var_of(t))),
+            ColorOperand::Variable { variable } => self.doc.variables.get_by_id(variable).map(|t| format!("var({})", self.names.name(t))),
             ColorOperand::Literal { literal } => Some(self.color(*literal)),
         };
         match v {
             VariableValue::ColorAlpha { variable, opacity } => {
                 let t = self.doc.variables.get_by_id(variable)?;
-                Some(format!("rgb(from var({}) r g b / {}%)", css_var_of(t), num(f64::from(*opacity) * 100.0, 2)))
+                Some(format!("rgb(from var({}) r g b / {}%)", self.names.name(t), num(f64::from(*opacity) * 100.0, 2)))
             }
             VariableValue::ColorMix { from, to, t } => {
                 Some(format!("color-mix(in srgb, {} {}%, {})", operand(from)?, num(f64::from(1.0 - t) * 100.0, 2), operand(to)?))
@@ -246,7 +248,7 @@ pub fn css(doc: &Document, colls: &[&Collection], oklch: bool, rem: Option<f64>,
             }
         }
     }
-    let out = Out { doc, oklch, rem, formulas, roles: Roles::new(doc), in_colours };
+    let out = Out { doc, oklch, rem, formulas, roles: Roles::new(doc), in_colours, names: CssNames::new(doc) };
     let flattener = vars.flattener();
     let mut text = String::new();
     for c in colls {
@@ -268,7 +270,7 @@ pub fn css(doc: &Document, colls: &[&Collection], oklch: bool, rem: Option<f64>,
                 };
                 let value = match (written, raw) {
                     (Some(w), _) => w,
-                    (None, VariableValue::Alias(a)) if vars.get_by_id(a).is_some() => format!("var({})", css_var_of(vars.get_by_id(a).unwrap_or(v))),
+                    (None, VariableValue::Alias(a)) if vars.get_by_id(a).is_some() => format!("var({})", out.names.name(vars.get_by_id(a).unwrap_or(v))),
                     _ => match flattener.value(v, &m.id, raw) {
                         Some(VariableValue::Color(col)) => out.color(col),
                         Some(VariableValue::Number(x)) => out.number(v, x),
@@ -277,7 +279,7 @@ pub fn css(doc: &Document, colls: &[&Collection], oklch: bool, rem: Option<f64>,
                         _ => continue,
                     },
                 };
-                text.push_str(&format!("  {}: {value};\n", css_var_of(v)));
+                text.push_str(&format!("  {}: {value};\n", out.names.name(v)));
             }
             text.push_str("}\n");
         }

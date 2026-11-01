@@ -30,15 +30,20 @@ thread_local! {
 /// its close button was clicked. Our callers close it on a press outside and on Escape themselves
 /// (they know which presses belong to them), so the popover leaves those to them.
 pub(crate) fn show(ctx: &egui::Context, id: Id, title: &str, width: f32, open: Open, body: impl FnOnce(&mut Ui)) -> (bool, Rect) {
-    let mut pop = OPEN.with(|o| o.borrow_mut().remove(&id)).unwrap_or_else(|| Popover::with_id(id, title).pad(0.0).close_on_outside(false));
+    let stored = OPEN.with(|o| o.borrow_mut().remove(&id));
+    let fresh = stored.as_ref().is_none_or(|p| p.rect.is_negative() || !p.rect.is_positive());
+    let mut pop = stored.unwrap_or_else(|| Popover::with_id(id, title).pad(0.0).close_on_outside(false));
     pop = pop.width(width);
     title.clone_into(&mut pop.title);
     let closed = pop.show(ctx, open, Hold { rects: &[], escape: true }, |ui| {
         ui.spacing_mut().item_spacing = egui::vec2(0.0, 0.0);
         body(ui);
     });
-    // Above what opened it (the colour picker, a style dialog), as a popover opened from it is.
-    ctx.move_to_top(egui::LayerId::new(egui::Order::Foreground, id));
+    // Above what opened it (the colour picker, a style dialog) while it opens — not every frame,
+    // so its own menus stay above it.
+    if fresh {
+        ctx.move_to_top(egui::LayerId::new(egui::Order::Foreground, id));
+    }
     let rect = pop.rect;
     OPEN.with(|o| o.borrow_mut().insert(id, pop));
     (closed, rect)
