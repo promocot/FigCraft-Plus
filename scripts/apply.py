@@ -46,6 +46,10 @@ def miss(msg: str) -> None:
 
 
 def main() -> None:
+    # Hook notes are UTF-8 (▸, →); a Windows console may default to a narrower code page.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
     global KEEP_GOING
     args = sys.argv[1:]
     if args[:1] == ["--check"]:
