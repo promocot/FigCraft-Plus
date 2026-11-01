@@ -1,0 +1,38 @@
+[
+  {
+    "note": "ui: Design System Inspector",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod windows;$",
+    "insert": "mod ds_inspect_ui;"
+  },
+  {
+    "note": "variables: an editor on a variable's details (the inspector's jump)",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
+    "find": "    pub fn on(collection: Option<String>) -> Self {\n        Editor { collection, ..Default::default() }\n    }\n",
+    "replace": "    pub fn on(collection: Option<String>) -> Self {\n        Editor { collection, ..Default::default() }\n    }\n\n    /// FigCraft Plus: on `collection` with `variable`'s details open (the Design System Inspector's jump).\n    pub fn on_variable(collection: String, variable: String) -> Self {\n        Editor { collection: Some(collection), details: Some(variable), ..Default::default() }\n    }\n"
+  },
+  {
+    "note": "variables: room for Inspect in the header",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
+    "find": "    let bar = Rect::from_min_max(pos2(r.max.x - 280.0, r.min.y + 10.0), pos2(r.max.x - 40.0, r.max.y - 10.0));",
+    "replace": "    let bar = Rect::from_min_max(pos2(r.max.x - 380.0, r.min.y + 10.0), pos2(r.max.x - 40.0, r.max.y - 10.0));"
+  },
+  {
+    "note": "variables: Inspect (the Design System Inspector)",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
+    "find": "    crate::tokens_ui::import_menu(app, &import, import_dialog);\n",
+    "replace": "    crate::tokens_ui::import_menu(app, &import, import_dialog);\n    let inspect = crate::ds_inspect_ui::button(&mut bar);\n    crate::ds_inspect_ui::draw(app, ui.ctx(), &inspect);\n"
+  },
+  {
+    "note": "English: inspector",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Check the design system: unbound values, broken references, unused variables…\" = \"Check the design system: unbound values, broken references, unused variables…\"\n\"Broken references\" = \"Broken references\"\n\"Circular formulas\" = \"Circular formulas\"\n\"Not on a variable\" = \"Not on a variable\"\n\"Unused variables\" = \"Unused variables\"\n\"Duplicate tokens\" = \"Duplicate tokens\"\n\"Without a scope\" = \"Without a scope\"\n\"Design system · {n} findings\" = \"Design system · {n} findings\"\n\"Nothing to fix: every value is on a variable and every variable holds together.\" = \"Nothing to fix: every value is on a variable and every variable holds together.\"\n\"Fix all {n}\" = \"Fix all {n}\"\n\"Go to it\" = \"Go to it\"\n\"Fix\" = \"Fix\""
+  },
+  {
+    "note": "Russian: inspector",
+    "file": "crates/ui-egui/locales/ru.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Check the design system: unbound values, broken references, unused variables…\" = \"Проверить дизайн-систему: значения без переменных, битые ссылки, неиспользуемые переменные…\"\n\"Broken references\" = \"Битые ссылки\"\n\"Circular formulas\" = \"Циклические формулы\"\n\"Not on a variable\" = \"Без переменной\"\n\"Unused variables\" = \"Неиспользуемые переменные\"\n\"Duplicate tokens\" = \"Дубликаты токенов\"\n\"Without a scope\" = \"Без области применения\"\n\"Design system · {n} findings\" = \"Дизайн-система · найдено: {n}\"\n\"Nothing to fix: every value is on a variable and every variable holds together.\" = \"Исправлять нечего: все значения на переменных, все переменные в порядке.\"\n\"Fix all {n}\" = \"Исправить все ({n})\"\n\"Go to it\" = \"Перейти\"\n\"Fix\" = \"Исправить\""
+  }
+]

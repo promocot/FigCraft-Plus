@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <b>FigCraft Plus 10</b> · built on FigCraft <b>v0.13.1</b>, the latest official release ·
+  <b>FigCraft Plus 11</b> · built on FigCraft <b>v0.13.1</b>, the latest official release ·
   <code>.figcraft</code> files stay compatible with the official app, both ways
 </p>
 
@@ -113,11 +113,7 @@ what you edit are offered.
 
 > ### 🗺 Roadmap — what's next
 >
-> **Now (on FigCraft 0.13):** richer CSS export (`oklch()`, `rem`, relative colours, `calc()`) and
-> CSS import · edit and bind many text styles at once · remembered font replacements · then the
-> **Design System Inspector**.
->
-> **After FigCraft 0.14:** sizes in %, vw and vh · auto layout from variables · line height and
+> **Next — after FigCraft 0.14:** sizes in %, vw and vh · auto layout from variables · line height and
 > gradients as tokens.
 >
 > **[See the full roadmap →](ROADMAP.md)** · **[Ask for a feature →](../../issues/new?template=feature_request.yml)**
@@ -148,6 +144,10 @@ what you edit are offered.
   - [Variable details & scope, one click away](#variable-details--scope-one-click-away)
   - [A richer variable picker](#a-richer-variable-picker)
   - [Reorder variables: drag & drop and sorting](#reorder-variables-drag--drop-and-sorting)
+  - [Design System Inspector](#design-system-inspector)
+  - [Variables as CSS for code, and from CSS](#variables-as-css-for-code-and-from-css)
+  - [Text styles together](#text-styles-together)
+  - [Missing fonts: replace, and remember](#missing-fonts-replace-and-remember)
 - [Community](#community)
 - [FAQ](#faq)
 - [How it works](#how-it-works)
@@ -181,6 +181,10 @@ version; Plus goes further. Features FigCraft has since added itself are
 | [Style groups in Local styles](#style-groups-in-local-styles) | Local styles are grouped by the folders in their names. | Real nested groups: Ctrl+G, New group, drag styles and groups, collapse, rename, ungroup. | 🔵 Enhanced |
 | [Variable details & scope, one click away](#variable-details--scope-one-click-away) | Right-click a variable ▸ Edit variable. | An *Edit variable* button on every row, opening beside the editor and following it. | 🔵 Enhanced |
 | [A richer variable picker](#a-richer-variable-picker) | A plain list of the variables that fit. | One card everywhere: search, library filter, collections and groups, swatches and values, arrow keys and Enter. | 🔵 Enhanced |
+| [Design System Inspector](#design-system-inspector) | No check of the design system as a whole. | One list of what keeps it from holding together — values typed by hand that a variable holds, broken references, circular formulas, unused, unscoped and duplicate variables — each jumping to its layer or variable, most with a one-click fix. | 🟣 Exclusive |
+| [Variables as CSS for code, and from CSS](#variables-as-css-for-code-and-from-css) | Variables export as CSS in hex and px (formulas flattened) and import from JSON. | **CSS for code:** `oklch()`, `rem`, relative colours, `color-mix()`, `calc()`; and **import CSS custom properties** — `:root` and theme blocks as modes. | 🔵 Enhanced |
+| [Text styles together](#text-styles-together) | Text styles are edited one at a time. | Select several: set font, size, line height, letter spacing for all; bind variables to all of them by name, previewed, one undo step. | 🟣 Exclusive |
+| [Missing fonts: replace, and remember](#missing-fonts-replace-and-remember) | Missing fonts are listed and the font store's ones downloaded. | **Replace…** with an installed font — every run and text style — remembered for the next file that uses it. | 🔵 Enhanced |
 | [Reorder variables: drag & drop and sorting](#reorder-variables-drag--drop-and-sorting) | Modes can be reordered; variables keep the order they were made in. | Drag variables, groups and collections, multi-select, Alt+↑/↓, and natural or by-value sorting — also as commands for scripts and MCP. | 🟣 Exclusive |
 
 Everything stays a normal `.figcraft` file: the official app opens it and sees the last computed
@@ -698,6 +702,82 @@ in exports. That fixes imports that arrive in the wrong order (`n-xs, n-6xl, n-s
 - Each drag, Alt+arrow or sort is one undo step. Read-only libraries can't be reordered.
 - The same operations are commands for scripts, the CLI and MCP: `variable.move`,
   `variable.moveGroup`, `variable.moveCollection`, `variable.sort`.
+
+### Design System Inspector
+
+**🟣 Exclusive** — only in FigCraft Plus (for now)
+
+> **FigCraft:** No check of the design system as a whole.
+>
+> **FigCraft Plus:** **Inspect** in the Variables editor's header lists what keeps the design system from holding together, grouped, each finding one click from its layer or variable, most with a fix.
+
+<img src="docs/images/42-design-system-inspector.png" width="390" alt="The inspector: Not on a variable · 4 (fills and corner radii typed by hand that a variable holds, each with Fix), Unused variables · 7, Fix all buttons">
+
+| Finding | Fix |
+|---|---|
+| **Not on a variable** — a solid fill or stroke, a corner radius, gap, padding, stroke weight or font size typed by hand although a variable holds exactly that value (one scoped for it, or named for it) | Binds it |
+| **Broken references** — an alias or a formula reading a variable that's gone; an alias to a variable of another type; a number that isn't finite | — (jump to it) |
+| **Circular formulas** — aliases or formulas that read themselves in the end | — |
+| **Unused variables** — nothing binds, aliases or reads them | Deletes them |
+| **Duplicate tokens** — colours of one collection, or numbers / text of one group, with the same values in every mode | — |
+| **Without a scope** — offered for every property | — |
+
+**Fix all** fixes a whole group as one undo step; the list follows every change.
+
+### Variables as CSS for code, and from CSS
+
+**🔵 Enhanced** — better in FigCraft Plus
+
+> **FigCraft:** Variables export as CSS custom properties — colours in hex, sizes in px, calculations flattened to their values — and import from its variables JSON.
+>
+> **FigCraft Plus:** **Export ▸ CSS for code…** writes them the way code does, and **Import ▸ CSS custom properties…** reads a stylesheet back.
+
+<img src="docs/images/43-css-for-code.png" width="270" alt="CSS for code: Colours Hex / OKLCH, Sizes px / rem, Formulas as CSS, Export…">
+
+- **Colours** as Hex or `oklch()`; **sizes** in px or `rem` of the file's root size (opacity and
+  weights stay bare).
+- **Formulas as CSS:** a derived colour as a relative colour —
+  `oklch(from var(--brand) calc(l - 0.08) c h)` — a mix as `color-mix()`, a calculated number as
+  `calc(var(--space-m) * 2)`, FigCraft's own alpha variants and mixes as CSS too.
+- **Import** reads `--name: value` from `:root` (or `@theme`) as the first mode, and every other
+  block — `[data-theme="dark"]`, `.dark`, `@media (prefers-color-scheme: dark)` — as a mode named
+  after it. Colours (hex, names, `rgb()`, `hsl()`, `oklch()`), lengths (px; rem and em of the
+  root size), numbers and font stacks become variables, `var(--x)` an alias, relative colours,
+  `color-mix()` and `calc()` calculated variables that follow what they read. `--space-m` lands in
+  the group `space` when several properties share the prefix; code keeps the CSS name.
+
+### Text styles together
+
+**🟣 Exclusive** — only in FigCraft Plus (for now)
+
+> **FigCraft:** Text styles are edited one at a time.
+>
+> **FigCraft Plus:** Select several text styles in Local styles (Ctrl/Shift-click) ▸ right-click ▸ **Edit N text styles…**
+
+<img src="docs/images/44-text-styles-together.png" width="310" alt="Edit 3 text styles: Set for all (font family, style, size Mixed, line height, letter spacing) and Bind variables by name: Font size from Type · font-size, Heading/H1 → font-size/h1, Heading/H2 → font-size/h2, Body → font-size/body, Bind 3">
+
+- **Set for all:** font family, style, size, line height, letter spacing. A field shows the shared
+  value or *Mixed*; what you type goes to every style as one undo step (`1.4em` works).
+- **Bind variables by name:** pick the property (font size, line height, letter spacing, family,
+  style) and the group of variables; each style finds the variable of the same name
+  (`Heading/H1` ↔ `font-size/h1`), shown before you **Bind**. No guessing between equally good
+  names: those stay unmatched.
+
+### Missing fonts: replace, and remember
+
+**🔵 Enhanced** — better in FigCraft Plus
+
+> **FigCraft:** Text ▸ Missing fonts lists the fonts a file uses that aren't installed, and downloads the ones the font store has.
+>
+> **FigCraft Plus:** **Replace…** each with an installed font, remembered for the next file.
+
+<img src="docs/images/45-missing-font-replace.png" width="430" alt="Missing fonts: Gone Sans · 1 text layer · Replace… open on a searchable list of installed fonts; Remember replacements for other files">
+
+- Every use moves: whole layers, single runs (the other runs keep their fonts), text styles — one
+  undo step.
+- With **Remember replacements for other files** on, the next file that uses that font gets the
+  same replacement as it opens, with a note. **Preferences ▸ FigCraft Plus** lists the remembered
+  ones; × forgets one.
 
 ## Community
 

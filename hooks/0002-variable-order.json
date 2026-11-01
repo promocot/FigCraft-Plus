@@ -3,13 +3,13 @@
     "note": "engine: variable order commands module",
     "file": "crates/engine/src/cmd.rs",
     "after": "^pub mod text;$",
-    "insert": "pub mod var_order;"
+    "insert": "pub mod var_order;\npub mod tokens_css;\npub mod ds_inspect;"
   },
   {
     "note": "engine: register variable order commands",
     "file": "crates/engine/src/cmd.rs",
     "after": "^\\s*list\\.extend\\(variables_io::specs\\(\\)\\);$",
-    "insert": "        list.extend(var_order::specs());"
+    "insert": "        list.extend(var_order::specs());\n        list.extend(tokens_css::specs());\n        list.extend(ds_inspect::specs());"
   },
   {
     "note": "ui: variable order module",

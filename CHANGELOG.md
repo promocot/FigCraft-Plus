@@ -7,6 +7,26 @@ Every FigCraft Plus release, newest first. Each one is built on an official FigC
 **🟣 Exclusive** — FigCraft has nothing like it yet. **🔵 Enhanced** — FigCraft has a basic
 version; Plus goes further.
 
+## Plus 11 · FigCraft v0.13.1 — 2026-11-01
+
+Roadmap stages 2 and 3.
+
+- 🟣 **Design System Inspector** — *Inspect* in the Variables editor: values typed by hand that a
+  variable holds (fills, strokes, radii, gaps, paddings, stroke weights, font sizes), broken
+  references, circular formulas, unused, unscoped and duplicate variables, invalid values. Every
+  finding jumps to its layer or variable; *Fix* / *Fix all* bind values and delete unused
+  variables, one undo step.
+- 🔵 **CSS for code** (Export ▸ CSS for code…): colours as `oklch()`, sizes in `rem`, derived
+  colours as relative colours, mixes as `color-mix()`, calculated numbers as `calc()`.
+- 🔵 **Import CSS custom properties** (Import ▸ CSS custom properties…): `:root` / `@theme` and
+  theme blocks as modes; colours, lengths, numbers and font stacks; `var()` as aliases; relative
+  colours, `color-mix()` and `calc()` as calculated variables.
+- 🟣 **Text styles together:** select several text styles ▸ *Edit N text styles…* — set font,
+  size, line height, letter spacing for all; bind variables to all of them by name, previewed.
+- 🔵 **Missing fonts: Replace…** with an installed font (every run and text style), remembered for
+  the next file that uses it; Preferences lists and forgets them.
+- Fixed: *Units settings…* in a field's unit menu could freeze the app.
+
 ## Plus 10 · FigCraft v0.13.1 — 2026-10-31
 
 - 🔵 **The colour picker follows the selection again.** Since FigCraft 0.13 a press outside the

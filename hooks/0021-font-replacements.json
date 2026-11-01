@@ -1,0 +1,44 @@
+[
+  {
+    "note": "ui: replacing missing fonts, remembered",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod windows;$",
+    "insert": "mod font_swap_ui;"
+  },
+  {
+    "note": "missing fonts: Replace… on each row",
+    "file": "crates/ui-egui/src/dialogs/missing_fonts.rs",
+    "find": "        ui.label(RichText::new(used).color(t.text_secondary));\n        let Some(source) = &m.source else { return };\n",
+    "replace": "        ui.label(RichText::new(used).color(t.text_secondary));\n        // FigCraft Plus: replace it with an installed font (remembered for other files).\n        crate::font_swap_ui::row_button(ui, &m.family);\n        let Some(source) = &m.source else { return };\n"
+  },
+  {
+    "note": "missing fonts: whether replacements are remembered",
+    "file": "crates/ui-egui/src/dialogs/missing_fonts.rs",
+    "find": "    if shown.consent.is_some() {\n        clicks.consent = consent_prompt(ui, t);\n    }\n",
+    "replace": "    if !shown.indexing && !shown.families.is_empty() {\n        ui.add_space(6.0);\n        crate::font_swap_ui::remember_toggle(ui);\n    }\n    if shown.consent.is_some() {\n        clicks.consent = consent_prompt(ui, t);\n    }\n"
+  },
+  {
+    "note": "missing fonts: apply the replacement picked",
+    "file": "crates/ui-egui/src/dialogs/missing_fonts.rs",
+    "find": "    let close = !open || clicks.close;\n    act(app, clicks);\n",
+    "replace": "    let close = !open || clicks.close;\n    act(app, clicks);\n    crate::font_swap_ui::act(app, ctx);\n"
+  },
+  {
+    "note": "missing fonts: remembered replacements as a file opens",
+    "file": "crates/ui-egui/src/dialogs/missing_fonts.rs",
+    "after": "^fn list\\(app: &mut FigApp, uid: u64\\) -> Option<Vec<Missing>> \\{$",
+    "insert": "    crate::font_swap_ui::auto(app, uid);"
+  },
+  {
+    "note": "English: font replacements",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Replace…\" = \"Replace…\"\n\"Replaced {family} with {with}\" = \"Replaced {family} with {with}\"\n\"Remembered font replacements: {list}\" = \"Remembered font replacements: {list}\"\n\"Remember replacements for other files\" = \"Remember replacements for other files\"\n\"Kept in Preferences ▸ FigCraft Plus, where you can remove them.\" = \"Kept in Preferences ▸ FigCraft Plus, where you can remove them.\"\n\"Remembered font replacements\" = \"Remembered font replacements\"\n\"Forget\" = \"Forget\""
+  },
+  {
+    "note": "Russian: font replacements",
+    "file": "crates/ui-egui/locales/ru.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Replace…\" = \"Заменить…\"\n\"Replaced {family} with {with}\" = \"{family} заменён на {with}\"\n\"Remembered font replacements: {list}\" = \"Запомненные замены шрифтов: {list}\"\n\"Remember replacements for other files\" = \"Запоминать замены для других файлов\"\n\"Kept in Preferences ▸ FigCraft Plus, where you can remove them.\" = \"Хранятся в Настройках ▸ FigCraft Plus, там их можно удалить.\"\n\"Remembered font replacements\" = \"Запомненные замены шрифтов\"\n\"Forget\" = \"Забыть\""
+  }
+]

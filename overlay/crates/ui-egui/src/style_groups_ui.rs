@@ -446,6 +446,17 @@ pub(crate) fn local_styles(app: &mut FigApp, ui: &mut Ui, doc: &Document) {
                             edit = Some(s.id.clone());
                             ui.close();
                         }
+                        // Several text styles selected: edit and bind them together.
+                        let texts: Vec<String> = if slot == StyleSlot::Text && on {
+                            styles.iter().filter(|x| st.selected.contains(&x.id)).map(|x| x.id.clone()).collect()
+                        } else {
+                            Vec::new()
+                        };
+                        if texts.len() > 1 && crate::right::menu_item(ui, &crate::i18n::trf("Edit {n} text styles…", &[("n", &texts.len().to_string())]), "") {
+                            let y = ui.ctx().input(|i| i.pointer.interact_pos()).map_or(140.0, |p| p.y - 12.0);
+                            crate::text_bulk_ui::open(ui.ctx(), texts, y);
+                            ui.close();
+                        }
                         if crate::right::menu_item(ui, tr("Group"), crate::shortcuts::shortcut("object.group").unwrap_or("")) {
                             if !st.selected.contains(&s.id) {
                                 st.selected = vec![s.id.clone()];

@@ -18,32 +18,13 @@ Everything below serves one of them.
 | Stage | When | Theme |
 |---|---|---|
 | **1** | ✅ done in Plus 9 | Measurement, part 2 · contrast both ways |
-| **2** | now, on FigCraft 0.13 | Design system ↔ code |
-| **3** | on FigCraft 0.13 | Design System Inspector |
+| **2** | ✅ done in Plus 11 | Design system ↔ code |
+| **3** | ✅ done in Plus 11 | Design System Inspector |
 | **4** | after FigCraft 0.14 | Responsive layout |
 | **5** | after FigCraft 0.14 | Web typography and colour tokens |
 | — | later | Print and export |
 
 ---
-
-## ▶ Stage 2 — now, on FigCraft 0.13: design system ↔ code
-
-*FigCraft already exports variables as JSON, CSS (in px), Tailwind and Dart, and imports JSON. Plus
-adds what it leaves out.*
-
-| | Feature | What it gives you |
-|---|---|---|
-| ⬜ | **Richer CSS export** — colours as `oklch()`, sizes in `rem` where the document uses rem, derived colours as relative colours (`oklch(from var(--primary) l c h / 50%)`), calculated numbers as `calc()` | Hand developers exactly what the design means, not a flattened copy |
-| ⬜ | **Import CSS custom properties as variables** — `--space-m: 1rem`, `oklch()`, `var()` (as an alias), `calc()` (as a calculated variable), `:root` and theme blocks as modes | Bring a site's design system into FigCraft in one step |
-| ⬜ | **Edit several text styles at once** — select styles in Local styles, change font, size or line height for all | Restyle a whole type scale in one go |
-| ⬜ | **Bind variables to many styles at once** — pick text styles, map their size, line height, weight… to variables by name, preview, apply as one undo step | Hundreds of clicks to move a type scale onto variables become one |
-| ⬜ | **Remember missing-font replacements** — "always use Inter for Helvetica" | Open files from others without choosing the same replacements again |
-
-## 🔍 Stage 3 — on FigCraft 0.13: Design System Inspector
-
-| | Feature | What it gives you |
-|---|---|---|
-| ⬜ | **Design System Inspector** — one panel that checks the whole document: colours and sizes not on a variable (with the variable that matches, one click to bind), broken references, circular formulas, unused variables, variables without a scope, duplicate tokens, invalid values. Every finding jumps to its layer or variable; fixes are one undo step | Keep a design system healthy without hunting by hand |
 
 ## 📐 Stage 4 — after FigCraft 0.14: responsive layout
 
@@ -101,6 +82,7 @@ Full details in the [changelog](CHANGELOG.md).
 
 | Release | Highlights |
 |---|---|
+| **Plus 11** | **CSS for code** (oklch, rem, relative colours, `color-mix()`, `calc()`) and **CSS import** · several text styles at once, variables bound by name · remembered missing-font replacements · the **Design System Inspector** |
 | **Plus 10** | The colour picker follows the selection again (clicks on the canvas and in Layers) · *Picker follows the selection* in Preferences, to turn it off |
 | **Plus 9** | On FigCraft 0.13.1 (FigCraft's own popovers now) · rulers and Dev Mode in the document's unit, the code in px or rem · number variables shown in the unit of what they size · em for line height and letter spacing · contrast both ways |
 | **Plus 8** | Switch the document's unit from any length field (click its unit, or right-click) · one way to close every popover · decimals shown, 0–4 |

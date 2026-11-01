@@ -40,11 +40,13 @@ pub(crate) struct Prefs {
     pub precision: u8,
     /// The colour picker stays open, on the same slot, when other layers are selected.
     pub picker_follows_selection: bool,
+    /// Missing font → the installed family that replaces it (remembered in Missing fonts).
+    pub font_replacements: std::collections::BTreeMap<String, String>,
 }
 
 impl Default for Prefs {
     fn default() -> Self {
-        Prefs { rem: false, text: String::new(), layout_unit: "px".into(), root: 16.0, color_model: "Hex".into(), precision: 2, picker_follows_selection: true }
+        Prefs { rem: false, text: String::new(), layout_unit: "px".into(), root: 16.0, color_model: "Hex".into(), precision: 2, picker_follows_selection: true, font_replacements: Default::default() }
     }
 }
 
@@ -100,6 +102,15 @@ fn set(f: impl FnOnce(&mut Prefs)) {
     if let (Some(path), Ok(text)) = (path(), serde_json::to_string_pretty(&*p)) {
         let _ = std::fs::write(path, text);
     }
+}
+
+/// Remember that `with` replaces the missing font `family`.
+pub(crate) fn remember_font(family: &str, with: &str) {
+    let family = family.trim().to_string();
+    set(|p| {
+        p.font_replacements.retain(|k, _| !k.eq_ignore_ascii_case(&family));
+        p.font_replacements.insert(family, with.trim().to_string());
+    });
 }
 
 /// The index in `models` of the model the picker opens in.
@@ -184,6 +195,21 @@ pub(crate) fn preferences(ui: &mut Ui) {
         set(|p| p.picker_follows_selection = !p.picker_follows_selection);
     }
     widgets::label(ui, tr("The colour picker stays open on the same fill, stroke or effect of the layers you select next. Off: it closes, as in FigCraft."), t.text_secondary);
+    if !p.font_replacements.is_empty() {
+        ui.add_space(6.0);
+        ui.label(egui::RichText::new(tr("Remembered font replacements")).font(regular(11.0)).color(t.text));
+        for (family, with) in &p.font_replacements {
+            ui.horizontal(|ui| {
+                ui.label(egui::RichText::new(format!("{family} → {with}")).font(regular(11.0)).color(t.text_secondary));
+                if ui.small_button("×").on_hover_text(tr("Forget")).clicked() {
+                    let f = family.clone();
+                    set(|p| {
+                        p.font_replacements.remove(&f);
+                    });
+                }
+            });
+        }
+    }
 }
 
 // ---- Units ---------------------------------------------------------------------------------------
@@ -218,9 +244,10 @@ fn toggle(ui: &Ui, at: Option<egui::Pos2>) {
 
 /// Open the Units popover at `at` (from a field's unit menu).
 pub(crate) fn open_units(ctx: &egui::Context, at: egui::Pos2) {
+    let now = ctx.cumulative_frame_nr();
     ctx.data_mut(|d| {
         d.insert_temp(popover_id(), at);
-        d.insert_temp(popover_id().with("toggled"), ctx.cumulative_frame_nr());
+        d.insert_temp(popover_id().with("toggled"), now);
     });
 }
 

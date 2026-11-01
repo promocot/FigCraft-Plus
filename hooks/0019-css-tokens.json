@@ -1,0 +1,32 @@
+[
+  {
+    "note": "ui: CSS tokens module",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod windows;$",
+    "insert": "mod tokens_ui;"
+  },
+  {
+    "note": "variables: Export ▸ CSS for code…",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
+    "find": "                export_dialog(app, format);\n                ui.close();\n            }\n        }\n    });\n",
+    "replace": "                export_dialog(app, format);\n                ui.close();\n            }\n        }\n        // FigCraft Plus: oklch(), rem and formulas, the way code writes them.\n        if menu_item(ui, tr(\"CSS for code…\"), \"\") {\n            crate::tokens_ui::open_export(ui.ctx());\n            ui.close();\n        }\n    });\n    crate::tokens_ui::export_popover(app, ui.ctx(), &export);\n"
+  },
+  {
+    "note": "variables: Import is a menu (variables JSON or CSS custom properties)",
+    "file": "crates/ui-egui/src/dialogs/variables_panel.rs",
+    "find": "    if widgets::button(&mut bar, tr(\"Import…\"), false, true).on_hover_text(tr(\"Add or update collections from a variables JSON\")).clicked() {\n        import_dialog(app);\n    }\n",
+    "replace": "    // FigCraft Plus: the variables JSON or CSS custom properties.\n    let import = widgets::button(&mut bar, tr(\"Import…\"), false, true).on_hover_text(tr(\"Add or update collections from a variables JSON\"));\n    crate::tokens_ui::import_menu(app, &import, import_dialog);\n"
+  },
+  {
+    "note": "English: CSS tokens",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"CSS for code…\" = \"CSS for code…\"\n\"CSS for code\" = \"CSS for code\"\n\"Colours\" = \"Colours\"\n\"Sizes\" = \"Sizes\"\n\"Formulas as CSS\" = \"Formulas as CSS\"\n\"Derived colours as relative colours, mixes as color-mix(), calculated numbers as calc().\" = \"Derived colours as relative colours, mixes as color-mix(), calculated numbers as calc().\""
+  },
+  {
+    "note": "Russian: CSS tokens",
+    "file": "crates/ui-egui/locales/ru.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"CSS for code…\" = \"CSS для кода…\"\n\"CSS for code\" = \"CSS для кода\"\n\"Colours\" = \"Цвета\"\n\"Sizes\" = \"Размеры\"\n\"Formulas as CSS\" = \"Формулы как CSS\"\n\"Derived colours as relative colours, mixes as color-mix(), calculated numbers as calc().\" = \"Производные цвета — относительными цветами, смеси — color-mix(), вычисляемые числа — calc().\""
+  }
+]

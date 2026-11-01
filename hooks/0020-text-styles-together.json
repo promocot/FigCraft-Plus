@@ -1,0 +1,20 @@
+[
+  {
+    "note": "ui: several text styles at once",
+    "file": "crates/ui-egui/src/lib.rs",
+    "after": "^pub mod windows;$",
+    "insert": "mod text_bulk_ui;"
+  },
+  {
+    "note": "English: text styles together",
+    "file": "crates/ui-egui/locales/en.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Edit {n} text styles…\" = \"Edit {n} text styles…\"\n\"Edit {n} text styles\" = \"Edit {n} text styles\"\n\"Set for all\" = \"Set for all\"\n\"Font family\" = \"Font family\"\n\"Bind variables by name\" = \"Bind variables by name\"\n\"Property\" = \"Property\"\n\"From\" = \"From\"\n\"No variables\" = \"No variables\"\n\"No variables of this type in the file.\" = \"No variables of this type in the file.\"\n\"no match\" = \"no match\"\n\"Bind {n}\" = \"Bind {n}\""
+  },
+  {
+    "note": "Russian: text styles together",
+    "file": "crates/ui-egui/locales/ru.toml",
+    "after": "^\"Search fonts\" = ",
+    "insert": "\"Edit {n} text styles…\" = \"Изменить текстовые стили ({n})…\"\n\"Edit {n} text styles\" = \"Текстовые стили: {n}\"\n\"Set for all\" = \"Для всех\"\n\"Font family\" = \"Шрифт\"\n\"Bind variables by name\" = \"Привязать переменные по имени\"\n\"Property\" = \"Свойство\"\n\"From\" = \"Откуда\"\n\"No variables\" = \"Нет переменных\"\n\"No variables of this type in the file.\" = \"В файле нет переменных этого типа.\"\n\"no match\" = \"нет совпадения\"\n\"Bind {n}\" = \"Привязать: {n}\""
+  }
+]

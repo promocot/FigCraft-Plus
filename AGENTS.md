@@ -210,7 +210,14 @@ inside). Lessons learned:
 
 ## 8. Where things stand (update this section when you finish work)
 
-- **Released:** Plus 10 on FigCraft v0.13.1 (2026-10-31): the picker follows the selection again
+- **Released:** Plus 11 on FigCraft v0.13.1 (2026-11-01): roadmap stages 2–3. Engine commands
+  `variable.exportCss` / `variable.importCss` (`engine/cmd/tokens_css.rs`) and
+  `designSystem.inspect` (`engine/cmd/ds_inspect.rs`); UI `tokens_ui.rs` (Export ▸ CSS for code,
+  Import menu), `ds_inspect_ui.rs` (Inspect button), `text_bulk_ui.rs` (Edit N text styles),
+  `font_swap_ui.rs` (Missing fonts ▸ Replace…, `fontReplacements` in `figcraft-plus.json`); hooks
+  0019–0022. Lesson: never call a `ctx` method inside `ctx.data_mut(|d| …)` — it deadlocks
+  (read `cumulative_frame_nr()` first).
+- **Plus 10** on FigCraft v0.13.1 (2026-10-31): the picker follows the selection again
   (0.13's outside press had closed it on a canvas / Layers click); `pickerFollowsSelection` in
   `figcraft-plus.json`, Preferences checkbox, default on; `picker_place_ui::held` holds the canvas
   and left panels from FigCraft's outside-press rule, `follow` closes on a click that selects
@@ -223,14 +230,16 @@ inside). Lessons learned:
   by role (`units_ui::number_roles`, own mapping: line height / letter spacing count as text), `em`
   for line height and letter spacing (`rem_ui::em`, stored as %), contrast both ways
   (`color_tools_ui::both_ways`).
-- **Next — roadmap Stage 2 (on 0.13):**
+- **Next — roadmap Stage 4 (after FigCraft 0.14):** %, vw, vh; auto layout from variables; align
+  to a key object. Then Stage 5. Done items below are kept for reference.
+- **Was Stage 2 (done in Plus 11):**
   - richer CSS variable export (FigCraft already exports JSON, CSS in px, Tailwind and Dart, and
     imports JSON; Plus adds `oklch()`, `rem`, relative colours, `calc()`, and CSS import);
   - bulk editing and binding of text styles; remembered missing-font replacements (0.13 downloads
     missing fonts but doesn't remember replacements).
   - Idea: write simple alpha / sRGB mixes as FigCraft 0.13's native `ColorAlpha` / `ColorMix`
     variable values instead of a description formula.
-- **Stage 3 (on 0.13):** Design System Inspector.
+- **Stage 3 (done in Plus 11):** Design System Inspector.
 - **After 0.14:** %, vw, vh; auto layout from variables; line height % tokens; gradient tokens.
 - **Known gaps:**
   - Style dialogs keep their own closing rules (an outside click must not lose a style being

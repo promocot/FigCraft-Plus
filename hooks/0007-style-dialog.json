@@ -21,7 +21,7 @@
     "note": "popups: the style dialog (under the colour picker)",
     "file": "crates/ui-egui/src/menus.rs",
     "find": "    crate::colorpicker::show(app, ctx);\n    palette(app, ctx);\n",
-    "replace": "    crate::style_dialog_ui::show(app, ctx);\n    crate::colorpicker::show(app, ctx);\n    palette(app, ctx);\n"
+    "replace": "    crate::style_dialog_ui::show(app, ctx);\n    crate::text_bulk_ui::draw(app, ctx);\n    crate::colorpicker::show(app, ctx);\n    palette(app, ctx);\n"
   },
   {
     "note": "Local styles: a click edits the style in the style dialog",
